@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: locallink-api
+    env: node
+    rootDir: backend
+    plan: starter
+    buildCommand: npm install
+    preDeployCommand: npm run migrate
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PAYSTACK_WEBHOOK_SECRET
+        sync: false
+      - key: FLUTTERWAVE_WEBHOOK_HASH
+        sync: false
+      - key: ADMIN_BOOTSTRAP_SECRET
+        sync: false
+
+

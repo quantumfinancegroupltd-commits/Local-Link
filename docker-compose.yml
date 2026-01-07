@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: locallink
+      POSTGRES_PASSWORD: locallink
+      POSTGRES_DB: locallink
+    volumes:
+      - locallink_pg:/var/lib/postgresql/data
+
+volumes:
+  locallink_pg:
+
+

@@ -6,6 +6,10 @@ export function roleHomePath(role) {
       return '/artisan'
     case 'farmer':
       return '/farmer'
+    case 'driver':
+      return '/driver'
+    case 'company':
+      return '/company'
     case 'admin':
       return '/admin'
     default:

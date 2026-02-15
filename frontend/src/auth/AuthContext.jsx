@@ -1,47 +1,29 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { http } from '../api/http.js'
-
-const AuthContext = createContext(null)
-
-const LS_TOKEN = 'locallink_token'
-const LS_USER = 'locallink_user'
-
-function safeParse(json) {
-  try {
-    return JSON.parse(json)
-  } catch {
-    return null
-  }
-}
+import { AuthContext, LS_TOKEN, LS_USER, readLocal, removeLocal, safeParse, writeLocal } from './authContext.js'
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null)
-  const [user, setUser] = useState(null)
-  const [booted, setBooted] = useState(false)
+  const [token, setToken] = useState(() => readLocal(LS_TOKEN))
+  const [user, setUser] = useState(() => safeParse(readLocal(LS_USER) ?? ''))
+  const booted = true
 
-  useEffect(() => {
-    const t = localStorage.getItem(LS_TOKEN)
-    const u = safeParse(localStorage.getItem(LS_USER) ?? '')
-    if (t) setToken(t)
-    if (u) setUser(u)
-    setBooted(true)
-  }, [])
-
-  function setSession(nextToken, nextUser) {
+  const setSession = useCallback((nextToken, nextUser) => {
     setToken(nextToken)
     setUser(nextUser)
-    if (nextToken) localStorage.setItem(LS_TOKEN, nextToken)
-    if (nextUser) localStorage.setItem(LS_USER, JSON.stringify(nextUser))
-  }
+    if (nextToken) writeLocal(LS_TOKEN, nextToken)
+    else removeLocal(LS_TOKEN)
+    if (nextUser) writeLocal(LS_USER, JSON.stringify(nextUser))
+    else removeLocal(LS_USER)
+  }, [])
 
-  function clearSession() {
+  const clearSession = useCallback(() => {
     setToken(null)
     setUser(null)
-    localStorage.removeItem(LS_TOKEN)
-    localStorage.removeItem(LS_USER)
-  }
+    removeLocal(LS_TOKEN)
+    removeLocal(LS_USER)
+  }, [])
 
-  async function login({ email, password }) {
+  const login = useCallback(async ({ email, password }) => {
     const res = await http.post('/login', { email, password })
     const nextToken = res.data?.token ?? res.data?.accessToken ?? null
     const nextUser = res.data?.user ?? null
@@ -50,16 +32,16 @@ export function AuthProvider({ children }) {
     }
     setSession(nextToken, nextUser)
     return nextUser
-  }
+  }, [setSession])
 
-  async function register({ name, email, phone, password, role }) {
+  const register = useCallback(async ({ name, email, phone, password, role }) => {
     const res = await http.post('/register', { name, email, phone, password, role })
     // Support either: register returns token+user, or just user.
     const nextToken = res.data?.token ?? res.data?.accessToken ?? null
     const nextUser = res.data?.user ?? res.data ?? null
     if (nextToken && nextUser) setSession(nextToken, nextUser)
     return nextUser
-  }
+  }, [setSession])
 
   const value = useMemo(
     () => ({
@@ -72,16 +54,8 @@ export function AuthProvider({ children }) {
       logout: clearSession,
       setSession,
     }),
-    [booted, token, user],
+    [booted, token, user, login, register, clearSession, setSession],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
-  return ctx
-}
-
-

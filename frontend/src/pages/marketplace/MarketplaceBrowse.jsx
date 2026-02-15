@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { http } from '../../api/http.js'
 import { ProductCard } from '../../components/marketplace/ProductCard.jsx'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
+import { EmptyState } from '../../components/ui/EmptyState.jsx'
+import { PageHeader } from '../../components/ui/PageHeader.jsx'
+import { Skeleton } from '../../components/ui/Skeleton.jsx'
+import { LocationInput } from '../../components/maps/LocationInput.jsx'
+import { haversineKm, formatKm } from '../../lib/geo.js'
 import { getVerificationTier, tierRank } from '../../lib/verification.js'
+import { ui } from '../../components/ui/tokens.js'
 
 export function MarketplaceBrowse() {
   const [products, setProducts] = useState([])
@@ -13,6 +19,14 @@ export function MarketplaceBrowse() {
   const [category, setCategory] = useState('all')
   const [location, setLocation] = useState('all')
   const [tier, setTier] = useState('all')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [sort, setSort] = useState('best')
+
+  const [near, setNear] = useState('')
+  const [nearLat, setNearLat] = useState(null)
+  const [nearLng, setNearLng] = useState(null)
+  const [radiusKm, setRadiusKm] = useState('all')
 
   useEffect(() => {
     let cancelled = false
@@ -50,7 +64,13 @@ export function MarketplaceBrowse() {
   }, [products])
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const origin = nearLat != null && nearLng != null ? { lat: Number(nearLat), lng: Number(nearLng) } : null
+    const radius = radiusKm === 'all' ? null : Number(radiusKm)
+    const minP = minPrice ? Number(minPrice) : null
+    const maxP = maxPrice ? Number(maxPrice) : null
+
+    const scored = products
+      .map((p) => {
       const matchCat =
         category === 'all' ? true : String(p.category ?? '').toLowerCase() === category
       const loc =
@@ -74,74 +94,242 @@ export function MarketplaceBrowse() {
             ? tierRank(inferredTier) >= tierRank('bronze')
             : inferredTier === tier
 
-      return matchCat && matchLoc && matchQ && matchTier
+      const price = Number(p?.price ?? 0)
+      const matchPriceMin = minP == null ? true : price >= minP
+      const matchPriceMax = maxP == null ? true : price <= maxP
+
+      const lat = p?.farm_lat ?? p?.farmLat ?? p?.farmer?.farm_lat ?? null
+      const lng = p?.farm_lng ?? p?.farmLng ?? p?.farmer?.farm_lng ?? null
+      const distKm = origin ? haversineKm(origin.lat, origin.lng, lat, lng) : null
+      const matchRadius = radius == null ? true : distKm != null && distKm <= radius
+
+      const createdAt = p?.created_at ? new Date(p.created_at) : null
+      const ageDays = createdAt ? (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24) : null
+      const freshness01 = ageDays == null ? 0.5 : Math.max(0, Math.min(1, 1 - ageDays / 7))
+
+      const dist01 = distKm == null ? 0.5 : Math.max(0, Math.min(1, 1 - distKm / 60))
+      const tier01 = Math.min(1, tierRank(inferredTier) / tierRank('gold'))
+      const query01 = q ? (matchQ ? 1 : 0) : 0.5
+      const score = 0.35 * freshness01 + 0.3 * dist01 + 0.2 * tier01 + 0.15 * query01
+
+      const whyParts = []
+      if (distKm != null) whyParts.push(`Near you (${formatKm(distKm)})`)
+      if (ageDays != null) whyParts.push(ageDays < 1 ? 'Fresh (today)' : `Freshness: ${Math.round(ageDays)}d`)
+      if (inferredTier && inferredTier !== 'unverified') whyParts.push(`Tier: ${String(inferredTier).toUpperCase()}`)
+      if (q) whyParts.push('Matches your search')
+
+      return {
+        product: p,
+        inferredTier,
+        distKm,
+        freshness01,
+        score,
+        why: whyParts.length ? `Why: ${whyParts.join(' • ')}` : null,
+        match: matchCat && matchLoc && matchQ && matchTier && matchPriceMin && matchPriceMax && matchRadius,
+      }
     })
-  }, [products, q, category, location, tier])
+      .filter((x) => x.match)
+
+    scored.sort((a, b) => {
+      if (sort === 'nearest') return (a.distKm ?? 1e9) - (b.distKm ?? 1e9)
+      if (sort === 'cheapest') return Number(a.product?.price ?? 0) - Number(b.product?.price ?? 0)
+      if (sort === 'freshest') return (b.freshness01 ?? 0) - (a.freshness01 ?? 0)
+      return (b.score ?? 0) - (a.score ?? 0)
+    })
+
+    return scored
+  }, [products, q, category, location, tier, minPrice, maxPrice, nearLat, nearLng, radiusKm, sort])
+
+  const results = useMemo(() => filtered.map((x) => ({ ...x.product, meta: { why: x.why } })), [filtered])
+
+  const canUseRadius = nearLat != null && nearLng != null
+  const radiusLabel = useMemo(() => {
+    if (!canUseRadius) return 'Pick a location to enable radius'
+    if (radiusKm === 'all') return 'Any distance'
+    return `Within ${radiusKm} km`
+  }, [canUseRadius, radiusKm])
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Farmers Marketplace</h1>
-          <p className="text-sm text-slate-600">Browse produce with photos, filtered by category & location.</p>
+      <PageHeader
+        title="Farmers Marketplace"
+        subtitle="Browse produce with photos, filtered by category, location, and verification."
+        actions={
+          <div className="text-sm font-semibold text-slate-700">
+            {loading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}`}
+          </div>
+        }
+      />
+
+      <Card>
+        <div className="grid gap-3 md:grid-cols-12 md:items-end">
+          <div className="md:col-span-4">
+            <div className={ui.label}>Search</div>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search produce…" />
+          </div>
+          <div className="md:col-span-2">
+            <div className={ui.label}>Category</div>
+            <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="all">All</option>
+              <option value="vegetables">Vegetables</option>
+              <option value="fruits">Fruits</option>
+              <option value="grains">Grains</option>
+              <option value="poultry">Poultry</option>
+              <option value="other">Other</option>
+            </Select>
+          </div>
+          <div className="md:col-span-3">
+            <div className={ui.label}>Location</div>
+            <Select value={location} onChange={(e) => setLocation(e.target.value)}>
+              <option value="all">All</option>
+              {locations.map((loc) => (
+                <option key={loc} value={loc.toLowerCase()}>
+                  {loc}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="md:col-span-2">
+            <div className={ui.label}>Verification</div>
+            <Select value={tier} onChange={(e) => setTier(e.target.value)}>
+              <option value="all">All</option>
+              <option value="verified">Verified (any)</option>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="bronze">Bronze</option>
+              <option value="unverified">Unverified</option>
+            </Select>
+          </div>
+          <div className="md:col-span-1">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={() => {
+                setQ('')
+                setCategory('all')
+                setLocation('all')
+                setTier('all')
+                setMinPrice('')
+                setMaxPrice('')
+                setSort('best')
+                setNear('')
+                setNearLat(null)
+                setNearLng(null)
+                setRadiusKm('all')
+              }}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
-        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search produce…" />
-          <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="all">All categories</option>
-            <option value="vegetables">Vegetables</option>
-            <option value="fruits">Fruits</option>
-            <option value="grains">Grains</option>
-            <option value="poultry">Poultry</option>
-            <option value="other">Other</option>
-          </Select>
-          <Select value={location} onChange={(e) => setLocation(e.target.value)}>
-            <option value="all">All locations</option>
-            {locations.map((loc) => (
-              <option key={loc} value={loc.toLowerCase()}>
-                {loc}
+
+        <div className="mt-4 grid gap-3 md:grid-cols-12 md:items-end">
+          <div className="md:col-span-6">
+            <div className={ui.label}>Near (radius filter)</div>
+            <LocationInput
+              value={near}
+              onChange={(v) => {
+                setNear(v)
+                setNearLat(null)
+                setNearLng(null)
+              }}
+              onPick={({ formatted, lat, lng }) => {
+                setNear(formatted || near)
+                setNearLat(typeof lat === 'number' ? lat : null)
+                setNearLng(typeof lng === 'number' ? lng : null)
+              }}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <div className={ui.label}>Radius</div>
+            <Select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} disabled={!canUseRadius}>
+              <option value="all">{radiusLabel}</option>
+              <option value="5">5 km</option>
+              <option value="10">10 km</option>
+              <option value="25">25 km</option>
+              <option value="50">50 km</option>
+            </Select>
+          </div>
+          <div className="md:col-span-2">
+            <div className={ui.label}>Min price (GHS)</div>
+            <Input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" min="0" placeholder="e.g. 20" />
+          </div>
+          <div className="md:col-span-2">
+            <div className={ui.label}>Max price (GHS)</div>
+            <Input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" min="0" placeholder="e.g. 150" />
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-12 md:items-end">
+          <div className="md:col-span-4">
+            <div className={ui.label}>Sort</div>
+            <Select value={sort} onChange={(e) => setSort(e.target.value)}>
+              <option value="best">Best (fresh + near + trust)</option>
+              <option value="nearest" disabled={!canUseRadius}>
+                Nearest
               </option>
-            ))}
-          </Select>
-          <Select value={tier} onChange={(e) => setTier(e.target.value)}>
-            <option value="all">All verification</option>
-            <option value="verified">Verified (any)</option>
-            <option value="gold">Gold</option>
-            <option value="silver">Silver</option>
-            <option value="bronze">Bronze</option>
-            <option value="unverified">Unverified</option>
-          </Select>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => {
-              setQ('')
-              setCategory('all')
-              setLocation('all')
-              setTier('all')
-            }}
-          >
-            Clear
-          </Button>
+              <option value="freshest">Freshest</option>
+              <option value="cheapest">Cheapest</option>
+            </Select>
+          </div>
+          <div className="md:col-span-8">
+            <div className="text-xs text-slate-500">
+              “Best” is a transparent score: freshness + near you + verification + match to your search.
+            </div>
+          </div>
         </div>
-      </div>
+      </Card>
 
       <div>
         {loading ? (
-          <Card>
-            <div className="text-sm text-slate-600">Loading…</div>
-          </Card>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <Card>
             <div className="text-sm text-red-700">{error}</div>
           </Card>
-        ) : filtered.length === 0 ? (
-          <Card>
-            <div className="text-sm text-slate-600">No products found.</div>
-          </Card>
+        ) : results.length === 0 ? (
+          <EmptyState
+            title="No products found"
+            description="Try clearing filters or searching a broader term."
+            actions={
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setQ('')
+                  setCategory('all')
+                  setLocation('all')
+                  setTier('all')
+                  setMinPrice('')
+                  setMaxPrice('')
+                  setSort('best')
+                  setNear('')
+                  setNearLat(null)
+                  setNearLng(null)
+                  setRadiusKm('all')
+                }}
+              >
+                Clear filters
+              </Button>
+            }
+          />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((p) => (
+            {results.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

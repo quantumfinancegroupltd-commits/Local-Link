@@ -1,11 +1,21 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import rateLimit from 'express-rate-limit'
 import { env } from '../config.js'
 import { pool } from '../db/pool.js'
 import { signToken } from '../auth/jwt.js'
+import { asyncHandler } from '../middleware/asyncHandler.js'
 
 export const bootstrapRouter = Router()
+
+const bootstrapRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later.' },
+})
 
 const Schema = z.object({
   secret: z.string().min(1),
@@ -14,10 +24,10 @@ const Schema = z.object({
   password: z.string().min(8),
 })
 
-bootstrapRouter.post('/admin', async (req, res) => {
+bootstrapRouter.post('/admin', bootstrapRateLimit, asyncHandler(async (req, res) => {
   if (!env.ADMIN_BOOTSTRAP_SECRET) return res.status(501).json({ message: 'ADMIN_BOOTSTRAP_SECRET not set' })
   const parsed = Schema.safeParse(req.body)
-  if (!parsed.success) return res.status(400).json({ message: 'Invalid input' })
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
   if (parsed.data.secret !== env.ADMIN_BOOTSTRAP_SECRET) return res.status(401).json({ message: 'Unauthorized' })
 
   // Only allow bootstrap if no admin exists yet
@@ -27,8 +37,8 @@ bootstrapRouter.post('/admin', async (req, res) => {
   const passwordHash = await bcrypt.hash(parsed.data.password, 10)
 
   const result = await pool.query(
-    `insert into users (name, email, phone, password_hash, role, verified)
-     values ($1,$2,null,$3,'admin',true)
+    `insert into users (name, email, phone, password_hash, role, verified, must_change_password)
+     values ($1,$2,null,$3,'admin',true,true)
      returning id, name, email, role, verified, created_at`,
     [parsed.data.name, parsed.data.email.toLowerCase(), passwordHash],
   )
@@ -43,6 +53,6 @@ bootstrapRouter.post('/admin', async (req, res) => {
 
   const token = signToken({ sub: admin.id, role: 'admin' })
   return res.status(201).json({ token, user: admin })
-})
+}))
 
 

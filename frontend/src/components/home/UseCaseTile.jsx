@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ui } from '../ui/tokens.js'
 
 export function UseCaseTile({ title, description, to, accent = 'emerald', imageUrl }) {
   const accentClass =
@@ -12,7 +13,7 @@ export function UseCaseTile({ title, description, to, accent = 'emerald', imageU
 
   return (
     <Link to={to} className="group">
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition group-hover:shadow-md">
+      <div className={['overflow-hidden rounded-3xl', ui.card, ui.cardHover].join(' ')}>
         <div className="relative aspect-[4/3] w-full bg-slate-100">
           <div className={`absolute inset-0 bg-gradient-to-br ${accentClass}`} />
           {imageUrl ? (

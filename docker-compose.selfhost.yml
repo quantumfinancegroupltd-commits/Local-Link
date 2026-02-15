@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: locallink
+      POSTGRES_PASSWORD: locallink
+      POSTGRES_DB: locallink
+    volumes:
+      - locallink_pg:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U locallink -d locallink"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
+      JWT_SECRET: change_me_in_prod
+      # In production, set to your real domain(s), e.g. "https://locallink.agency,https://www.locallink.agency"
+      CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
+      ADMIN_BOOTSTRAP_SECRET: change_me_in_prod
+      # Run background jobs in the separate worker service
+      SCHEDULERS_ENABLED: "false"
+      # Used for payment callback redirects (Paystack/Flutterwave) and any absolute links.
+      APP_BASE_URL: https://locallink.agency
+      PLATFORM_FEE_PCT_JOB: 0.08
+      PLATFORM_FEE_PCT_ORDER: 0.05
+      PLATFORM_FEE_PCT_DELIVERY: 0.1667
+      AUTO_RELEASE_JOB_HOURS: 72
+      AUTO_CONFIRM_DELIVERY_HOURS: 48
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - locallink_uploads:/app/uploads
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+    command: ["node","src/worker.js"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
+      JWT_SECRET: change_me_in_prod
+      CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
+      ADMIN_BOOTSTRAP_SECRET: change_me_in_prod
+      SCHEDULERS_ENABLED: "true"
+      WEBHOOK_QUEUE_ENABLED: "true"
+      AUTO_RELEASE_JOB_HOURS: 72
+      AUTO_CONFIRM_DELIVERY_HOURS: 48
+      PLATFORM_FEE_PCT_JOB: 0.08
+      PLATFORM_FEE_PCT_ORDER: 0.05
+      PLATFORM_FEE_PCT_DELIVERY: 0.1667
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - locallink_uploads:/app/uploads
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        # Optional (enables Google Places autocomplete in the Location input)
+        VITE_GOOGLE_MAPS_API_KEY: ${VITE_GOOGLE_MAPS_API_KEY-}
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:alpine
+    ports:
+      # Caddy on the host terminates TLS on 80/443 and forwards to this internal gateway.
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ./deploy/nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - api
+    restart: unless-stopped
+
+volumes:
+  locallink_pg:
+  locallink_uploads:
+
+

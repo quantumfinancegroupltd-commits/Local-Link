@@ -5,7 +5,14 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist',
+    'node_modules',
+    'playwright-report',
+    'test-results',
+    // local artifacts sometimes committed during debugging
+    '*.log',
+  ]),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -24,6 +31,20 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+  // Node config files (Playwright/Vite/etc.)
+  {
+    files: ['playwright.config.js', 'vite.config.js', 'postcss.config.js', 'tailwind.config.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  // Node environment for Playwright E2E specs
+  {
+    files: ['e2e/**/*.{js,jsx}'],
+    languageOptions: {
+      globals: globals.node,
     },
   },
 ])

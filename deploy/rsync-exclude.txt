@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+**/.DS_Store
+.env
+.env.*
+docker-compose.selfhost.yml
+frontend/playwright-report
+frontend/test-results
+frontend/.playwright
+frontend/e2e/.auth
+frontend/e2e/.cache
+
+

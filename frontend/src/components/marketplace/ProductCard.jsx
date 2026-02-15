@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { VerificationBadge } from '../ui/VerificationBadge.jsx'
+import { TrustBadge } from '../ui/TrustBadge.jsx'
+import { ui } from '../ui/tokens.js'
 
 function pick(obj, keys) {
   for (const k of keys) {
@@ -16,6 +18,11 @@ function productLocation(p) {
 }
 
 function productImage(p) {
+  const media = p?.media
+  if (Array.isArray(media) && media.length) {
+    const firstImage = media.find((m) => m?.kind === 'image' && typeof m?.url === 'string' && m.url.trim())
+    if (firstImage?.url) return firstImage.url
+  }
   return pick(p, ['image_url', 'imageUrl', 'photo_url', 'photoUrl', 'thumbnail_url', 'thumbnailUrl'])
 }
 
@@ -26,10 +33,11 @@ export function ProductCard({ product }) {
   const unit = product?.unit ?? ''
   const price = product?.price ?? '—'
   const verifyEntity = product?.farmer ?? product?.farmer_profile ?? product?.farmerProfile ?? product?.farmer_user ?? product?.farmerUser ?? product
+  const trustScore = product?.farmer?.trust_score ?? product?.farmer_trust_score ?? null
 
   return (
     <Link to={`/marketplace/products/${product.id}`} className="group">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition group-hover:shadow-md">
+      <div className={['overflow-hidden', ui.card, ui.cardHover].join(' ')}>
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
           {img ? (
             <img
@@ -45,6 +53,7 @@ export function ProductCard({ product }) {
             <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">
               {product?.category || 'Produce'}
             </div>
+            <TrustBadge trustScore={trustScore} />
             <VerificationBadge entity={verifyEntity} />
           </div>
         </div>
@@ -64,6 +73,7 @@ export function ProductCard({ product }) {
               </div>
             </div>
           </div>
+          {product?.meta?.why ? <div className="mt-3 text-xs font-medium text-slate-600">{product.meta.why}</div> : null}
         </div>
       </div>
     </Link>

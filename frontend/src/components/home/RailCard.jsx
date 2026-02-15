@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 import { VerificationBadge } from '../ui/VerificationBadge.jsx'
+import { ui } from '../ui/tokens.js'
 
 export function RailCard({ to, imageUrl, title, subtitle, meta, badgeEntity }) {
   return (
     <Link to={to} className="group" style={{ scrollSnapAlign: 'start' }}>
-      <div className="w-[260px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition group-hover:shadow-md sm:w-[300px]">
+      <div className={['w-[260px] overflow-hidden rounded-3xl sm:w-[300px]', ui.card, ui.cardHover].join(' ')}>
         <div className="relative aspect-[4/3] w-full bg-slate-100">
           {imageUrl ? (
             <img

@@ -1,0 +1,8 @@
+locallink.agency, www.locallink.agency {
+  encode zstd gzip
+
+  # Forward everything to the docker gateway (nginx) running on the host.
+  reverse_proxy 127.0.0.1:8080
+}
+
+

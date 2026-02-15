@@ -1,70 +1,158 @@
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext.jsx'
+import { useAuth } from '../auth/useAuth.js'
 import { roleHomePath } from '../lib/roles.js'
+import { http } from '../api/http.js'
 import { Button } from '../components/ui/FormControls.jsx'
 import { UseCaseTile } from '../components/home/UseCaseTile.jsx'
-import { HomeSearchBar } from '../components/home/HomeSearchBar.jsx'
-import { HorizontalScroller } from '../components/home/HorizontalScroller.jsx'
-import { RailCard } from '../components/home/RailCard.jsx'
-import { CategoryChips } from '../components/home/CategoryChips.jsx'
+import { ComingSoonModal } from '../components/home/ComingSoonModal.jsx'
+import { ui } from '../components/ui/tokens.js'
+
+function ComingSoonTile({ title, description, imageUrl, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={['overflow-hidden rounded-3xl text-left', ui.card, ui.cardHover].join(' ')}
+      title="Click for details"
+    >
+      <div className="relative aspect-[4/3] w-full bg-slate-100">
+        {imageUrl ? (
+          <>
+            <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/5 to-white/70" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-200/70 via-slate-100/60 to-white" />
+        )}
+        <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">
+          Coming soon
+        </div>
+      </div>
+      <div className="p-5">
+        <div className="text-base font-semibold text-slate-900">{title}</div>
+        <div className="mt-1 text-sm text-slate-600">{description}</div>
+      </div>
+    </button>
+  )
+}
 
 export function Home() {
   const { isAuthed, user } = useAuth()
+  const [features, setFeatures] = useState(null)
+  const [comingOpen, setComingOpen] = useState(false)
+  const [comingKey, setComingKey] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function load() {
+      try {
+        const res = await http.get('/features')
+        if (cancelled) return
+        setFeatures(res.data?.features ?? {})
+      } catch {
+        if (!cancelled) setFeatures({})
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const showEvents = !!features?.vertical_events
+  const showDomestic = !!features?.vertical_domestic
+  const showB2B = !!features?.vertical_b2b_supply
+  const showLogistics = !!features?.vertical_logistics
+
+  const comingSoonItems = useMemo(
+    () => ({
+      events: {
+        title: 'Events & Catering',
+        subtitle: 'Caterers, tents/chairs, staff — scheduled bookings with escrow protection.',
+        what: [
+          'Event job posting + quotes (like Skilled Labour)',
+          'Date/time scheduling + deposits',
+          'Verified vendors + verified reviews',
+          'Escrow holds until completion (or fair dispute resolution)',
+        ],
+        why: 'Events are high-risk and high-value — escrow + verification removes the “pay and pray” problem.',
+        now: ['Hire a Professional for event setup needs', 'Buy Produce for event ingredients', 'Use Support if anything goes wrong'],
+      },
+      domestic: {
+        title: 'Domestic & Recurring',
+        subtitle: 'Cleaners, laundry, caregivers — trust-first repeat services.',
+        what: ['Recurring bookings (weekly/monthly)', 'Preferred provider re-book', 'Trust + reliability enforcement', 'Dispute/evidence flow'],
+        why: 'Recurring services need reliability, not just matching — trust signals + repeat workflows make this sticky.',
+        now: ['Try Skilled Labour for one-off home tasks', 'Use Public Profiles to vet providers before hiring'],
+      },
+      b2b: {
+        title: 'Business Sourcing',
+        subtitle: 'Chop bars & SMEs sourcing ingredients reliably (B2B).',
+        what: ['Bulk pricing tiers', 'Supplier “storefront” + reliability', 'Delivery coordination + escrow', 'Verified reviews tied to orders'],
+        why: 'B2B needs predictable fulfilment — the same trust + ops layer, tuned for repeat purchasing.',
+        now: ['Buy Produce via Marketplace', 'Track deliveries and confirm to release escrow'],
+      },
+      logistics: {
+        title: 'Logistics-as-a-Service',
+        subtitle: 'Same-day deliveries for shops, pharmacies, hardware.',
+        what: ['Create delivery requests (pickup → dropoff)', 'Driver matching + radius/online filters', 'Status-first tracking + ETA ranges'],
+        why: 'Logistics wins on clarity and reliability — phase 1 is status-based tracking, not overpromised GPS.',
+        now: ['Use delivery inside Marketplace orders', 'Track deliveries in Buyer Orders'],
+      },
+    }),
+    [],
+  )
+
+  const images = {
+    // Coming-soon doors: professional royalty-free photos (direct CDN URLs).
+    // We intentionally avoid source.unsplash.com because it can be blocked by some browsers/networks.
+    coming_events: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_domestic: 'https://images.unsplash.com/photo-1626379481874-3dc5678fa8ca?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_b2b: 'https://images.unsplash.com/photo-1606824722920-4c652a70f348?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_logistics: 'https://images.unsplash.com/photo-1665521032636-e8d2f6927053?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+
+    // Existing hero door images (can be swapped later if you want all-local assets).
+    fix: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    produce: 'https://images.unsplash.com/photo-1646191920445-2534efe74a82?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    project: 'https://images.unsplash.com/photo-1574313428745-ea9221d581ee?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    supply: 'https://images.unsplash.com/photo-1610851467843-fe4a65aea9c0?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    employers: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+  }
 
   if (isAuthed) return <Navigate to={roleHomePath(user?.role)} replace />
 
-  const images = {
-    // Royalty-free sources (Unsplash CDN links)
-    fix: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    produce:
-      'https://images.unsplash.com/photo-1646191920445-2534efe74a82?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    project:
-      'https://images.unsplash.com/photo-1574313428745-ea9221d581ee?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    supply:
-      'https://images.unsplash.com/photo-1610851467843-fe4a65aea9c0?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    tomatoes:
-      'https://images.unsplash.com/photo-1524593166156-312f362cada0?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    tomatoes2:
-      'https://images.unsplash.com/photo-1582284540020-8acbe03f4924?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    plantain:
-      'https://images.unsplash.com/photo-1617631716600-6a454b430367?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    plantain2:
-      'https://images.unsplash.com/photo-1552709607-08d00227833d?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    plumber:
-      'https://images.unsplash.com/photo-1624101910729-b4f4371ff265?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    carpenter:
-      'https://images.unsplash.com/photo-1658757740651-977bf745296b?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-  }
-
   return (
     <div className="space-y-10">
-      {/* SEARCH + FILTERS (Airbnb-style, sticky) */}
-      <div className="sticky top-0 z-30 -mx-4 bg-slate-50/80 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-slate-50/60">
-        <HomeSearchBar />
-        <div className="mt-3">
-          <CategoryChips images={images} />
-        </div>
-      </div>
-
+      <ComingSoonModal open={comingOpen} onClose={() => setComingOpen(false)} item={comingKey ? comingSoonItems[comingKey] : null} />
       {/* HERO */}
       <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-soft md:p-12">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gradient-to-br from-brand-emerald/25 via-brand-lime/15 to-brand-orange/20 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-tr from-brand-orange/20 via-brand-lime/15 to-brand-emerald/20 blur-2xl" />
 
         <div className="relative max-w-2xl">
-          <div className="text-sm font-semibold text-slate-700">
-            Trusted local work & supply — Ghana-ready
-          </div>
+          <div className="text-sm font-semibold text-slate-700">Trusted local services & supplies — Ghana-ready</div>
           <h1 className="mt-4 text-3xl font-bold leading-[1.08] tracking-tight text-slate-900 md:text-5xl">
-            Get trusted local work done. Buy fresh produce safely.
+            Hire a professional. Buy fresh produce. Find employees.
           </h1>
           <p className="mt-5 text-base leading-relaxed text-slate-600">
-            Verified artisans and farmers, escrow-style payments (Trust Wallet), real reviews, and local support.
+            LocalLink is a trust + payment + coordination layer: verification tiers, escrow-style payments (Trust Wallet), delivery,
+            and real reviews.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link to="/register?role=buyer">
-              <Button className="px-5 py-2.5">Get started</Button>
+            <Link to="/register?role=buyer&intent=fix">
+              <Button className="px-5 py-2.5">Hire a professional</Button>
+            </Link>
+            <Link to="/register?role=buyer&intent=produce">
+              <Button variant="secondary" className="px-5 py-2.5">
+                Buy fresh produce
+              </Button>
+            </Link>
+            <Link to="/corporate">
+              <Button variant="secondary" className="px-5 py-2.5">
+                For employers
+              </Button>
             </Link>
             <Link to="/login">
               <Button variant="secondary" className="px-5 py-2.5">
@@ -79,141 +167,142 @@ export function Home() {
       <div>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="max-w-2xl">
-            <div className="text-sm font-semibold text-slate-700">Start with an outcome</div>
+            <div className="text-sm font-semibold text-slate-700">Launch focus</div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-              What do you need today?
+              Three doors. One trust engine.
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              Use-cases first — so it feels like one platform (not “two apps in one”).
+              We’re launching with three clear entry points: services, supplies, and employers. New verticals unlock later without rebuilding the
+              trust + payments layer.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
           <UseCaseTile
-            title="Fix or Build Something"
-            description="Electrician, plumber, mason, carpenter, painter."
+            title="Hire a Professional (Skilled Labour)"
+            description="Plumber, electrician, carpenter, mason, AC servicing."
             to="/register?role=buyer&intent=fix"
             accent="emerald"
             imageUrl={images.fix}
           />
           <UseCaseTile
-            title="Buy Fresh Produce"
-            description="Browse photos. Filter by location. Order fast."
+            title="Buy Fresh Produce (Farmers + Delivery)"
+            description="Browse listings, order, and track delivery — with escrow protection."
             to="/register?role=buyer&intent=produce"
             accent="lime"
             imageUrl={images.produce}
           />
           <UseCaseTile
-            title="Run a Project"
-            description="Hire multiple artisans + track payments (next)."
-            to="/register?role=buyer&intent=project"
+            title="Employers (Post jobs)"
+            description="Post roles, track applicants, and reduce no-shows."
+            to="/corporate"
             accent="orange"
-            imageUrl={images.project}
+            imageUrl={images.employers}
           />
-          <UseCaseTile
-            title="Supply My Business"
-            description="Weekly farm supply + standing orders (next)."
-            to="/register?role=buyer&intent=supply"
-            accent="slate"
-            imageUrl={images.supply}
-          />
+        </div>
+
+        <div className="mt-6">
+          <div className="text-sm font-semibold text-slate-900">Coming soon (same engine, new doors)</div>
+          <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {showEvents ? (
+              <UseCaseTile
+                title="Events & Catering"
+                description="Caterers, chairs/tents, staff — scheduling + escrow."
+                to="/register?role=buyer&intent=fix&category=Events%20%26%20Catering"
+                accent="orange"
+                imageUrl={images.project}
+              />
+            ) : (
+              <ComingSoonTile
+                title="Events & Catering"
+                description="Caterers, chairs/tents, staff — scheduling + escrow."
+                imageUrl={images.coming_events}
+                onClick={() => {
+                  setComingKey('events')
+                  setComingOpen(true)
+                }}
+              />
+            )}
+
+            {showDomestic ? (
+              <UseCaseTile
+                title="Domestic & Recurring"
+                description="Cleaners, laundry, caregivers — trust-first, repeat usage."
+                to="/register?role=buyer&intent=fix&category=Domestic%20Services"
+                accent="slate"
+                imageUrl={images.fix}
+              />
+            ) : (
+              <ComingSoonTile
+                title="Domestic & Recurring"
+                description="Cleaners, laundry, caregivers — trust-first, repeat usage."
+                imageUrl={images.coming_domestic}
+                onClick={() => {
+                  setComingKey('domestic')
+                  setComingOpen(true)
+                }}
+              />
+            )}
+
+            {showB2B ? (
+              <UseCaseTile
+                title="Business Sourcing"
+                description="Chop bars & SMEs sourcing ingredients reliably (B2B)."
+                to="/register?role=buyer&intent=produce"
+                accent="lime"
+                imageUrl={images.supply}
+              />
+            ) : (
+              <ComingSoonTile
+                title="Business Sourcing"
+                description="Chop bars & SMEs sourcing ingredients reliably (B2B)."
+                imageUrl={images.coming_b2b}
+                onClick={() => {
+                  setComingKey('b2b')
+                  setComingOpen(true)
+                }}
+              />
+            )}
+
+            {showLogistics ? (
+              <ComingSoonTile
+                title="Logistics-as-a-Service"
+                description="Enabled, but UI flow isn’t shipped yet (delivery requests coming next)."
+              />
+            ) : (
+              <ComingSoonTile
+                title="Logistics-as-a-Service"
+                description="Same-day deliveries for shops, pharmacies, hardware."
+                imageUrl={images.coming_logistics}
+                onClick={() => {
+                  setComingKey('logistics')
+                  setComingOpen(true)
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
 
       {/* SLIDE BARS */}
-      <div className="space-y-10">
-        <HorizontalScroller
-          title="Fresh produce offers"
-          subtitle="Browse popular bundles — photos, pricing, and locations."
-        >
-          <RailCard
-            to="/register?role=buyer&intent=produce&q=tomatoes&location=Accra"
-            imageUrl={images.tomatoes}
-            title="Tomatoes bundle"
-            subtitle="Accra"
-            meta="From GHS 50"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=produce&q=plantain&location=Kumasi"
-            imageUrl={images.plantain}
-            title="Plantain crate"
-            subtitle="Kumasi"
-            meta="From GHS 80"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=produce&q=onions&location=Tema"
-            imageUrl={images.tomatoes2}
-            title="Onions & peppers"
-            subtitle="Tema"
-            meta="From GHS 65"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=produce&q=vegetables&location=Cape%20Coast"
-            imageUrl={images.produce}
-            title="Fresh vegetables"
-            subtitle="Cape Coast"
-            meta="From GHS 60"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=produce&q=plantain&location=Takoradi"
-            imageUrl={images.plantain2}
-            title="Plantain (bulk)"
-            subtitle="Takoradi"
-            meta="From GHS 90"
-          />
-        </HorizontalScroller>
-
-        <HorizontalScroller
-          title="Skilled labour near you"
-          subtitle="Verified tiers + real reviews (filter after signup)."
-        >
-          <RailCard
-            to="/register?role=buyer&intent=fix&q=electrician&location=Accra"
-            imageUrl={images.fix}
-            title="Electrician"
-            subtitle="Accra • Same-week availability"
-            meta="From GHS 120"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=fix&q=plumber&location=Tema"
-            imageUrl={images.plumber}
-            title="Plumber"
-            subtitle="Tema • Emergency callouts"
-            meta="From GHS 140"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=fix&q=carpenter&location=Kumasi"
-            imageUrl={images.carpenter}
-            title="Carpenter"
-            subtitle="Kumasi • Doors, cabinets, fittings"
-            meta="From GHS 200"
-          />
-          <RailCard
-            to="/register?role=buyer&intent=project&q=project&location=Accra"
-            imageUrl={images.project}
-            title="Project crew"
-            subtitle="Accra • Multiple trades"
-            meta="Bundle pricing"
-          />
-        </HorizontalScroller>
-      </div>
+      {/* (Intentionally keeping launch page focused; no broad discovery UI here.) */}
 
       {/* TRUST STRIP */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className={['rounded-3xl p-5', ui.card].join(' ')}>
           <div className="text-sm font-semibold">Verified providers & farmers</div>
           <div className="mt-1 text-sm text-slate-600">Bronze / Silver / Gold trust tiers.</div>
         </div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className={['rounded-3xl p-5', ui.card].join(' ')}>
           <div className="text-sm font-semibold">Secure escrow payments</div>
           <div className="mt-1 text-sm text-slate-600">Funds held until completion/delivery.</div>
         </div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className={['rounded-3xl p-5', ui.card].join(' ')}>
           <div className="text-sm font-semibold">Real reviews</div>
           <div className="mt-1 text-sm text-slate-600">Reputation that can’t be faked.</div>
         </div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className={['rounded-3xl p-5', ui.card].join(' ')}>
           <div className="text-sm font-semibold">Local support</div>
           <div className="mt-1 text-sm text-slate-600">Help via WhatsApp / phone (next).</div>
         </div>

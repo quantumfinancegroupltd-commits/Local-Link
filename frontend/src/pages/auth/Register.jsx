@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext.jsx'
+import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 
@@ -19,7 +19,7 @@ export function Register() {
 
   useEffect(() => {
     const r = params.get('role')
-    if (r === 'buyer' || r === 'artisan' || r === 'farmer') setRole(r)
+    if (r === 'buyer' || r === 'artisan' || r === 'farmer' || r === 'driver' || r === 'company') setRole(r)
   }, [params])
 
   async function onSubmit(e) {
@@ -28,7 +28,22 @@ export function Register() {
     setBusy(true)
     try {
       const u = await register({ name, email, phone, password, role })
-      navigate(roleHomePath(u?.role || role), { replace: true })
+      const finalRole = u?.role || role
+      const intent = String(params.get('intent') ?? '').toLowerCase()
+      const category = params.get('category')
+
+      // Recommended “two door” buyer experience:
+      // - fix → start at post job
+      // - produce → go straight to marketplace
+      if (finalRole === 'buyer') {
+        if (intent === 'produce') return navigate('/marketplace', { replace: true })
+        if (intent === 'fix') {
+          const qs = category ? `?category=${encodeURIComponent(category)}` : ''
+          return navigate(`/buyer/jobs/new${qs}`, { replace: true })
+        }
+      }
+
+      navigate(roleHomePath(finalRole), { replace: true })
     } catch (err) {
       setError(err?.response?.data?.message ?? err?.message ?? 'Registration failed')
     } finally {
@@ -44,36 +59,53 @@ export function Register() {
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
           <div>
-            <Label>Role</Label>
-            <Select value={role} onChange={(e) => setRole(e.target.value)}>
+            <Label htmlFor="reg-role">Role</Label>
+            <Select id="reg-role" value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="buyer">Buyer / Homeowner</option>
               <option value="artisan">Artisan / Skilled labor</option>
               <option value="farmer">Farmer</option>
+              <option value="driver">Driver / Delivery partner</option>
+              <option value="company">Company / Employer</option>
             </Select>
           </div>
 
           <div>
-            <Label>Full name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+            <Label htmlFor="reg-name">Full name</Label>
+            <Input id="reg-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label>Email</Label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+              <Label htmlFor="reg-email">Email</Label>
+              <Input
+                id="reg-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                autoComplete="email"
+                required
+              />
             </div>
             <div>
-              <Label>Phone</Label>
-              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+233…" />
+              <Label htmlFor="reg-phone">Phone</Label>
+              <Input
+                id="reg-phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+233…"
+                autoComplete="tel"
+              />
             </div>
           </div>
 
           <div>
-            <Label>Password</Label>
+            <Label htmlFor="reg-password">Password</Label>
             <Input
+              id="reg-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
+              autoComplete="new-password"
               required
             />
           </div>

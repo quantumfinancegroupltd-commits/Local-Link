@@ -2,6 +2,9 @@ import { Router } from 'express'
 import crypto from 'node:crypto'
 import { env } from '../config.js'
 import { pool } from '../db/pool.js'
+import { paystackSecretKey } from '../payments/paystack.js'
+import { asyncHandler } from '../middleware/asyncHandler.js'
+import { enqueueWebhook } from '../services/webhookQueue.js'
 
 export const webhooksRouter = Router()
 
@@ -44,13 +47,14 @@ function jsonFromRaw(req) {
 }
 
 // Paystack signature: HMAC SHA512 of raw body with secret key
-webhooksRouter.post('/paystack', async (req, res) => {
+webhooksRouter.post('/paystack', asyncHandler(async (req, res) => {
   const sig = req.header('x-paystack-signature')
-  if (!env.PAYSTACK_WEBHOOK_SECRET) return res.status(501).json({ message: 'PAYSTACK_WEBHOOK_SECRET not set' })
+  const secret = paystackSecretKey()
+  if (!secret) return res.status(501).json({ message: 'PAYSTACK_SECRET_KEY not set' })
   if (!sig) return res.status(400).json({ message: 'Missing signature' })
 
   const computed = crypto
-    .createHmac('sha512', env.PAYSTACK_WEBHOOK_SECRET)
+    .createHmac('sha512', secret)
     .update(req.rawBody)
     .digest('hex')
 
@@ -63,12 +67,77 @@ webhooksRouter.post('/paystack', async (req, res) => {
   if (eventId && (await alreadySeen('paystack', eventId))) return res.json({ ok: true, deduped: true })
   await recordEvent('paystack', eventId ?? crypto.randomUUID(), payload)
 
-  // TODO: map paystack events to escrow_transactions and wallet ledger once provider init flow is wired.
+  // Map Paystack events to escrow status (foundation).
+  // Common successful event: "charge.success"
+  const eventName = String(payload?.event ?? '')
+  const reference = payload?.data?.reference ? String(payload.data.reference) : null
+
+  if (reference && eventName === 'charge.success') {
+    const updated = await pool.query(
+      `update escrow_transactions
+       set status = 'held', updated_at = now(),
+           meta = coalesce(meta, '{}'::jsonb) || jsonb_build_object('paystack_event', $2)
+       where provider = 'paystack' and provider_ref = $1
+       returning type, order_id, job_id`,
+      [reference, payload],
+    )
+    const orderIds = Array.from(new Set(updated.rows.filter((r) => r.type === 'order' && r.order_id).map((r) => r.order_id)))
+    if (orderIds.length) {
+      await pool.query(
+        `update orders
+         set payment_status='paid',
+             order_status = case when order_status='pending' then 'confirmed' else order_status end,
+             updated_at=now()
+         where id = any($1::uuid[]) and order_status <> 'cancelled'`,
+        [orderIds],
+      )
+      // Notify farmers: order placed and paid (in-app + optional SMS)
+      const { notifyWithSms } = await import('../services/messaging/index.js')
+      for (const orderId of orderIds) {
+        const o = await pool.query(
+          `select o.id, o.buyer_id, f.user_id as farmer_user_id
+           from orders o
+           left join farmers f on f.id = o.farmer_id
+           where o.id = $1`,
+          [orderId],
+        )
+        const farmerUserId = o.rows[0]?.farmer_user_id ?? null
+        if (farmerUserId) {
+          notifyWithSms(farmerUserId, {
+            type: 'order_placed',
+            title: 'New order received',
+            body: 'A buyer placed and paid for an order. Check your orders.',
+            meta: { url: '/farmer/orders', order_id: orderId },
+            dedupeKey: `order:${orderId}:placed`,
+          }).catch(() => {})
+        }
+      }
+    }
+  }
+
+  if (reference && (eventName === 'charge.failed' || eventName === 'charge.dispute.create')) {
+    const nextStatus = eventName === 'charge.dispute.create' ? 'disputed' : 'failed'
+    const updated = await pool.query(
+      `update escrow_transactions
+       set status = $2, updated_at = now(),
+           meta = coalesce(meta, '{}'::jsonb) || jsonb_build_object('paystack_event', $3)
+       where provider = 'paystack' and provider_ref = $1
+       returning type, order_id`,
+      [reference, nextStatus, payload],
+    )
+    if (eventName === 'charge.failed') {
+      const orderIds = Array.from(new Set(updated.rows.filter((r) => r.type === 'order' && r.order_id).map((r) => r.order_id)))
+      if (orderIds.length) {
+        await pool.query(`update orders set payment_status='failed', updated_at=now() where id = any($1::uuid[])`, [orderIds])
+      }
+    }
+  }
+
   return res.json({ ok: true })
-})
+}))
 
 // Flutterwave signature: "verif-hash" header matches your secret hash
-webhooksRouter.post('/flutterwave', async (req, res) => {
+webhooksRouter.post('/flutterwave', asyncHandler(async (req, res) => {
   const hash = req.header('verif-hash')
   if (!env.FLUTTERWAVE_WEBHOOK_HASH) return res.status(501).json({ message: 'FLUTTERWAVE_WEBHOOK_HASH not set' })
   if (!hash) return res.status(400).json({ message: 'Missing signature' })
@@ -83,8 +152,10 @@ webhooksRouter.post('/flutterwave', async (req, res) => {
   if (await alreadySeen('flutterwave', eventId)) return res.json({ ok: true, deduped: true })
   await recordEvent('flutterwave', eventId, payload)
 
-  // TODO: map flutterwave events to escrow_transactions and wallet ledger once provider init flow is wired.
-  return res.json({ ok: true })
-})
+  // Reliability: enqueue for durable processing + retries (mapping intentionally deferred).
+  // This gives us a production-safe hook without implementing provider-specific logic yet.
+  await enqueueWebhook({ provider: 'flutterwave', eventId, payload }).catch(() => {})
+  return res.json({ ok: true, queued: true })
+}))
 
 

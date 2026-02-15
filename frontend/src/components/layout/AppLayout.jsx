@@ -280,13 +280,22 @@ export function AppLayout() {
                           Notifications{unreadNotifications > 0 ? ` (${unreadNotifications})` : ''}
                         </Link>
                         {user?.role === 'company' ? (
-                          <Link
-                            to="/company/public"
-                            className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
-                            onClick={() => setAccountOpen(false)}
-                          >
-                            Public company page
-                          </Link>
+                          <>
+                            <Link
+                              to="/company/public"
+                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                              onClick={() => setAccountOpen(false)}
+                            >
+                              Public company page
+                            </Link>
+                            <Link
+                              to="/profile"
+                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                              onClick={() => setAccountOpen(false)}
+                            >
+                              Owner profile
+                            </Link>
+                          </>
                         ) : (
                           <Link
                             to="/profile"
@@ -489,13 +498,22 @@ export function AppLayout() {
                     Notifications{unreadNotifications > 0 ? ` (${unreadNotifications > 99 ? '99+' : unreadNotifications})` : ''}
                   </Link>
                   {user?.role === 'company' ? (
-                    <Link
-                      to="/company/public"
-                      onClick={() => setMobileOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                    >
-                      Public company page
-                    </Link>
+                    <>
+                      <Link
+                        to="/company/public"
+                        onClick={() => setMobileOpen(false)}
+                        className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Public company page
+                      </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setMobileOpen(false)}
+                        className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Owner profile
+                      </Link>
+                    </>
                   ) : (
                     <Link
                       to="/profile"

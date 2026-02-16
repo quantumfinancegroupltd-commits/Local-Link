@@ -284,6 +284,12 @@ export function FarmerDashboard() {
           <>
             {walletTab === 'payouts' ? (
               <div className="mt-4 space-y-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-sm text-emerald-900">
+                  <div className="font-semibold">When you get paid</div>
+                  <p className="mt-1 text-emerald-800">
+                    Payouts are processed within <strong>5 business days</strong> after you request a withdrawal. Our team reviews each request and will notify you once the transfer is made. Auto-payout (e.g. MoMo) is on the roadmap.
+                  </p>
+                </div>
                 <div className="rounded-2xl border bg-slate-50 p-4">
                   <div className="text-sm font-semibold">Request withdrawal</div>
                   <div className="mt-3 grid gap-4 md:grid-cols-3">

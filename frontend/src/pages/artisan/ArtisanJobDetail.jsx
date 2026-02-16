@@ -302,6 +302,28 @@ export function ArtisanJobDetail() {
               </div>
             ) : null}
             <div className="mt-4 whitespace-pre-wrap text-sm text-slate-700">{job?.description || '—'}</div>
+            {job?.access_instructions ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm">
+                <div className="font-semibold text-amber-900">Access instructions</div>
+                <div className="mt-1 whitespace-pre-wrap text-slate-800">{job.access_instructions}</div>
+              </div>
+            ) : null}
+            {(job?.event_head_count != null || job?.event_menu_notes || job?.event_equipment) ? (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                <div className="font-semibold text-slate-800">Event details</div>
+                <div className="mt-2 space-y-2">
+                  {job?.event_head_count != null ? (
+                    <div><span className="font-medium text-slate-700">Head count:</span> {Number(job.event_head_count)} guests</div>
+                  ) : null}
+                  {job?.event_menu_notes ? (
+                    <div><span className="font-medium text-slate-700">Menu / catering notes:</span><div className="mt-1 whitespace-pre-wrap text-slate-700">{job.event_menu_notes}</div></div>
+                  ) : null}
+                  {job?.event_equipment ? (
+                    <div><span className="font-medium text-slate-700">Equipment needed:</span><div className="mt-1 whitespace-pre-wrap text-slate-700">{job.event_equipment}</div></div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
             {(job?.scheduled_at || job?.recurring_frequency) ? (
               <div className="mt-4 flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
                 {job?.scheduled_at ? (

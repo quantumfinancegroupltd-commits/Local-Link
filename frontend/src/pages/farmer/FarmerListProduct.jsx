@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
-import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
+import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '../../lib/productCategories.js'
@@ -15,6 +15,7 @@ export function FarmerListProduct() {
   const [quantity, setQuantity] = useState('')
   const [unit, setUnit] = useState('kg')
   const [price, setPrice] = useState('')
+  const [recipe, setRecipe] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [mediaFiles, setMediaFiles] = useState([]) // File[]
   const [mediaError, setMediaError] = useState(null)
@@ -29,10 +30,11 @@ export function FarmerListProduct() {
       quantity,
       unit,
       price,
+      recipe,
       imageUrl,
       saved_at: Date.now(),
     }),
-    [name, category, quantity, unit, price, imageUrl],
+    [name, category, quantity, unit, price, recipe, imageUrl],
   )
   const draft = useDraftAutosave({ key: draftKey, data: draftData, enabled: true, debounceMs: 700 })
 
@@ -46,6 +48,7 @@ export function FarmerListProduct() {
     setQuantity(String(d.quantity ?? ''))
     setUnit(String(d.unit ?? 'kg'))
     setPrice(String(d.price ?? ''))
+    setRecipe(String(d.recipe ?? ''))
     setImageUrl(String(d.imageUrl ?? ''))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -98,6 +101,7 @@ export function FarmerListProduct() {
         quantity: Number(quantity),
         unit,
         price: Number(price),
+        recipe: recipe.trim() || null,
         image_url,
         media,
       })
@@ -139,6 +143,7 @@ export function FarmerListProduct() {
                 setQuantity('')
                 setUnit('kg')
                 setPrice('')
+                setRecipe('')
                 setImageUrl('')
                 setMediaFiles([])
               }}
@@ -175,6 +180,18 @@ export function FarmerListProduct() {
               </Select>
             </div>
           </div>
+          {category === 'flowers' ? (
+            <div>
+              <Label>Bouquet recipe / contents (optional)</Label>
+              <Textarea
+                value={recipe}
+                onChange={(e) => setRecipe(e.target.value)}
+                placeholder="e.g. 12 roses, 4 eucalyptus stems, ribbon"
+                rows={2}
+              />
+              <div className="mt-2 text-xs text-slate-500">What’s in this bouquet or arrangement (stems, foliage, wrap).</div>
+            </div>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
-import { Button, Card, Input, Label } from '../../components/ui/FormControls.jsx'
+import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { VerificationBadge } from '../../components/ui/VerificationBadge.jsx'
 import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
 import { WhatHappensIfModal } from '../../components/trust/WhatHappensIfModal.jsx'
@@ -44,6 +44,9 @@ export function MarketplaceProductDetail() {
   const [feeLoading, setFeeLoading] = useState(false)
   const [feeError, setFeeError] = useState(null)
   const [feeQuote, setFeeQuote] = useState(null)
+  const [requestedDeliveryDate, setRequestedDeliveryDate] = useState('')
+  const [occasion, setOccasion] = useState('')
+  const [giftMessage, setGiftMessage] = useState('')
   const [busy, setBusy] = useState(false)
   const [orderError, setOrderError] = useState(null)
   const [placed] = useState(false) // reserved for future "success" UI
@@ -160,6 +163,9 @@ export function MarketplaceProductDetail() {
         delivery_place_id: deliveryPlaceId,
         delivery_lat: deliveryLat,
         delivery_lng: deliveryLng,
+        requested_delivery_date: requestedDeliveryDate.trim() || null,
+        occasion: occasion.trim() || null,
+        gift_message: giftMessage.trim() || null,
         provider: 'paystack',
       })
       trackEvent('order_placed')
@@ -232,6 +238,12 @@ export function MarketplaceProductDetail() {
                   <div className="mt-2 text-sm text-slate-600">
                     Available: {product?.quantity ?? '—'} {product?.unit ?? ''}
                   </div>
+                  {product?.recipe ? (
+                    <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm text-slate-700">
+                      <span className="font-semibold text-slate-800">Contents:</span>{' '}
+                      <span className="whitespace-pre-wrap">{product.recipe}</span>
+                    </div>
+                  ) : null}
                   <div className="mt-4 text-lg font-semibold">GHS {product?.price ?? '—'}</div>
                 </div>
               </div>
@@ -302,6 +314,50 @@ export function MarketplaceProductDetail() {
                         value={qty}
                         onChange={(e) => setQty(e.target.value)}
                         required
+                        disabled={busy || !canOrder}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="order_delivery_date">Delivery date (optional)</Label>
+                      <Input
+                        id="order_delivery_date"
+                        type="date"
+                        value={requestedDeliveryDate}
+                        onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                        disabled={busy || !canOrder}
+                      />
+                      <div className="mt-2 text-xs text-slate-500">
+                        When you need this delivered (e.g. for a specific occasion).
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="order_occasion">Occasion (optional)</Label>
+                      <Select
+                        id="order_occasion"
+                        value={occasion}
+                        onChange={(e) => setOccasion(e.target.value)}
+                        disabled={busy || !canOrder}
+                      >
+                        <option value="">None</option>
+                        <option value="Birthday">Birthday</option>
+                        <option value="Valentine's">Valentine's</option>
+                        <option value="Mother's Day">Mother's Day</option>
+                        <option value="Sympathy">Sympathy</option>
+                        <option value="Get well">Get well</option>
+                        <option value="Thank you">Thank you</option>
+                        <option value="Anniversary">Anniversary</option>
+                        <option value="Just because">Just because</option>
+                        <option value="Other">Other</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="order_gift_message">Gift / card message (optional)</Label>
+                      <Textarea
+                        id="order_gift_message"
+                        value={giftMessage}
+                        onChange={(e) => setGiftMessage(e.target.value)}
+                        placeholder="e.g. Happy birthday! Love from us"
+                        rows={2}
                         disabled={busy || !canOrder}
                       />
                     </div>

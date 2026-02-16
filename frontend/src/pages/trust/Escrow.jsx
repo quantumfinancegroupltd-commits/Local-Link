@@ -33,6 +33,13 @@ export function TrustEscrow() {
           </div>
         </div>
 
+        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+          <div className="text-sm font-semibold text-emerald-900">When providers get paid</div>
+          <div className="mt-2 text-sm text-emerald-800">
+            After release, providers withdraw to Mobile Money or bank. Payouts are processed within <strong>5 business days</strong>. Auto-payout is on the roadmap.
+          </div>
+        </div>
+
         <div className="mt-4 rounded-2xl border bg-white p-4">
           <div className="text-sm font-semibold">Disputes</div>
           <div className="mt-2 text-sm text-slate-700">

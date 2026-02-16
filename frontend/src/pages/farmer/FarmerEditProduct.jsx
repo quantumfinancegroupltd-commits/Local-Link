@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
-import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
+import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '../../lib/productCategories.js'
 
@@ -30,6 +30,7 @@ export function FarmerEditProduct() {
   const [quantity, setQuantity] = useState('')
   const [unit, setUnit] = useState('kg')
   const [price, setPrice] = useState('')
+  const [recipe, setRecipe] = useState('')
   const [status, setStatus] = useState('available')
   const [imageUrl, setImageUrl] = useState('')
 
@@ -59,6 +60,7 @@ export function FarmerEditProduct() {
         setQuantity(String(p.quantity ?? ''))
         setUnit(p.unit ?? 'kg')
         setPrice(String(p.price ?? ''))
+        setRecipe(String(p.recipe ?? ''))
         setStatus(p.status ?? 'available')
         setImageUrl(p.image_url ?? '')
         setExistingMedia(normalizeMedia(p.media))
@@ -130,6 +132,7 @@ export function FarmerEditProduct() {
         status,
         image_url: nextImageUrl,
         media: mergedMedia.length ? mergedMedia : null,
+        recipe: recipe.trim() || null,
       })
 
       navigate('/farmer', { replace: true })
@@ -221,6 +224,19 @@ export function FarmerEditProduct() {
                 <Input value={price} onChange={(e) => setPrice(e.target.value)} type="number" min="1" required />
               </div>
             </div>
+
+            {category === 'flowers' ? (
+              <div>
+                <Label>Bouquet recipe / contents (optional)</Label>
+                <Textarea
+                  value={recipe}
+                  onChange={(e) => setRecipe(e.target.value)}
+                  placeholder="e.g. 12 roses, 4 eucalyptus stems, ribbon"
+                  rows={2}
+                />
+                <div className="mt-2 text-xs text-slate-500">What’s in this bouquet or arrangement (stems, foliage, wrap).</div>
+              </div>
+            ) : null}
 
             <div>
               <Label>Existing media</Label>

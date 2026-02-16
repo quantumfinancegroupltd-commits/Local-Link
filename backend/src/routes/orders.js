@@ -24,6 +24,9 @@ const CreateSchema = z.object({
   dropoff_place_id: z.string().optional().nullable(),
   dropoff_lat: z.number().min(-90).max(90).optional().nullable(),
   dropoff_lng: z.number().min(-180).max(180).optional().nullable(),
+  requested_delivery_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  occasion: z.string().max(80).optional().nullable(),
+  gift_message: z.string().max(2000).optional().nullable(),
 })
 
 ordersRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
@@ -205,14 +208,18 @@ ordersRouter.post('/', requireAuth, requireRole(['buyer']), asyncHandler(async (
 
     // Note: orders table stores delivery geo as delivery_* columns (migration 025).
     // deliveries table stores dropoff_* columns for live tracking & metrics.
+    const requestedDeliveryDate = parsed.data.requested_delivery_date ?? null
+    const occasion = parsed.data.occasion ?? null
+    const giftMessage = parsed.data.gift_message ?? null
     const r = await client.query(
       `insert into orders (
          product_id, buyer_id, farmer_id, quantity, total_price,
          delivery_address, delivery_fee,
          delivery_place_id, delivery_lat, delivery_lng,
+         requested_delivery_date, occasion, gift_message,
          payment_status, order_status
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending','pending')
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending','pending')
        returning *`,
       [
         parsed.data.product_id,
@@ -225,6 +232,9 @@ ordersRouter.post('/', requireAuth, requireRole(['buyer']), asyncHandler(async (
         dropoff_place_id,
         dropoff_lat,
         dropoff_lng,
+        requestedDeliveryDate,
+        occasion,
+        giftMessage,
       ],
     )
     const order = r.rows[0]

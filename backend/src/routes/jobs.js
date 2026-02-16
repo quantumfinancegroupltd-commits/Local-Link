@@ -229,6 +229,11 @@ const CreateJobSchema = z.object({
   location_place_id: z.string().nullable().optional(),
   location_lat: z.number().min(-90).max(90).nullable().optional(),
   location_lng: z.number().min(-180).max(180).nullable().optional(),
+  access_instructions: z.string().max(2000).optional().nullable(),
+  // Events & Catering: menu, head count, equipment
+  event_head_count: z.number().int().min(1).max(100000).optional().nullable(),
+  event_menu_notes: z.string().max(5000).optional().nullable(),
+  event_equipment: z.string().max(2000).optional().nullable(),
 })
 
 jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(async (req, res) => {
@@ -250,6 +255,10 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
     location_place_id,
     location_lat,
     location_lng,
+    access_instructions: accessInstructions,
+    event_head_count: eventHeadCount,
+    event_menu_notes: eventMenuNotes,
+    event_equipment: eventEquipment,
   } = parsed.data
 
   // IMPORTANT: node-postgres treats JS Arrays as Postgres array literals ("{...}"), not JSON.
@@ -260,8 +269,8 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
   const recurringEndDateVal = recurringEndDate && recurringEndDate !== '' ? recurringEndDate : null
 
   const r = await pool.query(
-    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng)
-     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15)
+    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng, access_instructions, event_head_count, event_menu_notes, event_equipment)
+     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19)
      returning *`,
     [
       req.user.sub,
@@ -279,6 +288,10 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
       location_place_id ?? null,
       location_lat ?? null,
       location_lng ?? null,
+      accessInstructions ?? null,
+      eventHeadCount ?? null,
+      eventMenuNotes ?? null,
+      eventEquipment ?? null,
     ],
   )
   return res.status(201).json(r.rows[0])

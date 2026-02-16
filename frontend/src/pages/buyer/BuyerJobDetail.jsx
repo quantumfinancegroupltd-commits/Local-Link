@@ -493,8 +493,8 @@ export function BuyerJobDetail() {
                 </Button>
               ) : null}
               {job?.status === 'completed' && job?.category === 'Domestic Services' ? (
-                <Link to="/buyer/jobs/new?category=Domestic%20Services">
-                  <Button variant="secondary">Book again (cleaning/laundry)</Button>
+                <Link to={`/buyer/jobs/new?rebook=${encodeURIComponent(job.id)}`}>
+                  <Button variant="secondary">Rebook this slot</Button>
                 </Link>
               ) : null}
             </div>
@@ -543,6 +543,22 @@ export function BuyerJobDetail() {
               </div>
             ) : null}
             <div className="mt-4 text-sm text-slate-700 whitespace-pre-wrap">{job?.description || '—'}</div>
+            {job?.access_instructions ? (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                <div className="font-semibold text-slate-800">Access instructions</div>
+                <div className="mt-1 whitespace-pre-wrap text-slate-700">{job.access_instructions}</div>
+              </div>
+            ) : null}
+            {(job?.event_head_count != null || job?.event_menu_notes || job?.event_equipment) ? (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                <div className="font-semibold text-slate-800">Event details</div>
+                <div className="mt-2 space-y-2">
+                  {job?.event_head_count != null ? <div><span className="font-medium text-slate-700">Head count:</span> {Number(job.event_head_count)} guests</div> : null}
+                  {job?.event_menu_notes ? <div><span className="font-medium text-slate-700">Menu notes:</span><div className="mt-1 whitespace-pre-wrap text-slate-700">{job.event_menu_notes}</div></div> : null}
+                  {job?.event_equipment ? <div><span className="font-medium text-slate-700">Equipment:</span><div className="mt-1 whitespace-pre-wrap text-slate-700">{job.event_equipment}</div></div> : null}
+                </div>
+              </div>
+            ) : null}
             {(job?.scheduled_at || job?.recurring_frequency) ? (
               <div className="mt-4 flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
                 {job?.scheduled_at ? (

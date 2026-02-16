@@ -13,7 +13,7 @@ export function FarmerOrders() {
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [orders, setOrders] = useState([])
-  const [tab, setTab] = useState('active') // active | pending | confirmed | dispatched | delivered | cancelled | all
+  const [tab, setTab] = useState('active') // active | pending | ... | all | by_date
   const [query, setQuery] = useState('')
   const [exportBusy, setExportBusy] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -48,7 +48,7 @@ export function FarmerOrders() {
   useEffect(() => {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')
-    const allowed = new Set(['active', 'pending', 'confirmed', 'dispatched', 'delivered', 'cancelled', 'all'])
+    const allowed = new Set(['active', 'pending', 'confirmed', 'dispatched', 'delivered', 'cancelled', 'all', 'by_date'])
     if (nextTab && allowed.has(nextTab) && nextTab !== tab) setTab(nextTab)
     if (nextQ !== query) setQuery(nextQ)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -171,17 +171,133 @@ export function FarmerOrders() {
     const q = String(query || '').trim().toLowerCase()
     return list.filter((o) => {
       const s = String(o?.order_status || 'pending')
-      if (tab === 'active' && ['cancelled', 'delivered'].includes(s)) return false
-      if (tab === 'pending' && s !== 'pending') return false
-      if (tab === 'confirmed' && s !== 'confirmed') return false
-      if (tab === 'dispatched' && s !== 'dispatched') return false
-      if (tab === 'delivered' && s !== 'delivered') return false
-      if (tab === 'cancelled' && s !== 'cancelled') return false
+      if (tab !== 'by_date') {
+        if (tab === 'active' && ['cancelled', 'delivered'].includes(s)) return false
+        if (tab === 'pending' && s !== 'pending') return false
+        if (tab === 'confirmed' && s !== 'confirmed') return false
+        if (tab === 'dispatched' && s !== 'dispatched') return false
+        if (tab === 'delivered' && s !== 'delivered') return false
+        if (tab === 'cancelled' && s !== 'cancelled') return false
+      }
       if (!q) return true
       const hay = `${o?.product_name ?? ''} ${o?.buyer_name ?? ''} ${o?.pickup_location ?? ''} ${o?.dropoff_location ?? ''} ${o?.dropoff_address ?? ''}`.toLowerCase()
       return hay.includes(q)
     })
   }, [orders, tab, query])
+
+  const ordersGroupedByDate = useMemo(() => {
+    if (tab !== 'by_date') return []
+    const groups = {}
+    for (const o of filtered) {
+      const dateStr = o.requested_delivery_date || (o.created_at ? new Date(o.created_at).toISOString().slice(0, 10) : null)
+      const key = dateStr || 'no_date'
+      const sortKey = dateStr ? new Date(dateStr + 'T12:00:00Z').getTime() : Number.MAX_SAFE_INTEGER
+      if (!groups[key]) groups[key] = { key, sortKey, orders: [] }
+      groups[key].orders.push(o)
+    }
+    return Object.values(groups).sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0))
+  }, [tab, filtered])
+
+  function formatGroupLabel(key) {
+    if (key === 'no_date') return 'No date set'
+    try {
+      const d = new Date(key + 'T12:00:00Z')
+      return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    } catch {
+      return key
+    }
+  }
+
+  function orderCard(o) {
+    const qty = `${o.quantity ?? '—'}`
+    const buyerName = o.buyer_name || 'Buyer'
+    const productName = o.product_name || 'Product'
+    const produceEscrow = o.produce_escrow_status || o.payment_status || '—'
+    const deliveryStatus = o.delivery_status || 'created'
+    const deliveryId = o.delivery_id
+    const expanded = expandedDeliveryId && deliveryId && expandedDeliveryId === deliveryId
+    const metrics = deliveryId ? metricsByDeliveryId[deliveryId] : null
+    return (
+      <Card key={o.id}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">{productName}</div>
+            <div className="mt-1 text-xs text-slate-600">
+              Qty: {qty} • Order: <span className="font-semibold">{o.order_status}</span>
+              {o.requested_delivery_date ? (
+                <span className="ml-2 text-slate-700"> • Deliver by: {new Date(o.requested_delivery_date + 'T12:00:00').toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
+              ) : null}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <StatusPill status={produceEscrow} label={`Escrow: ${produceEscrow}`} />
+              <StatusPill status={deliveryStatus} label={`Delivery: ${deliveryStatus}`} />
+            </div>
+            {String(o.produce_escrow_status || '') === 'disputed' ? (
+              <NextStepBanner
+                className="mt-3"
+                variant="warning"
+                title={`Dispute: ${o.produce_dispute_status === 'open' ? 'Open' : o.produce_dispute_status === 'under_review' ? 'Under review' : o.produce_dispute_status === 'resolved' ? 'Resolved' : 'Disputed'}`}
+                description={
+                  o.produce_dispute_status === 'open'
+                    ? 'Admin will review shortly. No action needed.'
+                    : o.produce_dispute_status === 'under_review'
+                      ? 'Admin is reviewing. You'll be notified when resolved.'
+                      : o.produce_dispute_status === 'resolved'
+                        ? 'Resolved. Payout applied per admin decision.'
+                        : 'Escrow is frozen while the dispute is reviewed.'
+                }
+              />
+            ) : null}
+            <div className="mt-2 text-xs text-slate-600">
+              Buyer: <span className="font-semibold text-slate-800">{buyerName}</span>
+              {o.buyer_rating != null ? <span className="text-slate-500"> • Rating {Number(o.buyer_rating).toFixed(1)}</span> : null}
+            </div>
+            {(o.occasion || o.gift_message) ? (
+              <div className="mt-2 space-y-1 rounded-lg border border-slate-200 bg-slate-50/80 p-2 text-xs text-slate-700">
+                {o.occasion ? <div><span className="font-medium">Occasion:</span> {o.occasion}</div> : null}
+                {o.gift_message ? <div><span className="font-medium">Message:</span> <span className="whitespace-pre-wrap">{o.gift_message}</span></div> : null}
+              </div>
+            ) : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link to={`/messages/order/${o.id}`}>
+              <Button variant="secondary">Message</Button>
+            </Link>
+            <Button
+              variant="secondary"
+              disabled={!deliveryId}
+              onClick={() => toggleTracking(deliveryId)}
+              title={!deliveryId ? 'Delivery not created yet' : 'View tracking'}
+            >
+              {expanded ? 'Hide tracking' : metricsBusyId === deliveryId ? 'Loading…' : 'Track delivery'}
+            </Button>
+          </div>
+        </div>
+        {expanded ? (
+          <div className="mt-4 space-y-3">
+            {metricsError ? <div className="text-sm text-red-700">{metricsError}</div> : null}
+            <StatusTimeline
+              items={buildDeliveryTimeline({
+                status: deliveryStatus,
+                hasDriver: Boolean(o.driver_user_id),
+              })}
+              metrics={metrics}
+            />
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="rounded-xl border bg-slate-50 p-3 text-sm">
+                <div className="text-xs text-slate-600">Pickup</div>
+                <div className="mt-1 font-medium text-slate-900">{o.pickup_location || '—'}</div>
+              </div>
+              <div className="rounded-xl border bg-slate-50 p-3 text-sm">
+                <div className="text-xs text-slate-600">Drop-off</div>
+                <div className="mt-1 font-medium text-slate-900">{o.dropoff_location || '—'}</div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </Card>
+    )
+  }
 
   async function toggleTracking(deliveryId) {
     setMetricsError(null)
@@ -261,6 +377,9 @@ export function FarmerOrders() {
           <Button variant={tab === 'all' ? 'primary' : 'secondary'} onClick={() => setTab('all')}>
             All ({counts.all})
           </Button>
+          <Button variant={tab === 'by_date' ? 'primary' : 'secondary'} onClick={() => setTab('by_date')}>
+            By date ({filtered.length})
+          </Button>
         </div>
       </Card>
 
@@ -276,92 +395,20 @@ export function FarmerOrders() {
         <Card>
           <div className="text-sm text-slate-600">No orders found for this view.</div>
         </Card>
+      ) : tab === 'by_date' ? (
+        <div className="space-y-6">
+          {ordersGroupedByDate.map((grp) => (
+            <div key={grp.key}>
+              <div className="mb-2 text-sm font-semibold text-slate-700">{formatGroupLabel(grp.key)}</div>
+              <div className="space-y-3">
+                {grp.orders.map((o) => orderCard(o))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="space-y-3">
-          {filtered.map((o) => {
-            const qty = `${o.quantity ?? '—'}`
-            const buyerName = o.buyer_name || 'Buyer'
-            const productName = o.product_name || 'Product'
-            const produceEscrow = o.produce_escrow_status || o.payment_status || '—'
-            const deliveryStatus = o.delivery_status || 'created'
-            const deliveryId = o.delivery_id
-            const expanded = expandedDeliveryId && deliveryId && expandedDeliveryId === deliveryId
-            const metrics = deliveryId ? metricsByDeliveryId[deliveryId] : null
-
-            return (
-              <Card key={o.id}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">{productName}</div>
-                    <div className="mt-1 text-xs text-slate-600">
-                      Qty: {qty} • Order: <span className="font-semibold">{o.order_status}</span>
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <StatusPill status={produceEscrow} label={`Escrow: ${produceEscrow}`} />
-                      <StatusPill status={deliveryStatus} label={`Delivery: ${deliveryStatus}`} />
-                    </div>
-                    {String(o.produce_escrow_status || '') === 'disputed' ? (
-                      <NextStepBanner
-                        className="mt-3"
-                        variant="warning"
-                        title={`Dispute: ${o.produce_dispute_status === 'open' ? 'Open' : o.produce_dispute_status === 'under_review' ? 'Under review' : o.produce_dispute_status === 'resolved' ? 'Resolved' : 'Disputed'}`}
-                        description={
-                          o.produce_dispute_status === 'open'
-                            ? 'Admin will review shortly. No action needed.'
-                            : o.produce_dispute_status === 'under_review'
-                              ? 'Admin is reviewing. You’ll be notified when resolved.'
-                              : o.produce_dispute_status === 'resolved'
-                                ? 'Resolved. Payout applied per admin decision.'
-                                : 'Escrow is frozen while the dispute is reviewed.'
-                        }
-                      />
-                    ) : null}
-                    <div className="mt-2 text-xs text-slate-600">
-                      Buyer: <span className="font-semibold text-slate-800">{buyerName}</span>
-                      {o.buyer_rating != null ? <span className="text-slate-500"> • Rating {Number(o.buyer_rating).toFixed(1)}</span> : null}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link to={`/messages/order/${o.id}`}>
-                      <Button variant="secondary">Message</Button>
-                    </Link>
-                    <Button
-                      variant="secondary"
-                      disabled={!deliveryId}
-                      onClick={() => toggleTracking(deliveryId)}
-                      title={!deliveryId ? 'Delivery not created yet' : 'View tracking'}
-                    >
-                      {expanded ? 'Hide tracking' : metricsBusyId === deliveryId ? 'Loading…' : 'Track delivery'}
-                    </Button>
-                  </div>
-                </div>
-
-                {expanded ? (
-                  <div className="mt-4 space-y-3">
-                    {metricsError ? <div className="text-sm text-red-700">{metricsError}</div> : null}
-                    <StatusTimeline
-                      items={buildDeliveryTimeline({
-                        status: deliveryStatus,
-                        hasDriver: Boolean(o.driver_user_id),
-                      })}
-                      metrics={metrics}
-                    />
-                    <div className="grid gap-2 md:grid-cols-2">
-                      <div className="rounded-xl border bg-slate-50 p-3 text-sm">
-                        <div className="text-xs text-slate-600">Pickup</div>
-                        <div className="mt-1 font-medium text-slate-900">{o.pickup_location || '—'}</div>
-                      </div>
-                      <div className="rounded-xl border bg-slate-50 p-3 text-sm">
-                        <div className="text-xs text-slate-600">Drop-off</div>
-                        <div className="mt-1 font-medium text-slate-900">{o.dropoff_location || '—'}</div>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-              </Card>
-            )
-          })}
+          {filtered.map((o) => orderCard(o))}
         </div>
       )}
     </div>

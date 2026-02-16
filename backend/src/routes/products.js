@@ -186,6 +186,7 @@ const CreateSchema = z.object({
     )
     .optional()
     .nullable(),
+  recipe: z.string().max(2000).optional().nullable(),
 })
 
 productsRouter.post('/', requireAuth, requireRole(['farmer']), requireIdVerified(), asyncHandler(async (req, res) => {
@@ -201,13 +202,13 @@ productsRouter.post('/', requireAuth, requireRole(['farmer']), requireIdVerified
     farmerRes.rows[0] = created.rows[0]
   }
 
-  const { name, category, quantity, unit, price, image_url, media } = parsed.data
+  const { name, category, quantity, unit, price, image_url, media, recipe } = parsed.data
   const mediaJson = media == null ? null : JSON.stringify(media)
   const r = await pool.query(
-    `insert into products (farmer_id, name, category, quantity, unit, price, image_url, media, status, created_at, updated_at)
-     values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,'available',now(),now())
+    `insert into products (farmer_id, name, category, quantity, unit, price, image_url, media, recipe, status, created_at, updated_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,'available',now(),now())
      returning *`,
-    [farmerRes.rows[0].id, name, category, quantity, unit, price, image_url ?? null, mediaJson],
+    [farmerRes.rows[0].id, name, category, quantity, unit, price, image_url ?? null, mediaJson, recipe ?? null],
   )
 
   return res.status(201).json(r.rows[0])
@@ -221,6 +222,7 @@ const UpdateSchema = z.object({
   price: z.number().positive().optional(),
   status: z.enum(['available', 'sold', 'pending', 'cancelled']).optional(),
   image_url: z.string().min(1).nullable().optional(),
+  recipe: z.string().max(2000).optional().nullable(),
   media: z
     .array(
       z.object({
@@ -273,6 +275,7 @@ productsRouter.put('/:id', requireAuth, asyncHandler(async (req, res) => {
       status: parsed.data.status ?? product.status,
       image_url: parsed.data.image_url === undefined ? product.image_url : parsed.data.image_url,
       media: parsed.data.media === undefined ? product.media : parsed.data.media,
+      recipe: parsed.data.recipe === undefined ? product.recipe : parsed.data.recipe,
     }
 
     const mediaJson = next.media == null ? null : JSON.stringify(next.media)
@@ -287,6 +290,7 @@ productsRouter.put('/:id', requireAuth, asyncHandler(async (req, res) => {
            status=$7,
            image_url=$8,
            media=$9::jsonb,
+           recipe=$10,
            updated_at=now()
        where id=$1
        returning *`,
@@ -300,6 +304,7 @@ productsRouter.put('/:id', requireAuth, asyncHandler(async (req, res) => {
         next.status,
         next.image_url ?? null,
         mediaJson,
+        next.recipe ?? null,
       ],
     )
 

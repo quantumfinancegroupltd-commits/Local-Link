@@ -28,6 +28,10 @@ export function BuyerPostJob() {
   const [scheduledEndAt, setScheduledEndAt] = useState('')
   const [recurringFrequency, setRecurringFrequency] = useState('')
   const [recurringEndDate, setRecurringEndDate] = useState('')
+  const [accessInstructions, setAccessInstructions] = useState('')
+  const [eventHeadCount, setEventHeadCount] = useState('')
+  const [eventMenuNotes, setEventMenuNotes] = useState('')
+  const [eventEquipment, setEventEquipment] = useState('')
   const [mediaFiles, setMediaFiles] = useState([]) // File[]
   const [mediaError, setMediaError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -48,14 +52,20 @@ export function BuyerPostJob() {
       scheduledEndAt,
       recurringFrequency,
       recurringEndDate,
+      accessInstructions,
+      eventHeadCount,
+      eventMenuNotes,
+      eventEquipment,
       saved_at: Date.now(),
     }),
-    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget, scheduledAt, scheduledEndAt, recurringFrequency, recurringEndDate],
+    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget, scheduledAt, scheduledEndAt, recurringFrequency, recurringEndDate, accessInstructions, eventHeadCount, eventMenuNotes, eventEquipment],
   )
   const draft = useDraftAutosave({ key: draftKey, data: draftData, enabled: true, debounceMs: 700 })
 
-  // Restore draft on first load if form is empty.
+  // Restore draft on first load if form is empty (skip when rebooking from a job).
   useEffect(() => {
+    const rebookId = params.get('rebook')
+    if (rebookId) return // rebook effect will pre-fill
     const empty = !title && !description && !category && !location && !budget
     if (!empty) return
     const d = draft.load()
@@ -72,8 +82,55 @@ export function BuyerPostJob() {
     setScheduledEndAt(String(d.scheduledEndAt ?? ''))
     setRecurringFrequency(String(d.recurringFrequency ?? ''))
     setRecurringEndDate(String(d.recurringEndDate ?? ''))
+    setAccessInstructions(String(d.accessInstructions ?? ''))
+    setEventHeadCount(String(d.eventHeadCount ?? ''))
+    setEventMenuNotes(String(d.eventMenuNotes ?? ''))
+    setEventEquipment(String(d.eventEquipment ?? ''))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Rebook this slot: pre-fill from a completed job (same cleaner/slot, next occurrence).
+  useEffect(() => {
+    const rebookId = params.get('rebook')
+    if (!rebookId) return
+    let cancelled = false
+    async function loadJob() {
+      try {
+        const res = await http.get(`/jobs/${rebookId}`)
+        const j = res.data?.job ?? res.data
+        if (!j || cancelled) return
+        setCategory(String(j.category ?? 'Domestic Services'))
+        setTitle(String(j.title ?? ''))
+        setDescription(String(j.description ?? ''))
+        setLocation(String(j.location ?? ''))
+        setLocationLat(j.location_lat != null ? Number(j.location_lat) : null)
+        setLocationLng(j.location_lng != null ? Number(j.location_lng) : null)
+        setLocationPlaceId(j.location_place_id ?? null)
+        setBudget(j.budget != null ? String(j.budget) : '')
+        setAccessInstructions(String(j.access_instructions ?? ''))
+        setRecurringFrequency(String(j.recurring_frequency ?? ''))
+        setRecurringEndDate(j.recurring_end_date ? String(j.recurring_end_date).slice(0, 10) : '')
+        const freq = String(j.recurring_frequency ?? '')
+        const prevAt = j.scheduled_at ? new Date(j.scheduled_at) : null
+        if (prevAt && (freq === 'weekly' || freq === 'monthly')) {
+          const next = new Date(prevAt)
+          if (freq === 'weekly') next.setDate(next.getDate() + 7)
+          else next.setMonth(next.getMonth() + 1)
+          const y = next.getFullYear()
+          const m = String(next.getMonth() + 1).padStart(2, '0')
+          const d = String(next.getDate()).padStart(2, '0')
+          const h = String(next.getHours()).padStart(2, '0')
+          const min = String(next.getMinutes()).padStart(2, '0')
+          setScheduledAt(`${y}-${m}-${d}T${h}:${min}`)
+        }
+      } catch {
+        if (!cancelled) toast.warning('Could not load job', 'Rebook pre-fill skipped. You can still post a new job.')
+      }
+    }
+    loadJob()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.get('rebook')])
 
   const previews = useMemo(() => {
     return mediaFiles.map((f) => ({
@@ -159,6 +216,10 @@ export function BuyerPostJob() {
         scheduled_end_at: scheduledEndAt.trim() || null,
         recurring_frequency: recurringFrequency || null,
         recurring_end_date: recurringEndDate.trim() || null,
+        access_instructions: accessInstructions.trim() || null,
+        event_head_count: eventHeadCount.trim() ? Number(eventHeadCount) : null,
+        event_menu_notes: eventMenuNotes.trim() || null,
+        event_equipment: eventEquipment.trim() || null,
         image_url,
         media,
         location_place_id: locationPlaceId,
@@ -203,6 +264,10 @@ export function BuyerPostJob() {
                 setScheduledEndAt('')
                 setRecurringFrequency('')
                 setRecurringEndDate('')
+                setAccessInstructions('')
+                setEventHeadCount('')
+                setEventMenuNotes('')
+                setEventEquipment('')
                 setMediaFiles([])
               }}
             >
@@ -210,6 +275,12 @@ export function BuyerPostJob() {
             </Button>
           </div>
         </div>
+
+        {params.get('rebook') ? (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <span className="font-semibold">Rebook this slot</span> — Form pre-filled from your previous booking. Confirm or edit the details, then post to book the next session.
+          </div>
+        ) : null}
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
           <div>
@@ -250,29 +321,69 @@ export function BuyerPostJob() {
           </div>
 
           {category === 'Events & Catering' ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="job_scheduled_at">Event date & time</Label>
-                <Input
-                  id="job_scheduled_at"
-                  type="datetime-local"
-                  value={scheduledAt}
-                  onChange={(e) => setScheduledAt(e.target.value)}
-                  disabled={busy}
-                />
-                <div className="mt-2 text-xs text-slate-500">When the event or service is scheduled. Escrow secures the booking.</div>
+            <>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="job_scheduled_at">Event date & time</Label>
+                  <Input
+                    id="job_scheduled_at"
+                    type="datetime-local"
+                    value={scheduledAt}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                    disabled={busy}
+                  />
+                  <div className="mt-2 text-xs text-slate-500">When the event or service is scheduled. Escrow secures the booking.</div>
+                </div>
+                <div>
+                  <Label htmlFor="job_scheduled_end_at">End time (optional)</Label>
+                  <Input
+                    id="job_scheduled_end_at"
+                    type="datetime-local"
+                    value={scheduledEndAt}
+                    onChange={(e) => setScheduledEndAt(e.target.value)}
+                    disabled={busy}
+                  />
+                </div>
               </div>
               <div>
-                <Label htmlFor="job_scheduled_end_at">End time (optional)</Label>
+                <Label htmlFor="job_event_head_count">Head count (optional)</Label>
                 <Input
-                  id="job_scheduled_end_at"
-                  type="datetime-local"
-                  value={scheduledEndAt}
-                  onChange={(e) => setScheduledEndAt(e.target.value)}
+                  id="job_event_head_count"
+                  type="number"
+                  min="1"
+                  max="100000"
+                  value={eventHeadCount}
+                  onChange={(e) => setEventHeadCount(e.target.value)}
+                  placeholder="e.g. 50"
                   disabled={busy}
                 />
+                <div className="mt-2 text-xs text-slate-500">Expected number of guests — helps caterers quote accurately.</div>
               </div>
-            </div>
+              <div>
+                <Label htmlFor="job_event_menu_notes">Menu / catering notes (optional)</Label>
+                <Textarea
+                  id="job_event_menu_notes"
+                  value={eventMenuNotes}
+                  onChange={(e) => setEventMenuNotes(e.target.value)}
+                  placeholder="e.g. 3-course sit-down, vegetarian options for 10, soft drinks + wine"
+                  rows={3}
+                  disabled={busy}
+                />
+                <div className="mt-2 text-xs text-slate-500">Meals, drinks, dietary requirements. Confirm with your caterer before the event.</div>
+              </div>
+              <div>
+                <Label htmlFor="job_event_equipment">Equipment needed (optional)</Label>
+                <Textarea
+                  id="job_event_equipment"
+                  value={eventEquipment}
+                  onChange={(e) => setEventEquipment(e.target.value)}
+                  placeholder="e.g. chairs, tables, tents, cutlery, glassware"
+                  rows={2}
+                  disabled={busy}
+                />
+                <div className="mt-2 text-xs text-slate-500">Chairs, tents, tables, etc. — or note if venue provides.</div>
+              </div>
+            </>
           ) : null}
 
           {category === 'Domestic Services' ? (
@@ -303,6 +414,21 @@ export function BuyerPostJob() {
               </div>
             </div>
           ) : null}
+
+          <div>
+            <Label htmlFor="job_access_instructions">Access instructions (optional)</Label>
+            <Textarea
+              id="job_access_instructions"
+              value={accessInstructions}
+              onChange={(e) => setAccessInstructions(e.target.value)}
+              placeholder="e.g. key code, gate code, door entry, where to collect keys"
+              rows={2}
+              disabled={busy}
+            />
+            <div className="mt-2 text-xs text-slate-500">
+              {category === 'Domestic Services' ? 'Cleaners need this to get in — key code, gate, building access.' : 'Help providers access the site (codes, entry instructions).'}
+            </div>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>

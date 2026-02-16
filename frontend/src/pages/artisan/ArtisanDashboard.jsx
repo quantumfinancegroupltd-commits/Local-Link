@@ -67,7 +67,7 @@ export function ArtisanDashboard() {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')
     const nextCat = String(searchParams.get('category') || '')
-    const allowed = new Set(['all', 'new', 'quoted', 'booked', 'in_progress', 'completed', 'paid', 'disputed', 'rejected'])
+    const allowed = new Set(['all', 'new', 'quoted', 'booked', 'in_progress', 'completed', 'paid', 'disputed', 'rejected', 'by_date'])
     if (nextTab && allowed.has(nextTab) && nextTab !== jobsTab) setJobsTab(nextTab)
     if (nextQ !== query) setQuery(nextQ)
     if (nextCat !== category) setCategory(nextCat)
@@ -199,6 +199,7 @@ export function ArtisanDashboard() {
   const stages = useMemo(
     () => [
       { key: 'all', label: 'All' },
+      { key: 'by_date', label: 'By date' },
       { key: 'new', label: 'New' },
       { key: 'quoted', label: 'Quoted' },
       { key: 'booked', label: 'Booked' },
@@ -210,6 +211,44 @@ export function ArtisanDashboard() {
     ],
     [],
   )
+
+  // For "By date" view: group jobs by event/scheduled date or recurring/no date
+  const jobsForDateView = useMemo(() => {
+    const list = Array.isArray(jobs) ? jobs : []
+    const q = String(query || '').trim().toLowerCase()
+    const cat = String(category || '').trim()
+    return list.filter((j) => {
+      if (!j) return false
+      if (cat && (j?.category ?? '') !== cat) return false
+      if (!q) return true
+      const hay = `${j.title ?? ''} ${j.description ?? ''} ${j.location ?? ''} ${j.category ?? ''}`.toLowerCase()
+      return hay.includes(q)
+    })
+  }, [jobs, query, category])
+
+  const jobsGroupedByDate = useMemo(() => {
+    const groups = {}
+    const now = Date.now()
+    for (const j of jobsForDateView) {
+      let key
+      let sortKey
+      if (j.scheduled_at) {
+        const d = new Date(j.scheduled_at)
+        key = d.toISOString().slice(0, 10) // YYYY-MM-DD
+        sortKey = d.getTime()
+      } else if (j.recurring_frequency) {
+        key = 'recurring'
+        sortKey = Number.MAX_SAFE_INTEGER - 1
+      } else {
+        key = 'no_date'
+        sortKey = Number.MAX_SAFE_INTEGER
+      }
+      if (!groups[key]) groups[key] = { key, sortKey, jobs: [] }
+      groups[key].jobs.push(j)
+    }
+    // Sort: dates chronological (soonest first), then recurring, then no_date
+    return Object.values(groups).sort((a, b) => (a.sortKey ?? 0) - (b.sortKey ?? 0))
+  }, [jobsForDateView])
 
   const filtered = useMemo(() => {
     const q = String(query || '').trim().toLowerCase()
@@ -484,6 +523,12 @@ export function ArtisanDashboard() {
           <>
             {walletTab === 'payouts' ? (
               <div className="mt-4 space-y-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-sm text-emerald-900">
+                  <div className="font-semibold">When you get paid</div>
+                  <p className="mt-1 text-emerald-800">
+                    Payouts are processed within <strong>5 business days</strong> after you request a withdrawal. Our team reviews each request and will notify you once the transfer is made. Auto-payout (e.g. MoMo) is on the roadmap.
+                  </p>
+                </div>
                 <div className="rounded-2xl border bg-slate-50 p-4">
                   <div className="text-sm font-semibold">Request withdrawal</div>
                   <div className="mt-3 grid gap-4 md:grid-cols-3">
@@ -681,7 +726,7 @@ export function ArtisanDashboard() {
 
         <div className="mt-3 flex flex-wrap gap-2">
           {stages.map((t) => {
-            const n = t.key === 'all' ? (Array.isArray(jobs) ? jobs.length : 0) : Number(jobCounts?.[t.key] ?? 0)
+            const n = t.key === 'all' ? (Array.isArray(jobs) ? jobs.length : 0) : t.key === 'by_date' ? jobsForDateView.length : Number(jobCounts?.[t.key] ?? 0)
             const active = jobsTab === t.key
             return (
               <Button key={t.key} variant={active ? 'primary' : 'secondary'} onClick={() => setJobsTab(t.key)}>
@@ -695,6 +740,88 @@ export function ArtisanDashboard() {
           <div className="mt-3 text-sm text-slate-600">Loading…</div>
         ) : error ? (
           <div className="mt-3 text-sm text-red-700">{error}</div>
+        ) : jobsTab === 'by_date' ? (
+          jobsGroupedByDate.length === 0 ? (
+            <div className="mt-3 text-sm text-slate-600">No jobs with dates. Post a job with an event date or recurring pattern to see it here.</div>
+          ) : (
+            <div className="mt-3 space-y-6">
+              {jobsGroupedByDate.map((group) => (
+                <div key={group.key}>
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {group.key === 'recurring'
+                      ? 'Recurring'
+                      : group.key === 'no_date'
+                        ? 'No date set'
+                        : (() => {
+                            const d = new Date(group.key + 'T12:00:00')
+                            return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                          })()}
+                  </div>
+                  <div className="divide-y rounded-lg border border-slate-200 bg-slate-50/50">
+                    {group.jobs.map((j) => (
+                      <div key={j.id} className="bg-white p-3 first:rounded-t-lg last:rounded-b-lg">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <div className="text-sm font-semibold">{j.title || 'Job'}</div>
+                              {j.stage === 'new' && j.category && Array.isArray(artisanProfile?.job_categories) && artisanProfile.job_categories.includes(j.category) ? (
+                                <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Matches your services</span>
+                              ) : null}
+                              <StatusPill status={j.stage || j.status || 'open'} label={j.stage ? String(j.stage).replaceAll('_', ' ') : undefined} />
+                              {j?.recurring_frequency ? (
+                                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                                  {j.recurring_frequency}
+                                  {j.recurring_end_date ? ` until ${new Date(j.recurring_end_date).toLocaleDateString()}` : ''}
+                                </span>
+                              ) : null}
+                            </div>
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                              <span>{j.location || '—'}</span>
+                              {j.category ? (
+                                <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-slate-700">{j.category}</span>
+                              ) : null}
+                            </div>
+                            {j.access_instructions ? (
+                              <div className="mt-1 text-xs text-slate-600">
+                                <span className="font-medium text-slate-700">Access:</span> {String(j.access_instructions).slice(0, 80)}{String(j.access_instructions).length > 80 ? '…' : ''}
+                              </div>
+                            ) : null}
+                            {(j.event_head_count != null || j.event_menu_notes || j.event_equipment) ? (
+                              <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+                                {j.event_head_count != null ? <span className="font-medium text-slate-700">Guests: {Number(j.event_head_count)}</span> : null}
+                                {j.event_menu_notes ? <span className="text-slate-600">Menu: {String(j.event_menu_notes).slice(0, 50)}{String(j.event_menu_notes).length > 50 ? '…' : ''}</span> : null}
+                                {j.event_equipment ? <span className="text-slate-600">Equipment: {String(j.event_equipment).slice(0, 50)}{String(j.event_equipment).length > 50 ? '…' : ''}</span> : null}
+                              </div>
+                            ) : null}
+                            <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-600">
+                              {j?.budget != null && Number(j.budget) > 0 ? <span className="font-semibold text-slate-700">Budget: GHS {Number(j.budget).toFixed(0)}</span> : null}
+                              {j?.my_quote?.amount != null ? <span>Your quote: GHS {Number(j.my_quote.amount).toFixed(0)}</span> : null}
+                              {j?.accepted_quote != null ? <span>Accepted: GHS {Number(j.accepted_quote).toFixed(0)}</span> : null}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Link to={`/artisan/jobs/${j.id}`}>
+                              <Button variant="secondary">Open</Button>
+                            </Link>
+                            {String(j.status || '') === 'assigned' ? (
+                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => startJob(j.id)}>
+                                {jobActionBusyId === j.id ? 'Working…' : 'Start'}
+                              </Button>
+                            ) : null}
+                            {String(j.status || '') === 'in_progress' ? (
+                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => completeJob(j.id)}>
+                                {jobActionBusyId === j.id ? 'Working…' : 'Complete'}
+                              </Button>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         ) : filtered.length === 0 ? (
           <div className="mt-3 text-sm text-slate-600">No items found for this view.</div>
         ) : (
@@ -719,6 +846,18 @@ export function ArtisanDashboard() {
                         <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-slate-700">{j.category}</span>
                       ) : null}
                     </div>
+                    {j.access_instructions ? (
+                      <div className="mt-1 text-xs text-slate-600">
+                        <span className="font-medium text-slate-700">Access:</span> {String(j.access_instructions).slice(0, 80)}{String(j.access_instructions).length > 80 ? '…' : ''}
+                      </div>
+                    ) : null}
+                    {(j.event_head_count != null || j.event_menu_notes || j.event_equipment) ? (
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+                        {j.event_head_count != null ? <span className="font-medium text-slate-700">Guests: {Number(j.event_head_count)}</span> : null}
+                        {j.event_menu_notes ? <span>Menu: {String(j.event_menu_notes).slice(0, 50)}{String(j.event_menu_notes).length > 50 ? '…' : ''}</span> : null}
+                        {j.event_equipment ? <span>Equipment: {String(j.event_equipment).slice(0, 50)}{String(j.event_equipment).length > 50 ? '…' : ''}</span> : null}
+                      </div>
+                    ) : null}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-600">
                       {j?.budget != null && Number(j.budget) > 0 ? <span className="font-semibold text-slate-700">Budget: GHS {Number(j.budget).toFixed(0)}</span> : null}
                       {j?.my_quote?.amount != null ? <span>Your quote: GHS {Number(j.my_quote.amount).toFixed(0)}</span> : null}

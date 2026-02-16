@@ -17,14 +17,12 @@ services:
   api:
     build:
       context: ./backend
+    env_file: .env
     environment:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
-      JWT_SECRET: change_me_in_prod
-      # In production, set to your real domain(s), e.g. "https://locallink.agency,https://www.locallink.agency"
       CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
-      ADMIN_BOOTSTRAP_SECRET: change_me_in_prod
       # Run background jobs in the separate worker service
       SCHEDULERS_ENABLED: "false"
       # Used for payment callback redirects (Paystack/Flutterwave) and any absolute links.
@@ -45,12 +43,11 @@ services:
     build:
       context: ./backend
     command: ["node","src/worker.js"]
+    env_file: .env
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
-      JWT_SECRET: change_me_in_prod
       CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
-      ADMIN_BOOTSTRAP_SECRET: change_me_in_prod
       SCHEDULERS_ENABLED: "true"
       WEBHOOK_QUEUE_ENABLED: "true"
       AUTO_RELEASE_JOB_HOURS: 72

@@ -132,7 +132,10 @@ export function ArtisanAvailability() {
             ))}
             {days[0]?.getDay() ? Array.from({ length: days[0].getDay() }, (_, i) => <div key={`pad-${i}`} />) : null}
             {days.map((d) => {
-              const dateStr = d.toISOString().slice(0, 10)
+              const y = d.getFullYear()
+              const m = String(d.getMonth() + 1).padStart(2, '0')
+              const day = String(d.getDate()).padStart(2, '0')
+              const dateStr = `${y}-${m}-${day}`
               const isAvailable = availableDates.has(dateStr)
               const isPast = d < new Date(now.getFullYear(), now.getMonth(), now.getDate())
               return (

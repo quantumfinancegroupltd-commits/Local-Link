@@ -164,7 +164,13 @@ artisansRouter.get('/me/availability', requireAuth, requireRole(['artisan']), as
      order by date asc`,
     [req.user.sub, from, to],
   )
-  return res.json(r.rows.map((row) => row.date))
+  const dates = r.rows.map((row) => {
+    const d = row.date
+    if (d instanceof Date) return d.toISOString().slice(0, 10)
+    if (typeof d === 'string') return d.slice(0, 10)
+    return d
+  })
+  return res.json(dates)
 }))
 
 artisansRouter.get('/:userId/services', asyncHandler(async (req, res) => {
@@ -254,7 +260,14 @@ artisansRouter.get('/:userId/availability', asyncHandler(async (req, res) => {
      order by date asc`,
     [userId, from, to],
   )
-  return res.json(r.rows.map((row) => row.date))
+  // Return YYYY-MM-DD strings for consistent parsing (PostgreSQL date can come back as Date or ISO string)
+  const dates = r.rows.map((row) => {
+    const d = row.date
+    if (d instanceof Date) return d.toISOString().slice(0, 10)
+    if (typeof d === 'string') return d.slice(0, 10)
+    return d
+  })
+  return res.json(dates)
 }))
 
 const SetAvailabilitySchema = z.object({

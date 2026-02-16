@@ -1342,14 +1342,19 @@ export function PublicProfile() {
                   <div className="mt-3 text-sm text-slate-600">No dates set yet.</div>
                 ) : (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {availability.slice(0, 14).map((d) => (
-                      <span
-                        key={d}
-                        className="rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800"
-                      >
-                        {new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                      </span>
-                    ))}
+                    {availability.slice(0, 14).map((d) => {
+                      const ymd = typeof d === 'string' ? d.slice(0, 10) : (d?.toISOString?.()?.slice(0, 10) ?? '')
+                      const date = /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? new Date(ymd + 'T12:00:00') : null
+                      const label = date && Number.isFinite(date.getTime()) ? date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : ymd || '—'
+                      return (
+                        <span
+                          key={ymd || d}
+                          className="rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800"
+                        >
+                          {label}
+                        </span>
+                      )
+                    })}
                     {availability.length > 14 ? (
                       <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm text-slate-600">
                         +{availability.length - 14} more

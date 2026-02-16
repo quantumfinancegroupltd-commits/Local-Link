@@ -102,7 +102,13 @@ export function FarmerEditProduct() {
       let mergedMedia = remainingExisting
 
       if (newMediaFiles.length) {
-        const uploaded = await uploadMediaFiles(newMediaFiles)
+        let uploaded
+        try {
+          uploaded = await uploadMediaFiles(newMediaFiles)
+        } catch (uploadErr) {
+          setMediaError(uploadErr?.response?.data?.message ?? uploadErr?.message ?? 'Upload failed. Please try again.')
+          return
+        }
         if (!uploaded.length) {
           setMediaError('Upload failed. Please try again.')
           return

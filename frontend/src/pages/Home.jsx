@@ -124,7 +124,7 @@ export function Home() {
   if (isAuthed) return <Navigate to={roleHomePath(user?.role)} replace />
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10" data-build="locallink-2025-02-events-domestic-live">
       <ComingSoonModal open={comingOpen} onClose={() => setComingOpen(false)} item={comingKey ? comingSoonItems[comingKey] : null} />
       {/* HERO */}
       <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-soft md:p-12">
@@ -210,7 +210,7 @@ export function Home() {
               <UseCaseTile
                 title="Events & Catering"
                 description="Caterers, chairs/tents, staff — scheduling + escrow."
-                to="/register?role=buyer&intent=fix&category=Events%20%26%20Catering"
+                to="/register?role=artisan&category=Events%20%26%20Catering"
                 accent="orange"
                 imageUrl={images.project}
               />
@@ -230,7 +230,7 @@ export function Home() {
               <UseCaseTile
                 title="Domestic & Recurring"
                 description="Cleaners, laundry — trust-first, repeat. Care givers coming later."
-                to="/register?role=buyer&intent=fix&category=Domestic%20Services"
+                to="/register?role=artisan&category=Domestic%20Services"
                 accent="slate"
                 imageUrl={images.fix}
               />

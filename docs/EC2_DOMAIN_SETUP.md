@@ -27,16 +27,18 @@ Allow:
 
 ## 3) SSH into the instance (macOS)
 
+Key path: **~/Downloads/LocalLink.pem**
+
+This instance uses **Amazon Linux** — use **ec2-user**:
+
 ```bash
 chmod 400 ~/Downloads/LocalLink.pem
-ssh -i ~/Downloads/LocalLink.pem ubuntu@18.130.159.10
-```
-
-If Ubuntu user fails, try:
-
-```bash
 ssh -i ~/Downloads/LocalLink.pem ec2-user@18.130.159.10
 ```
+
+If you use an Ubuntu AMI instead, use `ubuntu@18.130.159.10`.
+
+**Redeploy from your Mac (no need to stay SSH’d):** from the repo root, run `./scripts/redeploy-ssh.sh`. It uses `~/Downloads/LocalLink.pem` and pulls + rebuilds on the server. Push to `main` first.
 
 ## 4) Install Docker + Compose plugin
 
@@ -52,11 +54,16 @@ sudo apt install -y docker-compose-plugin
 
 ## 5) Deploy LocalLink containers
 
+Clone the repo (so future redeploys can use `git pull`):
+
 ```bash
 git clone <YOUR_REPO_URL> LocalLink
 cd LocalLink
+git checkout main
 docker compose -f docker-compose.selfhost.yml up -d --build
 ```
+
+If the app directory already exists but **is not a git repo** (you get “fatal: not a git repository” when running `redeploy-ssh.sh`), see **scripts/setup-server-git.sh** to replace it with a fresh clone.
 
 Important: the `gateway` container binds to `127.0.0.1:8080`, not public port 80, because Caddy will own 80/443.
 
@@ -93,8 +100,28 @@ From your laptop:
 - Open `https://locallink.agency`
 - Open `https://locallink.agency/api/health` (should return `{ ok: true }`)
 
+## 8) Production secrets (required for migrate and API)
+
+The API and migrate script require real secrets in production. On the server:
+
+```bash
+cd /home/ec2-user/LocalLink
+cp .env.selfhost.example .env
+# Edit .env and set strong values. Generate with:
+#   openssl rand -hex 32
+nano .env   # set JWT_SECRET=... and ADMIN_BOOTSTRAP_SECRET=...
+```
+
+Then run migrations (if not already done) and restart the API:
+
+```bash
+docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate
+docker compose -f docker-compose.selfhost.yml up -d
+```
+
+Docker Compose reads `.env` from this directory and passes the values into the containers.
+
 ## Notes
-- Update `JWT_SECRET` and `ADMIN_BOOTSTRAP_SECRET` in `docker-compose.selfhost.yml` before real users.
 - For production media, move uploads to **S3** (recommended).
 
 

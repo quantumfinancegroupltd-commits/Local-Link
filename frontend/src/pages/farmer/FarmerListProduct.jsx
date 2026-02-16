@@ -75,7 +75,14 @@ export function FarmerListProduct() {
       let image_url = imageUrl ? imageUrl : undefined
 
       if (mediaFiles.length) {
-        const uploaded = await uploadMediaFiles(mediaFiles)
+        let uploaded
+        try {
+          uploaded = await uploadMediaFiles(mediaFiles)
+        } catch (uploadErr) {
+          const msg = uploadErr?.response?.data?.message ?? uploadErr?.message ?? 'Upload failed. Please try again.'
+          setMediaError(msg)
+          return
+        }
         if (!uploaded.length) {
           setMediaError('Upload failed. Please try again.')
           return
@@ -189,7 +196,7 @@ export function FarmerListProduct() {
               onChange={(e) => setMediaFiles(Array.from(e.target.files ?? []))}
               disabled={busy}
             />
-            <div className="mt-2 text-xs text-slate-500">You can upload multiple images/videos. Max 50MB per file.</div>
+            <div className="mt-2 text-xs text-slate-500">You can upload multiple images/videos. Max 12 files, 50MB per file. Supported: JPEG, PNG, WebP, GIF, MP4, WebM. If upload fails, check you’re logged in and the file type/size.</div>
             {mediaError ? <div className="mt-2 text-sm text-red-700">{mediaError}</div> : null}
             {previews.length ? (
               <div className="mt-3 grid gap-3 sm:grid-cols-2">

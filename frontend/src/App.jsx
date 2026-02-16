@@ -27,6 +27,8 @@ const BuyerOrders = lazy(() => import('./pages/buyer/BuyerOrders.jsx').then((m) 
 const ArtisanDashboard = lazy(() => import('./pages/artisan/ArtisanDashboard.jsx').then((m) => ({ default: m.ArtisanDashboard })))
 const ArtisanJobDetail = lazy(() => import('./pages/artisan/ArtisanJobDetail.jsx').then((m) => ({ default: m.ArtisanJobDetail })))
 const ArtisanJobEscrow = lazy(() => import('./pages/artisan/ArtisanJobEscrow.jsx').then((m) => ({ default: m.ArtisanJobEscrow })))
+const ArtisanServices = lazy(() => import('./pages/artisan/ArtisanServices.jsx').then((m) => ({ default: m.ArtisanServices })))
+const ArtisanAvailability = lazy(() => import('./pages/artisan/ArtisanAvailability.jsx').then((m) => ({ default: m.ArtisanAvailability })))
 
 const FarmerDashboard = lazy(() => import('./pages/farmer/FarmerDashboard.jsx').then((m) => ({ default: m.FarmerDashboard })))
 const FarmerListProduct = lazy(() => import('./pages/farmer/FarmerListProduct.jsx').then((m) => ({ default: m.FarmerListProduct })))
@@ -271,6 +273,22 @@ export default function App() {
             element={
               <RequireAuth roles={['artisan']}>
                 <ArtisanJobEscrow />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/artisan/services"
+            element={
+              <RequireAuth roles={['artisan']}>
+                <ArtisanServices />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/artisan/availability"
+            element={
+              <RequireAuth roles={['artisan']}>
+                <ArtisanAvailability />
               </RequireAuth>
             }
           />

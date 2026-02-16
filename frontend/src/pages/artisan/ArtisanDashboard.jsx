@@ -454,6 +454,12 @@ export function ArtisanDashboard() {
           <Button variant="secondary" onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })}>
             View new requests
           </Button>
+          <Link to="/artisan/services">
+            <Button variant="secondary">My services</Button>
+          </Link>
+          <Link to="/artisan/availability">
+            <Button variant="secondary">Set availability</Button>
+          </Link>
           <Link to="/reviews">
             <Button variant="secondary">View reviews</Button>
           </Link>

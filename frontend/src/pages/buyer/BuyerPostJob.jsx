@@ -180,6 +180,25 @@ export function BuyerPostJob() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
 
+  // Pre-fill from "Book" on artisan profile (service booking)
+  useEffect(() => {
+    const artisanId = params.get('artisan')
+    const serviceTitle = params.get('title')
+    const serviceDesc = params.get('description')
+    const serviceBudget = params.get('budget')
+    const serviceCategory = params.get('category')
+    const serviceDate = params.get('date') // YYYY-MM-DD
+    if (!artisanId || !serviceTitle) return
+    setTitle(serviceTitle || '')
+    if (serviceDesc) setDescription(decodeURIComponent(serviceDesc))
+    if (serviceBudget) setBudget(serviceBudget || '')
+    if (serviceCategory) setCategory(decodeURIComponent(serviceCategory))
+    if (serviceDate) {
+      setScheduledAt(`${serviceDate}T09:00`)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.get('artisan'), params.get('title')])
+
   async function onSubmit(e) {
     e.preventDefault()
     setError(null)
@@ -206,7 +225,8 @@ export function BuyerPostJob() {
         image_url = firstImage?.url ?? null
       }
 
-      const res = await http.post('/jobs', {
+      const artisanIdFromUrl = params.get('artisan')
+      const payload = {
         title,
         description,
         category: category || null,
@@ -225,7 +245,10 @@ export function BuyerPostJob() {
         location_place_id: locationPlaceId,
         location_lat: locationLat,
         location_lng: locationLng,
-      })
+      }
+      if (artisanIdFromUrl) payload.invited_artisan_user_id = artisanIdFromUrl
+
+      const res = await http.post('/jobs', payload)
       const jobId = res.data?.id ?? res.data?.job?.id
       trackEvent('job_posted')
       draft.clear()
@@ -279,6 +302,10 @@ export function BuyerPostJob() {
         {params.get('rebook') ? (
           <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
             <span className="font-semibold">Rebook this slot</span> — Form pre-filled from your previous booking. Confirm or edit the details, then post to book the next session.
+          </div>
+        ) : params.get('artisan') && params.get('title') ? (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <span className="font-semibold">Book this service</span> — Form pre-filled from the provider&apos;s profile. Add your location and any extra details, then post. They&apos;ll see your request first.
           </div>
         ) : null}
 

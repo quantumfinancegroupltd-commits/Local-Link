@@ -10,6 +10,7 @@ import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { FollowListModal } from '../../components/social/FollowListModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
+import { Button } from '../../components/ui/FormControls.jsx'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -642,6 +643,11 @@ export function PublicProfile() {
   const [badgesOpen, setBadgesOpen] = useState(false)
   const [badgesFocusKey, setBadgesFocusKey] = useState(null)
 
+  const [services, setServices] = useState([])
+  const [servicesLoading, setServicesLoading] = useState(false)
+  const [availability, setAvailability] = useState([])
+  const [availabilityLoading, setAvailabilityLoading] = useState(false)
+
   const cover = user?.display_cover_url || profile?.cover_photo || user?.company_cover_url || null
   const links = Array.isArray(profile?.links) ? profile.links : []
   const isOwner = viewer?.id && id && String(viewer.id) === String(id)
@@ -869,6 +875,31 @@ export function PublicProfile() {
     if (!locked) loadPosts()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, locked])
+
+  // Load artisan services and availability when viewing artisan profile
+  useEffect(() => {
+    if (!id || user?.role !== 'artisan' || locked) return
+    let cancelled = false
+    const now = new Date()
+    const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
+    const to = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10)
+    setServicesLoading(true)
+    setAvailabilityLoading(true)
+    Promise.all([
+      http.get(`/artisans/${encodeURIComponent(id)}/services`).catch(() => ({ data: [] })),
+      http.get(`/artisans/${encodeURIComponent(id)}/availability`, { params: { from, to } }).catch(() => ({ data: [] })),
+    ]).then(([sRes, aRes]) => {
+      if (cancelled) return
+      setServices(Array.isArray(sRes.data) ? sRes.data : [])
+      setAvailability(Array.isArray(aRes.data) ? aRes.data : [])
+    }).finally(() => {
+      if (!cancelled) {
+        setServicesLoading(false)
+        setAvailabilityLoading(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [id, user?.role, locked])
 
   const roleLabel = useMemo(() => {
     const r = String(user?.role || '')
@@ -1267,6 +1298,69 @@ export function PublicProfile() {
               </div>
             </Card>
           </div>
+
+          {user?.role === 'artisan' ? (
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <Card>
+                <div className="text-sm font-semibold">Services</div>
+                <div className="mt-1 text-xs text-slate-600">Fixed-price offerings you can book directly.</div>
+                {servicesLoading ? (
+                  <div className="mt-3 text-sm text-slate-600">Loading…</div>
+                ) : services.length === 0 ? (
+                  <div className="mt-3 text-sm text-slate-600">No services listed yet.</div>
+                ) : (
+                  <div className="mt-3 space-y-3">
+                    {services.map((s) => (
+                      <div key={s.id} className="flex flex-wrap items-start justify-between gap-2 rounded-xl border bg-slate-50/50 p-3">
+                        <div>
+                          <div className="font-medium text-slate-900">{s.title}</div>
+                          {s.description ? <div className="mt-0.5 text-xs text-slate-600">{s.description}</div> : null}
+                          <div className="mt-1 text-sm font-semibold text-slate-700">
+                            {s.currency} {Number(s.price).toFixed(0)}
+                            {s.duration_minutes ? ` • ${s.duration_minutes} min` : ''}
+                          </div>
+                        </div>
+                        <Link
+                          to={
+                            isAuthed && viewer?.role === 'buyer'
+                              ? `/buyer/jobs/new?artisan=${encodeURIComponent(id)}&service=${encodeURIComponent(s.id)}&title=${encodeURIComponent(s.title)}&description=${encodeURIComponent(s.description || '')}&budget=${encodeURIComponent(s.price)}&category=${encodeURIComponent(s.category || '')}`
+                              : `/login?next=${encodeURIComponent(`/buyer/jobs/new?artisan=${id}&service=${s.id}&title=${encodeURIComponent(s.title)}&description=${encodeURIComponent(s.description || '')}&budget=${s.price}&category=${encodeURIComponent(s.category || '')}`)}`
+                          }
+                        >
+                          <Button size="sm">Book</Button>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+              <Card>
+                <div className="text-sm font-semibold">Availability</div>
+                <div className="mt-1 text-xs text-slate-600">Dates when this provider is available for bookings.</div>
+                {availabilityLoading ? (
+                  <div className="mt-3 text-sm text-slate-600">Loading…</div>
+                ) : availability.length === 0 ? (
+                  <div className="mt-3 text-sm text-slate-600">No dates set yet.</div>
+                ) : (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {availability.slice(0, 14).map((d) => (
+                      <span
+                        key={d}
+                        className="rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800"
+                      >
+                        {new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </span>
+                    ))}
+                    {availability.length > 14 ? (
+                      <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm text-slate-600">
+                        +{availability.length - 14} more
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+              </Card>
+            </div>
+          ) : null}
 
           {tab === 'about' ? (
             <div className="space-y-4">

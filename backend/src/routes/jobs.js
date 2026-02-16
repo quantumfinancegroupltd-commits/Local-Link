@@ -90,6 +90,7 @@ jobsRouter.get('/mine', requireAuth, requireRole(['artisan']), asyncHandler(asyn
        from jobs j
        where j.deleted_at is null
          and j.status = 'open'
+         and (j.invited_artisan_id is null or j.invited_artisan_id = $1)
          and not exists (select 1 from quotes q where q.job_id = j.id and q.artisan_id = $1)
        order by j.created_at desc
        limit $2
@@ -234,6 +235,9 @@ const CreateJobSchema = z.object({
   event_head_count: z.number().int().min(1).max(100000).optional().nullable(),
   event_menu_notes: z.string().max(5000).optional().nullable(),
   event_equipment: z.string().max(2000).optional().nullable(),
+  // Service booking: direct job to a specific artisan (from their profile). Resolved to invited_artisan_id.
+  invited_artisan_id: z.string().uuid().optional().nullable(),
+  invited_artisan_user_id: z.string().uuid().optional().nullable(),
 })
 
 jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(async (req, res) => {
@@ -259,7 +263,16 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
     event_head_count: eventHeadCount,
     event_menu_notes: eventMenuNotes,
     event_equipment: eventEquipment,
+    invited_artisan_id: invitedArtisanId,
+    invited_artisan_user_id: invitedArtisanUserId,
   } = parsed.data
+
+  // Resolve invited artisan: prefer artisan_id, else look up by user_id
+  let resolvedInvitedArtisanId = invitedArtisanId ?? null
+  if (!resolvedInvitedArtisanId && invitedArtisanUserId) {
+    const a = await pool.query('select id from artisans where user_id = $1 limit 1', [invitedArtisanUserId])
+    resolvedInvitedArtisanId = a.rows[0]?.id ?? null
+  }
 
   // IMPORTANT: node-postgres treats JS Arrays as Postgres array literals ("{...}"), not JSON.
   // Our column is jsonb, so explicitly stringify arrays and cast to jsonb in SQL.
@@ -269,8 +282,8 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
   const recurringEndDateVal = recurringEndDate && recurringEndDate !== '' ? recurringEndDate : null
 
   const r = await pool.query(
-    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng, access_instructions, event_head_count, event_menu_notes, event_equipment)
-     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19)
+    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng, access_instructions, event_head_count, event_menu_notes, event_equipment, invited_artisan_id)
+     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19,$20)
      returning *`,
     [
       req.user.sub,
@@ -292,6 +305,7 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
       eventHeadCount ?? null,
       eventMenuNotes ?? null,
       eventEquipment ?? null,
+      resolvedInvitedArtisanId,
     ],
   )
   return res.status(201).json(r.rows[0])

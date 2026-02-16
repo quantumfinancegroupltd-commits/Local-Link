@@ -127,4 +127,164 @@ artisansRouter.post('/', requireAuth, requireRole(['artisan']), asyncHandler(asy
   return res.status(201).json(row)
 }))
 
+// --- Artisan services (productized offerings, shown on profile) ---
+
+const CreateServiceSchema = z.object({
+  title: z.string().min(1).max(120),
+  description: z.string().max(2000).optional().nullable(),
+  price: z.number().min(0),
+  currency: z.string().max(10).optional().default('GHS'),
+  duration_minutes: z.number().int().min(0).max(10080).optional().nullable(), // up to 1 week
+  category: z.string().max(80).optional().nullable(),
+  sort_order: z.number().int().optional().nullable(),
+})
+
+const UpdateServiceSchema = CreateServiceSchema.partial()
+
+// Must define /me/* before /:userId/* so "me" isn't captured as userId
+artisansRouter.get('/me/services', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, created_at, updated_at
+     from artisan_services
+     where artisan_user_id = $1
+     order by sort_order asc, created_at asc`,
+    [req.user.sub],
+  )
+  return res.json(r.rows)
+}))
+
+artisansRouter.get('/me/availability', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const from = req.query.from
+  const to = req.query.to
+  if (!from || !to) return res.status(400).json({ message: 'Provide from and to (YYYY-MM-DD)' })
+  const r = await pool.query(
+    `select date
+     from artisan_availability
+     where artisan_user_id = $1 and date >= $2::date and date <= $3::date
+     order by date asc`,
+    [req.user.sub, from, to],
+  )
+  return res.json(r.rows.map((row) => row.date))
+}))
+
+artisansRouter.get('/:userId/services', asyncHandler(async (req, res) => {
+  const userId = req.params.userId
+  const r = await pool.query(
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, created_at, updated_at
+     from artisan_services
+     where artisan_user_id = $1
+     order by sort_order asc, created_at asc`,
+    [userId],
+  )
+  return res.json(r.rows)
+}))
+
+artisansRouter.post('/me/services', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const parsed = CreateServiceSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const r = await pool.query(
+    `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order)
+     values ($1,$2,$3,$4,$5,$6,$7,$8)
+     returning *`,
+    [
+      req.user.sub,
+      parsed.data.title,
+      parsed.data.description ?? null,
+      parsed.data.price,
+      parsed.data.currency ?? 'GHS',
+      parsed.data.duration_minutes ?? null,
+      parsed.data.category ?? null,
+      parsed.data.sort_order ?? 0,
+    ],
+  )
+  return res.status(201).json(r.rows[0])
+}))
+
+artisansRouter.patch('/me/services/:id', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const parsed = UpdateServiceSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const r = await pool.query(
+    `update artisan_services set
+       title = coalesce($2, title),
+       description = coalesce($3, description),
+       price = coalesce($4, price),
+       currency = coalesce($5, currency),
+       duration_minutes = coalesce($6, duration_minutes),
+       category = coalesce($7, category),
+       sort_order = coalesce($8, sort_order),
+       updated_at = now()
+     where id = $1 and artisan_user_id = $9
+     returning *`,
+    [
+      req.params.id,
+      parsed.data.title,
+      parsed.data.description,
+      parsed.data.price,
+      parsed.data.currency,
+      parsed.data.duration_minutes,
+      parsed.data.category,
+      parsed.data.sort_order,
+      req.user.sub,
+    ],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Service not found' })
+  return res.json(r.rows[0])
+}))
+
+artisansRouter.delete('/me/services/:id', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    'delete from artisan_services where id = $1 and artisan_user_id = $2 returning id',
+    [req.params.id, req.user.sub],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Service not found' })
+  return res.status(204).send()
+}))
+
+// --- Artisan availability (calendar dates for booking) ---
+
+artisansRouter.get('/:userId/availability', asyncHandler(async (req, res) => {
+  const userId = req.params.userId
+  const from = req.query.from // YYYY-MM-DD
+  const to = req.query.to // YYYY-MM-DD
+  if (!from || !to) return res.status(400).json({ message: 'Provide from and to (YYYY-MM-DD)' })
+  const r = await pool.query(
+    `select date
+     from artisan_availability
+     where artisan_user_id = $1 and date >= $2::date and date <= $3::date
+     order by date asc`,
+    [userId, from, to],
+  )
+  return res.json(r.rows.map((row) => row.date))
+}))
+
+const SetAvailabilitySchema = z.object({
+  dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).min(0).max(365),
+})
+
+artisansRouter.post('/me/availability', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const parsed = SetAvailabilitySchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const dates = [...new Set(parsed.data.dates)].sort()
+  if (dates.length === 0) return res.json({ added: 0, dates: [] })
+  const values = dates.map((d, i) => `($1, $${i + 2}::date)`).join(', ')
+  const r = await pool.query(
+    `insert into artisan_availability (artisan_user_id, date)
+     values ${values}
+     on conflict (artisan_user_id, date) do nothing`,
+    [req.user.sub, ...dates],
+  )
+  return res.json({ added: r.rowCount ?? dates.length, dates })
+}))
+
+artisansRouter.delete('/me/availability/:date', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const date = req.params.date
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ message: 'Invalid date format (YYYY-MM-DD)' })
+  const r = await pool.query(
+    'delete from artisan_availability where artisan_user_id = $1 and date = $2::date returning id',
+    [req.user.sub, date],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Date not found' })
+  return res.status(204).send()
+}))
+
 

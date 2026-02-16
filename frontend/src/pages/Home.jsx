@@ -60,9 +60,9 @@ export function Home() {
     }
   }, [])
 
-  // Events & Domestic are live; only hide if API explicitly returns false (e.g. admin turned off).
-  const showEvents = features?.vertical_events !== false
-  const showDomestic = features?.vertical_domestic !== false
+  // Events & Domestic are always live on the front page (repo ready for deploy).
+  const showEvents = true
+  const showDomestic = true
   const showB2B = !!features?.vertical_b2b_supply
   const showLogistics = !!features?.vertical_logistics
 

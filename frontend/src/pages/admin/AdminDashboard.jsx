@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { http } from '../../api/http.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
@@ -35,6 +35,105 @@ function MiniSparkline({ series, stroke = '#0f766e' }) {
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} role="img" aria-label="trend">
       <path d={d} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function formatChartDay(day) {
+  if (!day) return ''
+  const d = new Date(day)
+  if (Number.isNaN(d.getTime())) return String(day)
+  const m = d.getMonth() + 1
+  const date = d.getDate()
+  return `${m}/${date}`
+}
+
+function AnalyticsLineChart({ series, height = 220 }) {
+  const rows = Array.isArray(series) ? series : []
+  if (rows.length === 0) return null
+  const values = rows.map((r) => Number(r?.views ?? 0))
+  const max = Math.max(1, ...values)
+  const w = 640
+  const h = height
+  const pad = { left: 44, right: 20, top: 16, bottom: 36 }
+  const chartW = w - pad.left - pad.right
+  const chartH = h - pad.top - pad.bottom
+  const dx = rows.length > 1 ? chartW / (rows.length - 1) : 0
+  const pts = values.map((v, i) => {
+    const x = pad.left + i * dx
+    const y = pad.top + chartH - (v / max) * chartH
+    return [x, Number.isFinite(y) ? y : pad.top + chartH]
+  })
+  const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ')
+  const areaD = lineD + ` L${pts[pts.length - 1]?.[0] ?? 0},${pad.top + chartH} L${pts[0]?.[0] ?? 0},${pad.top + chartH} Z`
+  const gridLines = 4
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="max-w-full overflow-visible" role="img" aria-label="Page views over time">
+      {/* Grid */}
+      {Array.from({ length: gridLines + 1 }).map((_, i) => {
+        const y = pad.top + (chartH * i) / gridLines
+        return (
+          <line key={i} x1={pad.left} y1={y} x2={pad.left + chartW} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 2" />
+        )
+      })}
+      <line x1={pad.left} y1={pad.top + chartH} x2={pad.left + chartW} y2={pad.top + chartH} stroke="#cbd5e1" strokeWidth="1" />
+      <line x1={pad.left} y1={pad.top} x2={pad.left} y2={pad.top + chartH} stroke="#cbd5e1" strokeWidth="1" />
+      {/* Area fill */}
+      <path d={areaD} fill="rgba(15, 118, 110, 0.12)" />
+      {/* Line */}
+      <path d={lineD} fill="none" stroke="#0f766e" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      {/* X-axis labels */}
+      {rows.map((r, i) => {
+        const x = pad.left + i * dx
+        const label = formatChartDay(r?.day)
+        if (!label) return null
+        return (
+          <text key={i} x={x} y={pad.top + chartH + 20} textAnchor="middle" className="fill-slate-500 text-[10px] font-medium">
+            {label}
+          </text>
+        )
+      })}
+    </svg>
+  )
+}
+
+function AnalyticsBarChart({ data, labelKey = 'label', valueKey = 'views', maxBars = 10, color = '#0f766e' }) {
+  const rows = (Array.isArray(data) ? data : []).slice(0, maxBars)
+  if (rows.length === 0) return null
+  const max = Math.max(1, ...rows.map((r) => Number(r?.[valueKey] ?? 0)))
+  const barH = 20
+  const gap = 8
+  const labelW = 140
+  const barW = 200
+  const h = Math.max(1, rows.length * (barH + gap) - gap)
+  const w = labelW + barW + 48
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="max-w-full" role="img" aria-label="Bar chart">
+      {rows.map((r, i) => {
+        const val = Number(r?.[valueKey] ?? 0)
+        const pct = max > 0 ? val / max : 0
+        const label = String(r?.[labelKey] ?? '').slice(0, 22)
+        const y = i * (barH + gap)
+        return (
+          <g key={i}>
+            <text x={0} y={y + barH - 6} className="fill-slate-700 text-xs" style={{ fontFamily: 'inherit' }}>
+              {label || '—'}
+            </text>
+            <rect
+              x={labelW}
+              y={y}
+              width={barW * pct}
+              height={barH - 2}
+              rx={4}
+              fill={color}
+              opacity={0.85}
+            />
+            <text x={labelW + barW + 8} y={y + barH - 6} className="fill-slate-600 text-xs font-medium">
+              {val.toLocaleString()}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }
@@ -328,9 +427,21 @@ export function AdminDashboard() {
     }
   }, [])
 
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState(null)
+  const [analyticsDays, setAnalyticsDays] = useState(30)
+  const [analyticsPathPrefix, setAnalyticsPathPrefix] = useState('')
+  const [errorsList, setErrorsList] = useState([])
+  const [errorsLoading, setErrorsLoading] = useState(false)
+  const [errorsError, setErrorsError] = useState(null)
+  const [errorsExpandedId, setErrorsExpandedId] = useState(null)
+
   const tabs = useMemo(
     () => [
       { label: 'Overview', value: 'overview' },
+      { label: 'Analytics', value: 'analytics' },
+      { label: 'Errors', value: 'errors' },
       { label: 'Location', value: 'location' },
       { label: 'Support', value: 'support' },
       { label: 'Moderation', value: 'moderation' },
@@ -346,6 +457,50 @@ export function AdminDashboard() {
     ],
     [ops?.deliveries_unassigned_paid, ops?.disputes_active, ops?.verification_requests_pending, ops?.payouts_pending],
   )
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadAnalytics() {
+      if (tab !== 'analytics') return
+      setAnalyticsLoading(true)
+      setAnalyticsError(null)
+      try {
+        const params = { days: analyticsDays }
+        if (analyticsPathPrefix.trim()) params.path_prefix = analyticsPathPrefix.trim()
+        const r = await http.get('/admin/analytics/traffic', { params })
+        if (!cancelled) setAnalytics(r.data ?? null)
+      } catch (e) {
+        if (!cancelled) setAnalyticsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load analytics')
+      } finally {
+        if (!cancelled) setAnalyticsLoading(false)
+      }
+    }
+    loadAnalytics()
+    return () => {
+      cancelled = true
+    }
+  }, [tab, analyticsDays, analyticsPathPrefix])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadErrors() {
+      if (tab !== 'errors') return
+      setErrorsLoading(true)
+      setErrorsError(null)
+      try {
+        const r = await http.get('/admin/errors', { params: { limit: 100 } })
+        if (!cancelled) setErrorsList(Array.isArray(r.data) ? r.data : [])
+      } catch (e) {
+        if (!cancelled) setErrorsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load errors')
+      } finally {
+        if (!cancelled) setErrorsLoading(false)
+      }
+    }
+    loadErrors()
+    return () => {
+      cancelled = true
+    }
+  }, [tab])
 
   useEffect(() => {
     let cancelled = false
@@ -1558,6 +1713,429 @@ export function AdminDashboard() {
             </div>
           )}
         </Card>
+      ) : null}
+
+      {tab === 'analytics' ? (
+        <div className="space-y-4">
+          <Card>
+            <div className="text-sm font-semibold">Web traffic analytics</div>
+            <div className="mt-1 text-xs text-slate-600">
+              Page views, unique sessions, top pages, and referrers. Data is collected when users browse the site.
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label>Time range</Label>
+                <Select value={String(analyticsDays)} onChange={(e) => setAnalyticsDays(Number(e.target.value) || 30)}>
+                  <option value="7">Last 7 days</option>
+                  <option value="14">Last 14 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <Label>Path filter</Label>
+                <Input
+                  placeholder="/jobs or /c/..."
+                  value={analyticsPathPrefix}
+                  onChange={(e) => setAnalyticsPathPrefix(e.target.value)}
+                  className="max-w-[180px]"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {analyticsLoading ? (
+            <Card>Loading…</Card>
+          ) : analyticsError ? (
+            <Card>
+              <div className="text-sm text-red-700">{analyticsError}</div>
+            </Card>
+          ) : !analytics ? (
+            <Card>
+              <div className="text-sm text-slate-600">No data yet.</div>
+            </Card>
+          ) : (
+            <>
+              {analytics?.message ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  {analytics.message}
+                </div>
+              ) : null}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <Card>
+                  <div className="text-xs text-slate-600">Today</div>
+                  <div className="mt-1 text-2xl font-bold text-slate-900">
+                    {Number(analytics?.today_views ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">page views</div>
+                </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">Page views</div>
+                  <div className="mt-1 text-2xl font-bold text-slate-900">
+                    {Number(analytics?.totals?.total_page_views ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">last {analytics?.days ?? 30} days</div>
+                  {Array.isArray(analytics?.page_views_over_time) && analytics.page_views_over_time.length > 0 ? (
+                    <div className="mt-2">
+                      <MiniSparkline
+                        series={analytics.page_views_over_time.map((d) => ({ value: d.views }))}
+                        stroke="#0f766e"
+                      />
+                    </div>
+                  ) : null}
+                </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">Unique sessions</div>
+                  <div className="mt-1 text-2xl font-bold text-slate-900">
+                    {Number(analytics?.totals?.unique_sessions ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">by session</div>
+                </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">Bounce rate</div>
+                  <div className="mt-1 text-2xl font-bold text-slate-900">
+                    {Number(analytics?.bounce_rate_pct ?? 0)}%
+                  </div>
+                  <div className="text-xs text-slate-500">1-page sessions</div>
+                </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">Logged-in visitors</div>
+                  <div className="mt-1 text-2xl font-bold text-slate-900">
+                    {Number(analytics?.totals?.logged_in_visitors ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">with account</div>
+                </Card>
+              </div>
+
+              {Array.isArray(analytics?.page_views_over_time) && analytics.page_views_over_time.length > 0 ? (
+                <Card>
+                  <div className="text-sm font-semibold">Page views over time</div>
+                  <p className="mt-1 text-xs text-slate-500">Daily trend with grid and date labels</p>
+                  <div className="mt-3 min-h-[220px]">
+                    <AnalyticsLineChart series={analytics.page_views_over_time} />
+                  </div>
+                </Card>
+              ) : null}
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Card>
+                  <div className="text-sm font-semibold">Top pages</div>
+                  {Array.isArray(analytics?.top_pages) && analytics.top_pages.length > 0 ? (
+                    <>
+                      <div className="mt-3 min-h-[200px]">
+                        <AnalyticsBarChart
+                          data={analytics.top_pages.map((r) => ({ label: r.path || '/', views: r.views ?? 0 }))}
+                          labelKey="label"
+                          valueKey="views"
+                          maxBars={10}
+                          color="#0f766e"
+                        />
+                      </div>
+                      <div className="mt-4 overflow-x-auto border-t border-slate-100 pt-3">
+                        <table className="w-full text-sm">
+                        <thead className="text-left text-xs text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3">Path</th>
+                            <th className="py-2 pr-3 text-right">Views</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {analytics.top_pages.slice(0, 15).map((r) => (
+                            <tr key={r.path}>
+                              <td className="py-2 pr-3 font-medium text-slate-900 truncate max-w-[200px]" title={r.path}>
+                                {r.path || '/'}
+                              </td>
+                              <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-3 text-sm text-slate-600">No page views yet.</div>
+                  )}
+                </Card>
+                <Card>
+                  <div className="text-sm font-semibold">Traffic sources</div>
+                  {Array.isArray(analytics?.referrers) && analytics.referrers.length > 0 ? (
+                    <>
+                      <div className="mt-3 min-h-[180px]">
+                        <AnalyticsBarChart
+                          data={analytics.referrers.map((r) => ({ label: r.source ?? 'Unknown', views: r.views ?? 0 }))}
+                          labelKey="label"
+                          valueKey="views"
+                          maxBars={8}
+                          color="#0369a1"
+                        />
+                      </div>
+                      <div className="mt-4 overflow-x-auto border-t border-slate-100 pt-3">
+                        <table className="w-full text-sm">
+                        <thead className="text-left text-xs text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3">Source</th>
+                            <th className="py-2 pr-3 text-right">Views</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {analytics.referrers.map((r) => (
+                            <tr key={r.source}>
+                              <td className="py-2 pr-3 font-medium text-slate-900">{r.source ?? 'Unknown'}</td>
+                              <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-3 text-sm text-slate-600">No referrer data yet.</div>
+                  )}
+                </Card>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-3">
+                <Card>
+                  <div className="text-sm font-semibold">UTM sources</div>
+                  <div className="mt-3 overflow-x-auto">
+                    {Array.isArray(analytics?.utm) && analytics.utm.length > 0 ? (
+                      <table className="w-full text-sm">
+                        <thead className="text-left text-xs text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3">Source</th>
+                            <th className="py-2 pr-3 text-right">Views</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {analytics.utm.map((r) => (
+                            <tr key={r.source}>
+                              <td className="py-2 pr-3 font-medium text-slate-900">{r.source ?? '—'}</td>
+                              <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-sm text-slate-600">No UTM data yet.</div>
+                    )}
+                  </div>
+                </Card>
+                <Card>
+                  <div className="text-sm font-semibold">Devices</div>
+                  {Array.isArray(analytics?.devices) && analytics.devices.length > 0 ? (
+                    <>
+                      <div className="mt-3 min-h-[120px]">
+                        <AnalyticsBarChart
+                          data={analytics.devices.map((r) => ({ label: (r.device ?? '—').toLowerCase(), views: r.views ?? 0 }))}
+                          labelKey="label"
+                          valueKey="views"
+                          maxBars={5}
+                          color="#059669"
+                        />
+                      </div>
+                      <div className="mt-3 overflow-x-auto border-t border-slate-100 pt-3">
+                        <table className="w-full text-sm">
+                          <thead className="text-left text-xs text-slate-500">
+                            <tr>
+                              <th className="py-2 pr-3">Device</th>
+                              <th className="py-2 pr-3 text-right">Views</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {analytics.devices.map((r) => (
+                              <tr key={r.device}>
+                                <td className="py-2 pr-3 font-medium text-slate-900 capitalize">{r.device ?? '—'}</td>
+                                <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-3 text-sm text-slate-600">No device data yet.</div>
+                  )}
+                </Card>
+                <Card>
+                  <div className="text-sm font-semibold">Funnel</div>
+                  <div className="mt-3 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Page views</span>
+                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.page_views ?? 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Signups</span>
+                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.signup ?? 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Logins</span>
+                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.login ?? 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Jobs posted</span>
+                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.job_posted ?? 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Orders placed</span>
+                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.order_placed ?? 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
+
+      {tab === 'errors' ? (
+        <div className="space-y-4">
+          <Card>
+            <div className="text-sm font-semibold">Server error log</div>
+            <div className="mt-1 text-xs text-slate-600">
+              Unhandled API errors are logged here. Run migrations so the <code className="rounded bg-slate-100 px-1">error_logs</code> table exists.
+            </div>
+          </Card>
+          {errorsLoading ? (
+            <Card>Loading…</Card>
+          ) : errorsError ? (
+            <Card>
+              <div className="text-sm text-red-700">{errorsError}</div>
+            </Card>
+          ) : errorsList.length === 0 ? (
+            <Card>
+              <div className="text-sm text-slate-600">No errors logged yet.</div>
+            </Card>
+          ) : (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-xs text-slate-500">
+                    <tr>
+                      <th className="py-2 pr-3">Time</th>
+                      <th className="py-2 pr-3">Message</th>
+                      <th className="py-2 pr-3">Method</th>
+                      <th className="py-2 pr-3">Path</th>
+                      <th className="py-2 pr-3 w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {errorsList.map((row) => (
+                      <Fragment key={row.id}>
+                        <tr className="text-slate-700">
+                          <td className="py-2 pr-3 whitespace-nowrap text-slate-600">
+                            {row.created_at ? new Date(row.created_at).toLocaleString() : '—'}
+                          </td>
+                          <td className="py-2 pr-3 max-w-[280px] truncate" title={row.message}>
+                            {row.message || '—'}
+                          </td>
+                          <td className="py-2 pr-3">{row.method || '—'}</td>
+                          <td className="py-2 pr-3 max-w-[160px] truncate" title={row.path}>{row.path || '—'}</td>
+                          <td className="py-2 pr-3">
+                            {(row.stack || row.req_id) ? (
+                              <button
+                                type="button"
+                                className="text-slate-500 hover:text-slate-900"
+                                onClick={() => setErrorsExpandedId(errorsExpandedId === row.id ? null : row.id)}
+                              >
+                                {errorsExpandedId === row.id ? '▼' : '▶'}
+                              </button>
+                            ) : null}
+                          </td>
+                        </tr>
+                        {errorsExpandedId === row.id ? (
+                          <tr key={`${row.id}-detail`}>
+                            <td colSpan={5} className="py-2 pr-3">
+                              <div className="rounded-lg border bg-slate-50 p-3 font-mono text-xs text-slate-700 whitespace-pre-wrap break-all">
+                                {row.req_id ? <div className="mb-2"><span className="text-slate-500">Req ID:</span> {row.req_id}</div> : null}
+                                {row.stack ? <div><span className="text-slate-500">Stack:</span><br />{row.stack}</div> : null}
+                              </div>
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </div>
+      ) : null}
+
+      {tab === 'errors' ? (
+        <div className="space-y-4">
+          <Card>
+            <div className="text-sm font-semibold">Server error log</div>
+            <div className="mt-1 text-xs text-slate-600">
+              Unhandled API errors are logged here. No external service required. Run migrations to create the table.
+            </div>
+          </Card>
+          {errorsLoading ? (
+            <Card>Loading…</Card>
+          ) : errorsError ? (
+            <Card>
+              <div className="text-sm text-red-700">{errorsError}</div>
+            </Card>
+          ) : errorsList.length === 0 ? (
+            <Card>
+              <div className="text-sm text-slate-600">No errors logged yet.</div>
+            </Card>
+          ) : (
+            <Card>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-xs text-slate-500">
+                    <tr>
+                      <th className="py-2 pr-3">Time</th>
+                      <th className="py-2 pr-3">Message</th>
+                      <th className="py-2 pr-3">Method</th>
+                      <th className="py-2 pr-3">Path</th>
+                      <th className="py-2 pr-3 w-8" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {errorsList.map((row) => (
+                      <Fragment key={row.id}>
+                        <tr className="text-slate-700">
+                          <td className="py-2 pr-3 whitespace-nowrap text-xs">
+                            {row.created_at ? new Date(row.created_at).toLocaleString() : '—'}
+                          </td>
+                          <td className="py-2 pr-3 max-w-[280px] truncate font-medium" title={row.message}>
+                            {row.message ?? '—'}
+                          </td>
+                          <td className="py-2 pr-3 text-xs">{row.method ?? '—'}</td>
+                          <td className="py-2 pr-3 max-w-[160px] truncate text-xs" title={row.path}>
+                            {row.path ?? '—'}
+                          </td>
+                          <td className="py-2 pr-3">
+                            {row.stack ? (
+                              <button
+                                type="button"
+                                className="text-slate-500 hover:text-slate-900"
+                                onClick={() => setErrorsExpandedId(errorsExpandedId === row.id ? null : row.id)}
+                              >
+                                {errorsExpandedId === row.id ? 'Hide' : 'Stack'}
+                              </button>
+                            ) : null}
+                          </td>
+                        </tr>
+                        {errorsExpandedId === row.id && row.stack ? (
+                          <tr>
+                            <td colSpan={5} className="bg-slate-50 py-2 pr-3">
+                              <pre className="whitespace-pre-wrap break-all text-xs text-slate-700 font-mono max-h-48 overflow-auto">
+                                {row.stack}
+                              </pre>
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
+        </div>
       ) : null}
 
       {tab === 'location' ? (

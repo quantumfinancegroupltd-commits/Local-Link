@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { createApp } from './app.js'
 import { env } from './config.js'
 import { pool } from './db/pool.js'

@@ -745,6 +745,175 @@ function bucketSql(col, bucketDeg) {
   return `floor((${col})::numeric / ${bucketDeg}) * ${bucketDeg}`
 }
 
+// Web traffic analytics (page views, top pages, referrers, UTM, device, bounce, funnel)
+adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const days = Math.min(90, Math.max(1, Number(req.query.days) || 30))
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  const pathPrefix = typeof req.query.path_prefix === 'string' && req.query.path_prefix.trim()
+    ? req.query.path_prefix.trim()
+    : null
+  const pathFilter = pathPrefix ? ` and path like $2 escape '\\' ` : ''
+  const pathFilterOneParam = pathPrefix ? ` and path like $1 escape '\\' ` : ''
+  const pathArg = pathPrefix ? `${pathPrefix.replace(/%/g, '\\%').replace(/_/g, '\\_')}%` : null
+  const args = pathPrefix ? [since, pathArg] : [since]
+  const argsOne = pathPrefix ? [pathArg] : []
+
+  try {
+    const [
+      pageViewsTs,
+      topPages,
+      referrers,
+      totals,
+      todayViews,
+      bounceResult,
+      utmBreakdown,
+      deviceBreakdown,
+      funnel,
+    ] = await Promise.all([
+      pool.query(
+        `select date_trunc('day', created_at)::date as day, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by 1 order by 1`,
+        args,
+      ),
+      pool.query(
+        `select path, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 and path is not null and path <> '' ${pathFilter}
+         group by path order by views desc limit 20`,
+        args,
+      ),
+      pool.query(
+        `select
+           case when referrer is null or referrer = '' then 'Direct'
+             when referrer ilike '%google%' then 'Google'
+             when referrer ilike '%facebook%' then 'Facebook'
+             when referrer ilike '%twitter%' or referrer ilike '%x.com%' then 'Twitter/X'
+             when referrer ilike '%linkedin%' then 'LinkedIn'
+             when referrer ilike '%locallink%' then 'LocalLink (internal)'
+             else 'Other' end as source,
+           count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by 1 order by views desc limit 15`,
+        args,
+      ),
+      pool.query(
+        `select count(*)::int as total_page_views,
+           count(distinct session_id)::int as unique_sessions,
+           count(distinct user_id) filter (where user_id is not null)::int as logged_in_visitors
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}`,
+        args,
+      ),
+      pool.query(
+        `select count(*)::int as views from analytics_events
+         where event_type = 'page_view' and created_at >= date_trunc('day', now()) ${pathFilterOneParam}`,
+        argsOne,
+      ).then((r) => r.rows[0]?.views ?? 0).catch(() => 0).then((n) => (typeof n === 'number' ? n : 0)),
+      pathPrefix
+        ? pool.query(
+          `select count(*)::int as bounce_sessions from (
+             select session_id from analytics_events
+             where event_type = 'page_view' and created_at >= $1 and path like $2 escape '\\'
+             group by session_id having count(*) = 1
+           ) x`,
+          [since, pathArg],
+        ).then((r) => r.rows[0]?.bounce_sessions ?? 0)
+        : pool.query(
+          `select count(*)::int as bounce_sessions from (
+             select session_id from analytics_events
+             where event_type = 'page_view' and created_at >= $1
+             group by session_id having count(*) = 1
+           ) x`,
+          [since],
+        ),
+      pool.query(
+        `select coalesce(utm_source, '(none)') as source, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by utm_source order by views desc limit 15`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `select coalesce(device_type, 'unknown') as device, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by device_type order by views desc limit 10`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `select event_type, count(*)::int as cnt from analytics_events
+         where event_type in ('page_view', 'signup', 'login', 'job_posted', 'order_placed') and created_at >= $1 ${pathFilter}
+         group by event_type`,
+        args,
+      ).catch(() => ({ rows: [] })),
+    ])
+
+    const totalsRow = totals.rows?.[0] ?? { total_page_views: 0, unique_sessions: 0, logged_in_visitors: 0 }
+    const bounceSessions = bounceResult?.rows?.[0]?.bounce_sessions ?? 0
+    const todayViewsVal = typeof todayViews === 'number' ? todayViews : (todayViews?.rows?.[0]?.views ?? 0)
+    const uniqueSessions = Number(totalsRow.unique_sessions) || 0
+    const bounceRate = uniqueSessions > 0 ? Math.round((bounceSessions / uniqueSessions) * 100) : 0
+
+    const funnelMap = (funnel.rows || []).reduce((acc, row) => {
+      acc[row.event_type] = row.cnt
+      return acc
+    }, {})
+
+    return res.json({
+      page_views_over_time: pageViewsTs.rows,
+      top_pages: topPages.rows,
+      referrers: referrers.rows,
+      totals: totalsRow,
+      days,
+      today_views: todayViewsVal,
+      bounce_sessions: bounceSessions,
+      bounce_rate_pct: bounceRate,
+      utm: (utmBreakdown.rows || []).filter((r) => r.source !== '(none)'),
+      devices: deviceBreakdown.rows || [],
+      funnel: {
+        page_views: funnelMap.page_view ?? 0,
+        signup: funnelMap.signup ?? 0,
+        login: funnelMap.login ?? 0,
+        job_posted: funnelMap.job_posted ?? 0,
+        order_placed: funnelMap.order_placed ?? 0,
+      },
+    })
+  } catch (e) {
+    if (String(e?.code || '') === '42P01') {
+      return res.json({
+        page_views_over_time: [],
+        top_pages: [],
+        referrers: [],
+        totals: { total_page_views: 0, unique_sessions: 0, logged_in_visitors: 0 },
+        days,
+        today_views: 0,
+        bounce_sessions: 0,
+        bounce_rate_pct: 0,
+        utm: [],
+        devices: [],
+        funnel: { page_views: 0, signup: 0, login: 0, job_posted: 0, order_placed: 0 },
+        message: 'Analytics table not ready. Run migrations.',
+      })
+    }
+    throw e
+  }
+}))
+
+adminRouter.get('/errors', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50))
+  const r = await pool.query(
+    `select id, message, stack, code, method, path, req_id, user_id, created_at
+     from error_logs
+     order by created_at desc
+     limit $1`,
+    [limit],
+  )
+  return res.json(r.rows)
+}))
+
 adminRouter.get('/analytics/geo', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
   const parsed = GeoAnalyticsSchema.safeParse(req.query)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })

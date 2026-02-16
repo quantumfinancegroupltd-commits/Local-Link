@@ -403,7 +403,15 @@ export function BuyerJobDetail() {
           <PageHeader
             kicker="Job"
             title={job?.title || 'Job'}
-            subtitle={job?.location || '—'}
+            subtitle={
+              [
+                job?.location || null,
+                job?.scheduled_at ? `Scheduled: ${new Date(job.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}` : null,
+                job?.recurring_frequency ? `Recurring: ${job.recurring_frequency}${job?.recurring_end_date ? ` until ${new Date(job.recurring_end_date).toLocaleDateString()}` : ''}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || '—'
+            }
             actions={
               <>
                 <StatusPill status={job?.status || 'open'} />
@@ -484,6 +492,11 @@ export function BuyerJobDetail() {
                   {deleteBusy ? 'Deleting…' : 'Delete job'}
                 </Button>
               ) : null}
+              {job?.status === 'completed' && job?.category === 'Domestic Services' ? (
+                <Link to="/buyer/jobs/new?category=Domestic%20Services">
+                  <Button variant="secondary">Book again (cleaning/laundry)</Button>
+                </Link>
+              ) : null}
             </div>
 
             {job?.location_lat != null && job?.location_lng != null ? (
@@ -530,6 +543,25 @@ export function BuyerJobDetail() {
               </div>
             ) : null}
             <div className="mt-4 text-sm text-slate-700 whitespace-pre-wrap">{job?.description || '—'}</div>
+            {(job?.scheduled_at || job?.recurring_frequency) ? (
+              <div className="mt-4 flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                {job?.scheduled_at ? (
+                  <div>
+                    <span className="font-semibold text-slate-700">Scheduled:</span>{' '}
+                    {new Date(job.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    {job?.scheduled_end_at
+                      ? ` – ${new Date(job.scheduled_end_at).toLocaleString(undefined, { timeStyle: 'short' })}`
+                      : ''}
+                  </div>
+                ) : null}
+                {job?.recurring_frequency ? (
+                  <div>
+                    <span className="font-semibold text-slate-700">Recurring:</span> {job.recurring_frequency}
+                    {job?.recurring_end_date ? ` until ${new Date(job.recurring_end_date).toLocaleDateString()}` : ''}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </Card>
 
           <Card>

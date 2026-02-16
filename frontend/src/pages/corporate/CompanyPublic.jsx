@@ -164,6 +164,18 @@ export function CompanyPublic() {
     }
   }, [data?.company?.owner_user_id, isAuthed])
 
+  // Must run unconditionally (same number of hooks every render) — cannot be after early returns
+  const c = data?.company
+  usePageMeta({
+    title: c?.name ? `${c.name} • LocalLink` : 'Company • LocalLink',
+    description: (c?.description || ownerProfile?.profile?.bio || ownerProfile?.user?.company_description)
+      ? String(c?.description || ownerProfile?.profile?.bio || ownerProfile?.user?.company_description).slice(0, 160)
+      : (c?.name ? `View ${c.name} on LocalLink.` : 'Company on LocalLink.'),
+    image: c?.cover_url || c?.logo_url || ownerProfile?.user?.profile_pic || ownerProfile?.profile?.cover_photo || '/locallink-logo.png',
+    url: typeof window !== 'undefined' && slug ? `${window.location.origin}/c/${encodeURIComponent(slug)}` : null,
+    type: 'profile',
+  })
+
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl">
@@ -186,18 +198,18 @@ export function CompanyPublic() {
     )
   }
 
-  const c = data.company
+  const company = data.company
   const jobs = Array.isArray(data.jobs) ? data.jobs : []
   const isOwner = Boolean(viewerCompanySlug && String(viewerCompanySlug) === String(slug))
   const jobsPreview = jobs.slice(0, 4)
-  const ownerId = c?.owner_user_id ? String(c.owner_user_id) : ''
+  const ownerId = company?.owner_user_id ? String(company.owner_user_id) : ''
   const owner = ownerProfile?.user ?? null
   const stats = ownerProfile?.stats ?? null
   const ownerProfileData = ownerProfile?.profile ?? null
   // Fall back to owner profile when company has no cover/logo/bio
-  const coverUrl = c?.cover_url || owner?.company_cover_url || ownerProfileData?.cover_photo
-  const logoUrl = c?.logo_url || owner?.profile_pic
-  const description = c?.description || ownerProfileData?.bio || owner?.company_description
+  const coverUrl = company?.cover_url || owner?.company_cover_url || ownerProfileData?.cover_photo
+  const logoUrl = company?.logo_url || owner?.profile_pic
+  const description = company?.description || ownerProfileData?.bio || owner?.company_description
 
   const lastActiveLabel = (() => {
     const raw = owner?.last_active_at
@@ -211,14 +223,6 @@ export function CompanyPublic() {
   })()
 
   const verificationTier = String(owner?.verification_tier ?? 'unverified')
-
-  usePageMeta({
-    title: c?.name ? `${c.name} • LocalLink` : 'Company • LocalLink',
-    description: description ? String(description).slice(0, 160) : `View ${c?.name || 'company'} on LocalLink.`,
-    image: coverUrl || logoUrl || '/locallink-logo.png',
-    url: typeof window !== 'undefined' ? `${window.location.origin}/c/${encodeURIComponent(slug)}` : null,
-    type: 'profile',
-  })
 
   const publicUrl = typeof window !== 'undefined' ? `${window.location.origin}/c/${encodeURIComponent(slug)}` : ''
 
@@ -235,8 +239,8 @@ export function CompanyPublic() {
     try {
       if (!navigator.share) return copyShareLink()
       await navigator.share({
-        title: c?.name ? `${c.name} • LocalLink` : 'LocalLink',
-        text: description ? String(description).slice(0, 160) : 'LocalLink company page',
+        title: company?.name ? `${company.name} • LocalLink` : 'LocalLink',
+        text: description ? String(description).slice(0, 160) : `${company.name || 'Company'} • LocalLink`,
         url: publicUrl || window.location.href,
       })
     } catch {
@@ -296,7 +300,7 @@ export function CompanyPublic() {
             <div className="flex items-start gap-4">
               {logoUrl ? <img src={logoUrl} alt="logo" className="h-14 w-14 rounded-2xl border object-cover" /> : null}
               <div>
-                <div className="text-lg font-bold">{c.name}</div>
+                <div className="text-lg font-bold">{company.name}</div>
                 <div className="mt-1 text-sm text-slate-600">
                   <span className="font-semibold">COMPANY</span>
                   {(typeof owner?.rating === 'number' || owner?.rating != null) ? (
@@ -304,11 +308,11 @@ export function CompanyPublic() {
                   ) : null}
                   {owner?.verified ? ' • Verified' : ''}
                 </div>
-                {(c.industry || c.location || c.size_range) ? (
+                {(company.industry || company.location || company.size_range) ? (
                   <div className="mt-0.5 text-xs text-slate-500">
-                    {c.industry || 'Company'}
-                    {c.location ? ` • ${c.location}` : ''}
-                    {c.size_range ? ` • ${c.size_range}` : ''}
+                    {company.industry || 'Company'}
+                    {company.location ? ` • ${company.location}` : ''}
+                    {company.size_range ? ` • ${company.size_range}` : ''}
                   </div>
                 ) : null}
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -371,7 +375,7 @@ export function CompanyPublic() {
 
       <PageHeader
         title="Posts"
-        subtitle={isOwner ? 'Updates from your company page.' : `Updates from ${c.name}.`}
+        subtitle={isOwner ? 'Updates from your company page.' : `Updates from ${company.name}.`}
         actions={
           isOwner ? (
             <Link to="/feed?compose=1">

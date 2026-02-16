@@ -206,7 +206,7 @@ export function FarmerOrders() {
   return (
     <div className="space-y-6">
       <PageHeader
-        kicker="Farmer"
+        kicker="Farmer / Florist"
         title="Orders"
         subtitle={`${counts.all} total • ${counts.active} active`}
         actions={

@@ -7,24 +7,29 @@ import { asyncHandler } from '../middleware/asyncHandler.js'
 export const artisansRouter = Router()
 
 async function upsertArtisan(userId, data) {
-  const { skills, primary_skill, experience_years, service_area } = data
+  const { skills, primary_skill, experience_years, service_area, job_categories: jobCategories } = data
   const inferredPrimary =
     primary_skill != null && String(primary_skill).trim()
       ? String(primary_skill).trim()
       : Array.isArray(skills) && skills.filter(Boolean).length
         ? String(skills.filter(Boolean)[0]).trim()
         : null
+  const jobCats =
+    Array.isArray(jobCategories) && jobCategories.length
+      ? jobCategories.filter((c) => c != null && String(c).trim()).map((c) => String(c).trim())
+      : null
   const r = await pool.query(
-    `insert into artisans (user_id, skills, primary_skill, experience_years, service_area)
-     values ($1,$2,$3,$4,$5)
+    `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, job_categories)
+     values ($1,$2,$3,$4,$5,$6::text[])
      on conflict (user_id) do update set
        skills = excluded.skills,
        primary_skill = excluded.primary_skill,
        experience_years = excluded.experience_years,
        service_area = excluded.service_area,
+       job_categories = excluded.job_categories,
        updated_at = now()
      returning *`,
-    [userId, skills ?? null, inferredPrimary, experience_years ?? null, service_area ?? null],
+    [userId, skills ?? null, inferredPrimary, experience_years ?? null, service_area ?? null, jobCats],
   )
   return r.rows[0]
 }
@@ -42,7 +47,7 @@ artisansRouter.get('/', asyncHandler(async (req, res) => {
     `select u.id as user_id,
             u.name, u.role, u.verified, u.rating, u.profile_pic, u.trust_score,
             a.id as artisan_id,
-            a.skills, a.primary_skill, a.portfolio, a.experience_years, a.service_area, a.service_place_id, a.service_lat, a.service_lng,
+            a.skills, a.primary_skill, a.portfolio, a.experience_years, a.service_area, a.service_place_id, a.service_lat, a.service_lng, a.job_categories,
             a.verified_docs, a.premium,
             a.created_at as artisan_created_at,
             a.updated_at as artisan_updated_at,
@@ -78,6 +83,7 @@ artisansRouter.get('/', asyncHandler(async (req, res) => {
     service_place_id: row.service_place_id ?? null,
     service_lat: row.service_lat ?? null,
     service_lng: row.service_lng ?? null,
+    job_categories: Array.isArray(row.job_categories) ? row.job_categories : null,
     verified_docs: row.verified_docs ?? null,
     premium: row.premium ?? false,
     created_at: row.artisan_created_at ?? null,
@@ -103,6 +109,7 @@ const CreateSchema = z.object({
   primary_skill: z.string().max(80).optional().nullable(),
   experience_years: z.number().int().min(0).optional().nullable(),
   service_area: z.string().optional().nullable(),
+  job_categories: z.array(z.string().max(80)).optional().nullable(),
 })
 
 artisansRouter.post('/me', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {

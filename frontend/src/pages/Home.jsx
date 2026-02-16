@@ -60,8 +60,9 @@ export function Home() {
     }
   }, [])
 
-  const showEvents = !!features?.vertical_events
-  const showDomestic = !!features?.vertical_domestic
+  // Events & Domestic are live; only hide if API explicitly returns false (e.g. admin turned off).
+  const showEvents = features?.vertical_events !== false
+  const showDomestic = features?.vertical_domestic !== false
   const showB2B = !!features?.vertical_b2b_supply
   const showLogistics = !!features?.vertical_logistics
 
@@ -69,7 +70,7 @@ export function Home() {
     () => ({
       events: {
         title: 'Events & Catering',
-        subtitle: 'Caterers, tents/chairs, staff — scheduled bookings with escrow protection.',
+        subtitle: 'Caterers, chairs/tents, staff — scheduling + escrow.',
         what: [
           'Event job posting + quotes (like Skilled Labour)',
           'Date/time scheduling + deposits',
@@ -81,10 +82,10 @@ export function Home() {
       },
       domestic: {
         title: 'Domestic & Recurring',
-        subtitle: 'Cleaners, laundry, caregivers — trust-first repeat services.',
-        what: ['Recurring bookings (weekly/monthly)', 'Preferred provider re-book', 'Trust + reliability enforcement', 'Dispute/evidence flow'],
+        subtitle: 'Cleaners, laundry — trust-first repeat services. Care givers coming later.',
+        what: ['Recurring bookings (weekly/monthly)', 'Preferred provider re-book', 'Trust + reliability enforcement', 'Dispute/evidence flow', 'Care givers in a future update'],
         why: 'Recurring services need reliability, not just matching — trust signals + repeat workflows make this sticky.',
-        now: ['Try Skilled Labour for one-off home tasks', 'Use Public Profiles to vet providers before hiring'],
+        now: ['Post a cleaning or laundry need (Hire a Professional)', 'Use Public Profiles to vet providers', 'Care givers will be added in a later release'],
       },
       b2b: {
         title: 'Business Sourcing',
@@ -169,11 +170,10 @@ export function Home() {
           <div className="max-w-2xl">
             <div className="text-sm font-semibold text-slate-700">Launch focus</div>
             <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-              Three doors. One trust engine.
+              Hire, buy, employ — plus events & domestic.
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
-              We’re launching with three clear entry points: services, supplies, and employers. New verticals unlock later without rebuilding the
-              trust + payments layer.
+              Skilled labour, produce & flowers, and employers. Events & Catering and Domestic (cleaners, laundry) are live with scheduling and escrow. More verticals unlock later.
             </p>
           </div>
         </div>
@@ -187,7 +187,7 @@ export function Home() {
             imageUrl={images.fix}
           />
           <UseCaseTile
-            title="Buy Fresh Produce (Farmers + Delivery)"
+            title="Buy Fresh Produce & Flowers (Farmers & Florists + Delivery)"
             description="Browse listings, order, and track delivery — with escrow protection."
             to="/register?role=buyer&intent=produce"
             accent="lime"
@@ -203,7 +203,8 @@ export function Home() {
         </div>
 
         <div className="mt-6">
-          <div className="text-sm font-semibold text-slate-900">Coming soon (same engine, new doors)</div>
+          <div className="text-sm font-semibold text-slate-900">Events, domestic services & more</div>
+          <div className="mt-1 text-xs text-slate-500">Caterers and equipment, cleaners and laundry — scheduling + escrow. Care givers coming later.</div>
           <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {showEvents ? (
               <UseCaseTile
@@ -228,7 +229,7 @@ export function Home() {
             {showDomestic ? (
               <UseCaseTile
                 title="Domestic & Recurring"
-                description="Cleaners, laundry, caregivers — trust-first, repeat usage."
+                description="Cleaners, laundry — trust-first, repeat. Care givers coming later."
                 to="/register?role=buyer&intent=fix&category=Domestic%20Services"
                 accent="slate"
                 imageUrl={images.fix}
@@ -236,7 +237,7 @@ export function Home() {
             ) : (
               <ComingSoonTile
                 title="Domestic & Recurring"
-                description="Cleaners, laundry, caregivers — trust-first, repeat usage."
+                description="Cleaners, laundry — trust-first, repeat. Care givers coming later."
                 imageUrl={images.coming_domestic}
                 onClick={() => {
                   setComingKey('domestic')
@@ -291,7 +292,7 @@ export function Home() {
       {/* TRUST STRIP */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className={['rounded-3xl p-5', ui.card].join(' ')}>
-          <div className="text-sm font-semibold">Verified providers & farmers</div>
+          <div className="text-sm font-semibold">Verified providers, farmers & florists</div>
           <div className="mt-1 text-sm text-slate-600">Bronze / Silver / Gold trust tiers.</div>
         </div>
         <div className={['rounded-3xl p-5', ui.card].join(' ')}>

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
+import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label } from '../../components/ui/FormControls.jsx'
 
 export function Login() {
@@ -51,6 +52,7 @@ export function Login() {
     setBusy(true)
     try {
       const u = await login({ email, password })
+      trackEvent('login')
       if (u?.role === 'admin' && u?.must_change_password) {
         navigate('/admin/set-password', { replace: true })
       } else {

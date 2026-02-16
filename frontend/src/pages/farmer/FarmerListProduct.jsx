@@ -5,6 +5,7 @@ import { uploadMediaFiles } from '../../api/uploads.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
+import { PRODUCT_CATEGORIES, PRODUCT_UNITS } from '../../lib/productCategories.js'
 
 export function FarmerListProduct() {
   const navigate = useNavigate()
@@ -106,8 +107,8 @@ export function FarmerListProduct() {
     <div className="mx-auto max-w-2xl">
       <PageHeader
         kicker="Marketplace"
-        title="List produce"
-        subtitle="Create a simple “Buy Now” listing for the marketplace."
+        title="List produce or flowers"
+        subtitle="Create a simple “Buy Now” listing for the marketplace (produce, flowers, plants)."
         actions={
           <Button variant="secondary" onClick={() => navigate(-1)}>
             Back
@@ -149,20 +150,21 @@ export function FarmerListProduct() {
             <div>
               <Label>Category</Label>
               <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-                <option value="vegetables">Vegetables</option>
-                <option value="fruits">Fruits</option>
-                <option value="grains">Grains</option>
-                <option value="poultry">Poultry</option>
-                <option value="other">Other</option>
+                {PRODUCT_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
               </Select>
             </div>
             <div>
               <Label>Unit</Label>
               <Select value={unit} onChange={(e) => setUnit(e.target.value)}>
-                <option value="kg">kg</option>
-                <option value="crate">crate</option>
-                <option value="bunch">bunch</option>
-                <option value="bag">bag</option>
+                {PRODUCT_UNITS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
               </Select>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
@@ -15,6 +16,7 @@ export function BuyerJobs() {
   const [deleteBusyId, setDeleteBusyId] = useState(null)
   const [tab, setTab] = useState('active') // active | open | assigned | in_progress | completed | cancelled | all
   const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('')
   const [exportBusy, setExportBusy] = useState(false)
 
   useEffect(() => {
@@ -40,9 +42,11 @@ export function BuyerJobs() {
   useEffect(() => {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')
+    const nextCat = String(searchParams.get('category') || '')
     const allowed = new Set(['active', 'open', 'assigned', 'in_progress', 'completed', 'cancelled', 'all'])
     if (nextTab && allowed.has(nextTab) && nextTab !== tab) setTab(nextTab)
     if (nextQ !== query) setQuery(nextQ)
+    if (nextCat !== category) setCategory(nextCat)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -51,14 +55,17 @@ export function BuyerJobs() {
       const next = new URLSearchParams(searchParams)
       const t0 = String(tab || '').trim()
       const q0 = String(query || '').trim()
+      const c0 = String(category || '').trim()
       if (t0) next.set('tab', t0)
       else next.delete('tab')
       if (q0) next.set('q', q0)
       else next.delete('q')
+      if (c0) next.set('category', c0)
+      else next.delete('category')
       if (String(next.toString()) !== String(searchParams.toString())) setSearchParams(next, { replace: true })
     }, 250)
     return () => clearTimeout(t)
-  }, [tab, query, searchParams, setSearchParams])
+  }, [tab, query, category, searchParams, setSearchParams])
 
   const counts = useMemo(() => {
     const c = { all: jobs.length, active: 0, open: 0, assigned: 0, in_progress: 0, completed: 0, cancelled: 0 }
@@ -72,6 +79,7 @@ export function BuyerJobs() {
 
   const filtered = useMemo(() => {
     const q = String(query || '').trim().toLowerCase()
+    const cat = String(category || '').trim()
     return jobs.filter((j) => {
       const s = String(j?.status ?? 'open')
       const matchTab =
@@ -81,11 +89,12 @@ export function BuyerJobs() {
             ? s !== 'cancelled'
             : s === tab
       if (!matchTab) return false
+      if (cat && (j?.category ?? '') !== cat) return false
       if (!q) return true
-      const hay = `${j?.title ?? ''} ${j?.location ?? ''} ${j?.status ?? ''}`.toLowerCase()
+      const hay = `${j?.title ?? ''} ${j?.location ?? ''} ${j?.category ?? ''} ${j?.status ?? ''}`.toLowerCase()
       return hay.includes(q)
     })
-  }, [jobs, tab, query])
+  }, [jobs, tab, query, category])
 
   function csvCell(v) {
     const s = v == null ? '' : String(v)
@@ -179,9 +188,18 @@ export function BuyerJobs() {
 
       <Card>
         <div className="grid gap-3 md:grid-cols-12 md:items-end">
-          <div className="md:col-span-7">
+          <div className="md:col-span-5">
             <div className="text-xs font-semibold text-slate-700">Search</div>
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="kitchen, plumbing, Accra…" />
+          </div>
+          <div className="md:col-span-2">
+            <div className="text-xs font-semibold text-slate-700">Category</div>
+            <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">All categories</option>
+              {JOB_CATEGORIES_TIER1.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </Select>
           </div>
           <div className="md:col-span-3">
             <div className="text-xs font-semibold text-slate-700">Status</div>
@@ -201,6 +219,7 @@ export function BuyerJobs() {
               onClick={() => {
                 setTab('active')
                 setQuery('')
+                setCategory('')
               }}
             >
               Clear
@@ -238,7 +257,12 @@ export function BuyerJobs() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <Link to={`/buyer/jobs/${j.id}`} className="min-w-0">
                     <div className="truncate text-sm font-semibold">{j.title || 'Job'}</div>
-                    <div className="mt-0.5 truncate text-xs text-slate-600">{j.location || '—'}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                      <span className="truncate">{j.location || '—'}</span>
+                      {j.category ? (
+                        <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-slate-700">{j.category}</span>
+                      ) : null}
+                    </div>
                   </Link>
                   <div className="flex items-center gap-2">
                     <div className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">

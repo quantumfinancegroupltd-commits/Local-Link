@@ -299,6 +299,11 @@ export function BuyerJobEscrow() {
               <div>
                 <div className="text-sm font-semibold">{job?.title || 'Job'}</div>
                 <div className="mt-1 text-sm text-slate-600">{job?.location || '—'}</div>
+                {job?.scheduled_at ? (
+                  <div className="mt-1 text-xs text-slate-600">
+                    📅 Your deposit secures the booking for {new Date(job.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.
+                  </div>
+                ) : null}
               </div>
               <div className="text-xs font-medium text-slate-700">{job?.status || 'open'}</div>
             </div>

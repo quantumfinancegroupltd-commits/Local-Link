@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
+import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 
 export function Register() {
@@ -28,6 +29,7 @@ export function Register() {
     setBusy(true)
     try {
       const u = await register({ name, email, phone, password, role })
+      trackEvent('signup')
       const finalRole = u?.role || role
       const intent = String(params.get('intent') ?? '').toLowerCase()
       const category = params.get('category')
@@ -59,14 +61,15 @@ export function Register() {
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
           <div>
-            <Label htmlFor="reg-role">Role</Label>
+            <Label htmlFor="reg-role">I am a</Label>
             <Select id="reg-role" value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="buyer">Buyer / Homeowner</option>
-              <option value="artisan">Artisan / Skilled labor</option>
-              <option value="farmer">Farmer</option>
-              <option value="driver">Driver / Delivery partner</option>
-              <option value="company">Company / Employer</option>
+              <option value="buyer">Buyer — hire pros, buy produce, post jobs</option>
+              <option value="artisan">Artisan — offer skills (events, catering, cleaning, repairs…)</option>
+              <option value="farmer">Farmer / Florist — sell produce, flowers & plants</option>
+              <option value="driver">Driver — delivery partner</option>
+              <option value="company">Company — hire staff, manage shifts</option>
             </Select>
+            <p className="mt-1.5 text-xs text-slate-500">Buyers post jobs and use escrow; artisans, farmers and drivers get hired and earn.</p>
           </div>
 
           <div>

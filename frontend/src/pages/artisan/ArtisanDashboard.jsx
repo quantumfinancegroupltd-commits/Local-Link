@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { useAuth } from '../../auth/useAuth.js'
 import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
@@ -17,6 +18,7 @@ export function ArtisanDashboard() {
   const [jobCounts, setJobCounts] = useState({})
   const [jobsTab, setJobsTab] = useState('new') // all | new | quoted | booked | in_progress | completed | paid | disputed | rejected
   const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('')
   const [exportBusy, setExportBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -64,9 +66,11 @@ export function ArtisanDashboard() {
   useEffect(() => {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')
+    const nextCat = String(searchParams.get('category') || '')
     const allowed = new Set(['all', 'new', 'quoted', 'booked', 'in_progress', 'completed', 'paid', 'disputed', 'rejected'])
     if (nextTab && allowed.has(nextTab) && nextTab !== jobsTab) setJobsTab(nextTab)
     if (nextQ !== query) setQuery(nextQ)
+    if (nextCat !== category) setCategory(nextCat)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
@@ -75,14 +79,17 @@ export function ArtisanDashboard() {
       const next = new URLSearchParams(searchParams)
       const t0 = String(jobsTab || '').trim()
       const q0 = String(query || '').trim()
+      const c0 = String(category || '').trim()
       if (t0) next.set('tab', t0)
       else next.delete('tab')
       if (q0) next.set('q', q0)
       else next.delete('q')
+      if (c0) next.set('category', c0)
+      else next.delete('category')
       if (String(next.toString()) !== String(searchParams.toString())) setSearchParams(next, { replace: true })
     }, 250)
     return () => clearTimeout(t)
-  }, [jobsTab, query, searchParams, setSearchParams])
+  }, [jobsTab, query, category, searchParams, setSearchParams])
 
   function csvCell(v) {
     const s = v == null ? '' : String(v)
@@ -206,16 +213,18 @@ export function ArtisanDashboard() {
 
   const filtered = useMemo(() => {
     const q = String(query || '').trim().toLowerCase()
+    const cat = String(category || '').trim()
     const list = Array.isArray(jobs) ? jobs : []
     return list.filter((j) => {
       if (!j) return false
       const stage = String(j.stage || '').trim()
       if (jobsTab !== 'all' && stage !== jobsTab) return false
+      if (cat && (j?.category ?? '') !== cat) return false
       if (!q) return true
-      const hay = `${j.title ?? ''} ${j.description ?? ''} ${j.location ?? ''}`.toLowerCase()
+      const hay = `${j.title ?? ''} ${j.description ?? ''} ${j.location ?? ''} ${j.category ?? ''}`.toLowerCase()
       return hay.includes(q)
     })
-  }, [jobs, jobsTab, query])
+  }, [jobs, jobsTab, query, category])
 
   async function reloadPipeline() {
     try {
@@ -647,8 +656,16 @@ export function ArtisanDashboard() {
             <div className="mt-1 text-xs text-slate-600">Track quotes, bookings, job progress, escrow and disputes.</div>
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
-            <div className="w-full md:w-64">
+            <div className="w-full md:w-48">
               <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search jobs…" />
+            </div>
+            <div className="w-full md:w-44">
+              <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">All categories</option>
+                {JOB_CATEGORIES_TIER1.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </Select>
             </div>
             <Button size="sm" variant="secondary" onClick={() => copyCurrentLink().catch(() => {})}>
               Copy link
@@ -688,12 +705,20 @@ export function ArtisanDashboard() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="text-sm font-semibold">{j.title || 'Job'}</div>
+                      {j.stage === 'new' && j.category && Array.isArray(artisanProfile?.job_categories) && artisanProfile.job_categories.includes(j.category) ? (
+                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Matches your services</span>
+                      ) : null}
                       <StatusPill status={j.stage || j.status || 'open'} label={j.stage ? String(j.stage).replaceAll('_', ' ') : undefined} />
                       {j?.my_quote?.status ? <StatusPill status={j.my_quote.status} label={`quote: ${j.my_quote.status}`} /> : null}
                       {j?.escrow?.status ? <StatusPill status={j.escrow.status} label={`escrow: ${j.escrow.status}`} /> : null}
                       {j?.dispute?.status ? <StatusPill status={j.dispute.status} label={`dispute: ${j.dispute.status}`} /> : null}
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-600">{j.location || '—'}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                      <span>{j.location || '—'}</span>
+                      {j.category ? (
+                        <span className="shrink-0 rounded bg-slate-100 px-2 py-0.5 text-slate-700">{j.category}</span>
+                      ) : null}
+                    </div>
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-600">
                       {j?.budget != null && Number(j.budget) > 0 ? <span className="font-semibold text-slate-700">Budget: GHS {Number(j.budget).toFixed(0)}</span> : null}
                       {j?.my_quote?.amount != null ? <span>Your quote: GHS {Number(j.my_quote.amount).toFixed(0)}</span> : null}

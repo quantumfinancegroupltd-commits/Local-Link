@@ -9,6 +9,7 @@ import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { haversineKm, formatKm } from '../../lib/geo.js'
 import { getVerificationTier, tierRank } from '../../lib/verification.js'
 import { ui } from '../../components/ui/tokens.js'
+import { PRODUCT_CATEGORIES } from '../../lib/productCategories.js'
 
 export function MarketplaceBrowse() {
   const [products, setProducts] = useState([])
@@ -152,8 +153,8 @@ export function MarketplaceBrowse() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Farmers Marketplace"
-        subtitle="Browse produce with photos, filtered by category, location, and verification."
+        title="Farmers & Florists Marketplace"
+        subtitle="Produce, flowers & plants — browse by category, location, and verification."
         actions={
           <div className="text-sm font-semibold text-slate-700">
             {loading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}`}
@@ -165,17 +166,17 @@ export function MarketplaceBrowse() {
         <div className="grid gap-3 md:grid-cols-12 md:items-end">
           <div className="md:col-span-4">
             <div className={ui.label}>Search</div>
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search produce…" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search produce, flowers, plants…" />
           </div>
           <div className="md:col-span-2">
             <div className={ui.label}>Category</div>
             <Select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="all">All</option>
-              <option value="vegetables">Vegetables</option>
-              <option value="fruits">Fruits</option>
-              <option value="grains">Grains</option>
-              <option value="poultry">Poultry</option>
-              <option value="other">Other</option>
+              {PRODUCT_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
             </Select>
           </div>
           <div className="md:col-span-3">

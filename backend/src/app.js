@@ -39,6 +39,8 @@ import { corporateRouter } from './routes/corporate.js'
 import { newsRouter } from './routes/news.js'
 import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
+import { analyticsRouter } from './routes/analytics.js'
+import { logErrorToDb } from './services/errorLog.js'
 
 export function createApp() {
   const app = express()
@@ -139,6 +141,7 @@ export function createApp() {
   app.use('/api/posts', postsRouter)
   app.use('/api/follows', followsRouter)
   app.use('/api/endorsements', endorsementsRouter)
+  app.use('/api/analytics', analyticsRouter)
   app.use('/api/news', newsRouter)
   app.use('/api/match', matchRouter)
   app.use('/api/verification', verificationRouter)
@@ -157,6 +160,7 @@ export function createApp() {
   app.use((err, req, res, next) => {
     // eslint-disable-next-line no-console
     console.error(err)
+    logErrorToDb(err, req)
     if (String(err?.message || '') === 'Not allowed by CORS') {
       return res.status(403).json({ message: 'Origin not allowed', reqId: req.id })
     }

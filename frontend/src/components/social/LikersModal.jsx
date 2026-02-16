@@ -13,7 +13,7 @@ function roleLabel(role) {
   const r = String(role || '')
   if (!r) return ''
   if (r === 'artisan') return 'Provider'
-  if (r === 'farmer') return 'Farmer'
+  if (r === 'farmer') return 'Farmer / Florist'
   if (r === 'driver') return 'Driver'
   if (r === 'company') return 'Company'
   if (r === 'buyer') return 'Buyer'

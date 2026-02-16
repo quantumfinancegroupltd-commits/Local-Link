@@ -7,6 +7,7 @@ import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
 import { WhatHappensIfModal } from '../../components/trust/WhatHappensIfModal.jsx'
 import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { useAuth } from '../../auth/useAuth.js'
+import { trackEvent } from '../../lib/useAnalytics.js'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { StickyActionBar } from '../../components/ui/StickyActionBar.jsx'
 
@@ -161,6 +162,7 @@ export function MarketplaceProductDetail() {
         delivery_lng: deliveryLng,
         provider: 'paystack',
       })
+      trackEvent('order_placed')
       const url = res.data?.paystack?.authorization_url
       if (!url) {
         throw new Error('Paystack did not return an authorization URL')

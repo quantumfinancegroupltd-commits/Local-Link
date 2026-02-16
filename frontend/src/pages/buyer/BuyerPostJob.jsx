@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
+import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
@@ -23,6 +24,10 @@ export function BuyerPostJob() {
   const [locationLng, setLocationLng] = useState(null)
   const [locationPlaceId, setLocationPlaceId] = useState(null)
   const [budget, setBudget] = useState('')
+  const [scheduledAt, setScheduledAt] = useState('')
+  const [scheduledEndAt, setScheduledEndAt] = useState('')
+  const [recurringFrequency, setRecurringFrequency] = useState('')
+  const [recurringEndDate, setRecurringEndDate] = useState('')
   const [mediaFiles, setMediaFiles] = useState([]) // File[]
   const [mediaError, setMediaError] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -39,9 +44,13 @@ export function BuyerPostJob() {
       locationLng,
       locationPlaceId,
       budget,
+      scheduledAt,
+      scheduledEndAt,
+      recurringFrequency,
+      recurringEndDate,
       saved_at: Date.now(),
     }),
-    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget],
+    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget, scheduledAt, scheduledEndAt, recurringFrequency, recurringEndDate],
   )
   const draft = useDraftAutosave({ key: draftKey, data: draftData, enabled: true, debounceMs: 700 })
 
@@ -59,6 +68,10 @@ export function BuyerPostJob() {
     setLocationLng(typeof d.locationLng === 'number' ? d.locationLng : null)
     setLocationPlaceId(d.locationPlaceId ?? null)
     setBudget(String(d.budget ?? ''))
+    setScheduledAt(String(d.scheduledAt ?? ''))
+    setScheduledEndAt(String(d.scheduledEndAt ?? ''))
+    setRecurringFrequency(String(d.recurringFrequency ?? ''))
+    setRecurringEndDate(String(d.recurringEndDate ?? ''))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -92,6 +105,17 @@ export function BuyerPostJob() {
     if (!mapsQuery) return null
     return `https://www.google.com/maps?q=${encodeURIComponent(mapsQuery)}&output=embed`
   }, [mapsQuery])
+
+  const titlePlaceholder = useMemo(() => {
+    if (category === 'Events & Catering') return 'e.g. Wedding catering, chairs & tents, event staff'
+    if (category === 'Domestic Services') return 'e.g. Weekly cleaning, laundry pickup, deep clean'
+    return 'e.g. Fix leaking kitchen sink'
+  }, [category])
+  const descriptionPlaceholder = useMemo(() => {
+    if (category === 'Events & Catering') return 'Event date, venue, head count, catering needs (meals/drinks), equipment (chairs, tents, tables), staff required. Escrow can hold deposit until completion.'
+    if (category === 'Domestic Services') return 'Frequency (e.g. weekly), what to clean or launder, access instructions. Recurring bookings supported.'
+    return 'What needs to be done? Include scope, timeline, and any special requirements.'
+  }, [category])
 
   useEffect(() => {
     const fromQuery = params.get('category')
@@ -131,6 +155,10 @@ export function BuyerPostJob() {
         category: category || null,
         location,
         budget: budget ? Number(budget) : null,
+        scheduled_at: scheduledAt.trim() || null,
+        scheduled_end_at: scheduledEndAt.trim() || null,
+        recurring_frequency: recurringFrequency || null,
+        recurring_end_date: recurringEndDate.trim() || null,
         image_url,
         media,
         location_place_id: locationPlaceId,
@@ -138,6 +166,7 @@ export function BuyerPostJob() {
         location_lng: locationLng,
       })
       const jobId = res.data?.id ?? res.data?.job?.id
+      trackEvent('job_posted')
       draft.clear()
       navigate(jobId ? `/buyer/jobs/${jobId}` : '/buyer', { replace: true })
     } catch (err) {
@@ -170,6 +199,10 @@ export function BuyerPostJob() {
                 setLocationLng(null)
                 setLocationPlaceId(null)
                 setBudget('')
+                setScheduledAt('')
+                setScheduledEndAt('')
+                setRecurringFrequency('')
+                setRecurringEndDate('')
                 setMediaFiles([])
               }}
             >
@@ -186,7 +219,7 @@ export function BuyerPostJob() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="e.g. Fix leaking kitchen sink"
+              placeholder={titlePlaceholder}
             />
           </div>
           <div>
@@ -209,12 +242,68 @@ export function BuyerPostJob() {
               onChange={(e) => setDescription(e.target.value)}
               rows={5}
               required
-              placeholder="What needs to be done? Include scope, timeline, and any special requirements."
+              placeholder={descriptionPlaceholder}
             />
             <div className="mt-2 text-xs text-slate-500">
               Be specific — scope, timeline, and requirements help providers quote accurately.
             </div>
           </div>
+
+          {category === 'Events & Catering' ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="job_scheduled_at">Event date & time</Label>
+                <Input
+                  id="job_scheduled_at"
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  disabled={busy}
+                />
+                <div className="mt-2 text-xs text-slate-500">When the event or service is scheduled. Escrow secures the booking.</div>
+              </div>
+              <div>
+                <Label htmlFor="job_scheduled_end_at">End time (optional)</Label>
+                <Input
+                  id="job_scheduled_end_at"
+                  type="datetime-local"
+                  value={scheduledEndAt}
+                  onChange={(e) => setScheduledEndAt(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {category === 'Domestic Services' ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="job_recurring">Recurring</Label>
+                <Select
+                  id="job_recurring"
+                  value={recurringFrequency}
+                  onChange={(e) => setRecurringFrequency(e.target.value)}
+                  disabled={busy}
+                >
+                  <option value="">One-off</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </Select>
+                <div className="mt-2 text-xs text-slate-500">Cleaners and laundry often repeat weekly or monthly.</div>
+              </div>
+              <div>
+                <Label htmlFor="job_recurring_end">Repeat until (optional)</Label>
+                <Input
+                  id="job_recurring_end"
+                  type="date"
+                  value={recurringEndDate}
+                  onChange={(e) => setRecurringEndDate(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label htmlFor="job_location">Location</Label>

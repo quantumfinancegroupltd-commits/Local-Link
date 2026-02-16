@@ -21,7 +21,7 @@ export function TrustReviews() {
           <div className="rounded-2xl border bg-slate-50 p-4">
             <div className="text-sm font-semibold">Orders</div>
             <div className="mt-2 text-sm text-slate-700">
-              Buyers can review the farmer/driver after delivery is confirmed (delivery is settled).
+              Buyers can review the farmer/florist or driver after delivery is confirmed (delivery is settled).
             </div>
           </div>
         </div>

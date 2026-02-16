@@ -228,7 +228,15 @@ export function ArtisanJobDetail() {
           <PageHeader
             kicker="Job"
             title={job?.title || 'Job'}
-            subtitle={job?.location || '—'}
+            subtitle={
+              [
+                job?.location || null,
+                job?.scheduled_at ? `Scheduled: ${new Date(job.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}` : null,
+                job?.recurring_frequency ? `Recurring: ${job.recurring_frequency}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || '—'
+            }
             actions={
               <>
                 <StatusPill status={job?.status || 'open'} />
@@ -294,6 +302,23 @@ export function ArtisanJobDetail() {
               </div>
             ) : null}
             <div className="mt-4 whitespace-pre-wrap text-sm text-slate-700">{job?.description || '—'}</div>
+            {(job?.scheduled_at || job?.recurring_frequency) ? (
+              <div className="mt-4 flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                {job?.scheduled_at ? (
+                  <div>
+                    <span className="font-semibold text-slate-700">Scheduled:</span>{' '}
+                    {new Date(job.scheduled_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                    {job?.scheduled_end_at ? ` – ${new Date(job.scheduled_end_at).toLocaleString(undefined, { timeStyle: 'short' })}` : ''}
+                  </div>
+                ) : null}
+                {job?.recurring_frequency ? (
+                  <div>
+                    <span className="font-semibold text-slate-700">Recurring:</span> {job.recurring_frequency}
+                    {job?.recurring_end_date ? ` until ${new Date(job.recurring_end_date).toLocaleDateString()}` : ''}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
               <Button variant="secondary" disabled={actionBusy || job?.status !== 'assigned'} onClick={startJob}>
                 {actionBusy ? 'Working…' : 'Start job'}

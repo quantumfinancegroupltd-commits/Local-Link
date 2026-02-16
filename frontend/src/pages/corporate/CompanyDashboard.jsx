@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
+import { trackEvent } from '../../lib/useAnalytics.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { ImageCropperModal } from '../../components/ui/ImageCropperModal.jsx'
@@ -2082,6 +2083,7 @@ export function CompanyDashboard() {
         },
         { params: withCompanyParams() },
       )
+      trackEvent('job_posted')
       toast.success('Job posted.')
       setJobs((prev) => [res.data, ...(Array.isArray(prev) ? prev : [])])
       setJobTitle('')

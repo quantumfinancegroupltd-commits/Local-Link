@@ -9,6 +9,8 @@ export const JOB_CATEGORIES_TIER1 = [
   'Welding / Metal work',
   'Tiling',
   'Roofing',
+  'Events & Catering',
+  'Domestic Services',
   'Other',
 ]
 

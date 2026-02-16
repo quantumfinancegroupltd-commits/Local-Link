@@ -1227,6 +1227,16 @@ export function PublicProfile() {
                     <div className="mt-1">{String(roleProfile.service_area)}</div>
                   </div>
                 ) : null}
+                {user?.role === 'artisan' && Array.isArray(roleProfile?.job_categories) && roleProfile.job_categories.length ? (
+                  <div>
+                    <div className="text-xs font-semibold text-slate-600">Job categories</div>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {roleProfile.job_categories.map((c) => (
+                        <span key={c} className="rounded bg-slate-100 px-2 py-0.5 text-sm text-slate-700">{c}</span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {user?.role === 'farmer' && roleProfile?.farm_location ? (
                   <div>
                     <div className="text-xs font-semibold text-slate-600">Farm location</div>

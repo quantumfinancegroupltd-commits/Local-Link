@@ -113,7 +113,7 @@ export function FarmerDashboard() {
     <div className="space-y-6">
       <PageHeader
         kicker="Dashboard"
-        title="Farmer Dashboard"
+        title="Produce (Farmer / Florist)"
         subtitle={`How is your farm business doing today${user?.name ? `, ${user.name}` : ''}?`}
         actions={
           <>

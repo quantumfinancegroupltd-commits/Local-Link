@@ -93,7 +93,7 @@ export function IdVerification() {
 
       {!canVerify ? (
         <Card className="p-5">
-          <div className="text-sm text-slate-700">ID verification is currently required only for providers (artisan, farmer, driver).</div>
+          <div className="text-sm text-slate-700">ID verification is currently required only for providers (artisan, farmer/florist, driver).</div>
         </Card>
       ) : null}
 

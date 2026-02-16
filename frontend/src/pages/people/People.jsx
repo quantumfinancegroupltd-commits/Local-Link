@@ -11,7 +11,7 @@ function roleLabel(r) {
   if (!s) return ''
   if (s === 'buyer') return 'Buyer'
   if (s === 'artisan') return 'Provider'
-  if (s === 'farmer') return 'Farmer'
+  if (s === 'farmer') return 'Farmer / Florist'
   if (s === 'driver') return 'Driver'
   if (s === 'company') return 'Company'
   return s.toUpperCase()
@@ -138,7 +138,7 @@ export function People() {
               <option value="">All</option>
               <option value="buyer">Buyers</option>
               <option value="artisan">Providers (Artisans)</option>
-              <option value="farmer">Farmers</option>
+              <option value="farmer">Farmers / Florists</option>
               <option value="driver">Drivers</option>
               <option value="company">Companies</option>
             </Select>

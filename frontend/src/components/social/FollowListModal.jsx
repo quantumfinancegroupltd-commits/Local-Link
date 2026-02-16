@@ -11,7 +11,7 @@ function roleTag(role) {
   if (!r) return ''
   if (r === 'buyer') return 'Buyer'
   if (r === 'artisan') return 'Provider'
-  if (r === 'farmer') return 'Farmer'
+  if (r === 'farmer') return 'Farmer / Florist'
   if (r === 'driver') return 'Driver'
   if (r === 'company') return 'Company'
   return r.toUpperCase()

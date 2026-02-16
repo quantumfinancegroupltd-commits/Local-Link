@@ -10,6 +10,7 @@ import { VerifyAccountBanner } from '../../components/verification/VerifyAccount
 import { useToast } from '../../components/ui/Toast.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
+import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -965,6 +966,7 @@ export function MyProfile() {
   const [primarySkill, setPrimarySkill] = useState('')
   const [experienceYears, setExperienceYears] = useState('')
   const [serviceArea, setServiceArea] = useState('')
+  const [jobCategories, setJobCategories] = useState([]) // job categories I serve (Events & Catering, Domestic Services, etc.)
 
   // farmer fields
   const [farmLocation, setFarmLocation] = useState('')
@@ -1108,6 +1110,7 @@ export function MyProfile() {
           )
           setExperienceYears(ap.data?.experience_years != null ? String(ap.data.experience_years) : '')
           setServiceArea(ap.data?.service_area ?? '')
+          setJobCategories(Array.isArray(ap.data?.job_categories) ? ap.data.job_categories : [])
         }
         if (role === 'farmer') {
           const fp = await http.get('/farmers/me')
@@ -1374,6 +1377,7 @@ export function MyProfile() {
             .filter(Boolean),
           experience_years: experienceYears ? Number(experienceYears) : null,
           service_area: serviceArea || null,
+          job_categories: Array.isArray(jobCategories) && jobCategories.length ? jobCategories : null,
         }
         const ap = await http.post('/artisans/me', body)
         setRoleProfile(ap.data)
@@ -1988,12 +1992,36 @@ export function MyProfile() {
                 <Label>Service area</Label>
                 <Input value={serviceArea} onChange={(e) => setServiceArea(e.target.value)} placeholder="e.g. Accra, Tema" />
               </div>
+              <div className="mt-4">
+                <Label>Job categories I serve</Label>
+                <div className="mt-2 text-xs text-slate-500">Select the types of jobs you do (e.g. Events & Catering, Domestic Services). Helps buyers find you.</div>
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {JOB_CATEGORIES_TIER1.map((c) => {
+                    const checked = Array.isArray(jobCategories) && jobCategories.includes(c)
+                    return (
+                      <label key={c} className="flex cursor-pointer items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            setJobCategories((prev) =>
+                              checked ? (prev || []).filter((x) => x !== c) : [...(prev || []), c],
+                            )
+                          }}
+                          className="rounded border-slate-300"
+                        />
+                        <span className="text-sm text-slate-700">{c}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
             </Card>
           ) : null}
 
           {role === 'farmer' ? (
             <Card>
-              <div className="text-sm font-semibold">Farmer profile</div>
+              <div className="text-sm font-semibold">Farmer / Florist profile</div>
               <div className="mt-4">
                 <Label>Farm location</Label>
                 <LocationInput

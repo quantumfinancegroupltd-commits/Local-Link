@@ -156,7 +156,7 @@ profileRouter.get('/:userId', optionalAuth, asyncHandler(async (req, res) => {
   let role_profile = null
   if (user.role === 'artisan') {
     const r = await pool.query(
-      `select skills, primary_skill, experience_years, service_area, service_place_id, service_lat, service_lng, premium
+      `select skills, primary_skill, experience_years, service_area, service_place_id, service_lat, service_lng, premium, job_categories
        from artisans where user_id = $1`,
       [req.params.userId],
     )

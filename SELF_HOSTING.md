@@ -77,4 +77,13 @@ Restore (dangerous):
 ./scripts/restore_db.sh ./backups/locallink-db-<stamp>.sql.gz
 ```
 
+**Optional: copy latest backup to another server** (no S3 required). Before running the backup script, set:
+
+- `BACKUP_REMOTE_HOST` – hostname or IP of the other server (required to enable)
+- `BACKUP_REMOTE_USER` – SSH user (default: current user)
+- `BACKUP_REMOTE_PATH` – directory on remote, e.g. `backups` (default: `backups`)
+- `BACKUP_SSH_KEY` – path to SSH key file (optional)
+
+Example: `BACKUP_REMOTE_HOST=10.0.0.5 BACKUP_REMOTE_USER=ec2-user BACKUP_SSH_KEY=~/.ssh/backup.pem ./scripts/backup_db.sh`. The script uses `rsync` if available, else `scp`.
+
 

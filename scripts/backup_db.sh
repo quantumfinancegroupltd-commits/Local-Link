@@ -28,4 +28,29 @@ echo "Backup complete."
 ls -1t "$BACKUP_DIR"/locallink-db-*.sql.gz 2>/dev/null | tail -n +"$((KEEP + 1))" | xargs -r rm -f
 echo "Retention: kept last $KEEP backups."
 
+# Optional: copy latest backup to another server (no external service required)
+# Set BACKUP_REMOTE_HOST (required), BACKUP_REMOTE_USER, BACKUP_REMOTE_PATH, and optionally BACKUP_SSH_KEY
+if [[ -n "${BACKUP_REMOTE_HOST:-}" ]]; then
+  LATEST="$(ls -1t "$BACKUP_DIR"/locallink-db-*.sql.gz 2>/dev/null | head -n 1)"
+  if [[ -n "$LATEST" && -f "$LATEST" ]]; then
+    REMOTE_USER="${BACKUP_REMOTE_USER:-$USER}"
+    REMOTE_PATH="${BACKUP_REMOTE_PATH:-backups}"
+    REMOTE_DEST="${REMOTE_USER}@${BACKUP_REMOTE_HOST}:${REMOTE_PATH}/"
+    if command -v rsync &>/dev/null; then
+      if [[ -n "${BACKUP_SSH_KEY:-}" && -f "${BACKUP_SSH_KEY}" ]]; then
+        rsync -avz -e "ssh -i $BACKUP_SSH_KEY -o StrictHostKeyChecking=accept-new" "$LATEST" "$REMOTE_DEST" || true
+      else
+        rsync -avz -e "ssh -o StrictHostKeyChecking=accept-new" "$LATEST" "$REMOTE_DEST" || true
+      fi
+      echo "Remote copy (rsync) to $REMOTE_DEST done (or skipped on error)."
+    else
+      if [[ -n "${BACKUP_SSH_KEY:-}" && -f "${BACKUP_SSH_KEY}" ]]; then
+        scp -i "$BACKUP_SSH_KEY" -o StrictHostKeyChecking=accept-new "$LATEST" "$REMOTE_DEST" || true
+      else
+        scp -o StrictHostKeyChecking=accept-new "$LATEST" "$REMOTE_DEST" || true
+      fi
+      echo "Remote copy (scp) to $REMOTE_DEST done (or skipped on error)."
+    fi
+  fi
+fi
 

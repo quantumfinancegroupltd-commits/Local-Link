@@ -49,6 +49,15 @@ jobsRouter.get('/mine', requireAuth, requireRole(['artisan']), asyncHandler(asyn
 
   const openLimit = Number(parsed.data.open_limit ?? 50)
 
+  // Fetch artisan's job_categories so we can rank "new" open jobs that match first
+  const artisanRow = await pool.query(
+    'select job_categories from artisans where id = $1',
+    [artisanId],
+  )
+  const artisanCategories = Array.isArray(artisanRow?.rows?.[0]?.job_categories)
+    ? artisanRow.rows[0].job_categories.filter((c) => c != null && String(c).trim())
+    : []
+
   const r = await pool.query(
     `with      my_quotes as (
        select distinct on (q.job_id)
@@ -172,13 +181,24 @@ jobsRouter.get('/mine', requireAuth, requireRole(['artisan']), asyncHandler(asyn
     }
   })
 
-  const counts = items.reduce((acc, it) => {
+  // Rank so "new" open jobs whose category matches artisan's job_categories appear first (among new leads)
+  const ranked = items
+    .map((it, i) => {
+      const isNew = it.stage === 'new'
+      const match = isNew && it.category && artisanCategories.length > 0 && artisanCategories.includes(String(it.category).trim())
+      const rank = !isNew ? 0 : match ? 1 : 2
+      return { it, i, rank }
+    })
+    .sort((a, b) => (a.rank !== b.rank ? a.rank - b.rank : a.i - b.i))
+    .map((x) => x.it)
+
+  const counts = ranked.reduce((acc, it) => {
     const k = String(it?.stage || 'other')
     acc[k] = (acc[k] || 0) + 1
     return acc
   }, {})
 
-  return res.json({ items, counts })
+  return res.json({ items: ranked, counts })
 }))
 
 const CreateJobSchema = z.object({
@@ -187,6 +207,12 @@ const CreateJobSchema = z.object({
   location: z.string().min(1),
   category: z.string().max(80).optional().nullable(),
   budget: z.number().nullable().optional(),
+  // Events & Catering: when the event/service is scheduled (ISO or datetime-local)
+  scheduled_at: z.string().max(64).optional().nullable().or(z.literal('')),
+  scheduled_end_at: z.string().max(64).optional().nullable().or(z.literal('')),
+  // Domestic: recurring booking (weekly/monthly)
+  recurring_frequency: z.enum(['weekly', 'monthly']).optional().nullable(),
+  recurring_end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable().or(z.literal('')),
   // Accept internal upload URLs like "/api/uploads/<file>" (not a full absolute URL).
   image_url: z.string().min(1).nullable().optional(),
   media: z
@@ -209,16 +235,33 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
   const parsed = CreateJobSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
 
-  const { title, description, location, category, budget, image_url, media, location_place_id, location_lat, location_lng } =
-    parsed.data
+  const {
+    title,
+    description,
+    location,
+    category,
+    budget,
+    scheduled_at: scheduledAt,
+    scheduled_end_at: scheduledEndAt,
+    recurring_frequency: recurringFrequency,
+    recurring_end_date: recurringEndDate,
+    image_url,
+    media,
+    location_place_id,
+    location_lat,
+    location_lng,
+  } = parsed.data
 
   // IMPORTANT: node-postgres treats JS Arrays as Postgres array literals ("{...}"), not JSON.
   // Our column is jsonb, so explicitly stringify arrays and cast to jsonb in SQL.
   const mediaJson = media == null ? null : JSON.stringify(media)
+  const scheduledAtVal = scheduledAt && scheduledAt !== '' ? scheduledAt : null
+  const scheduledEndAtVal = scheduledEndAt && scheduledEndAt !== '' ? scheduledEndAt : null
+  const recurringEndDateVal = recurringEndDate && recurringEndDate !== '' ? recurringEndDate : null
 
   const r = await pool.query(
-    `insert into jobs (buyer_id, title, description, location, category, budget, image_url, media, location_place_id, location_lat, location_lng)
-     values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,$10,$11)
+    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng)
+     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15)
      returning *`,
     [
       req.user.sub,
@@ -227,6 +270,10 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
       location,
       category ?? null,
       budget ?? null,
+      scheduledAtVal,
+      scheduledEndAtVal,
+      recurringFrequency ?? null,
+      recurringEndDateVal,
       image_url ?? null,
       mediaJson,
       location_place_id ?? null,

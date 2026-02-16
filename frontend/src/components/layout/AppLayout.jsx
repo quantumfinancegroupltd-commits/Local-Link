@@ -5,6 +5,7 @@ import { roleHomePath } from '../../lib/roles.js'
 import { http } from '../../api/http.js'
 import { Button } from '../ui/FormControls.jsx'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
+import { useAnalytics } from '../../lib/useAnalytics.js'
 
 function NavItem({ to, children }) {
   return (
@@ -57,6 +58,7 @@ function Avatar({ src, name, size = 36 }) {
 
 export function AppLayout() {
   const { isAuthed, user, logout } = useAuth()
+  useAnalytics()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
@@ -588,7 +590,7 @@ export function AppLayout() {
                   Become an artisan
                 </Link>
                 <Link className="block hover:underline" to="/register?role=farmer">
-                  Become a farmer
+                  Become a farmer or florist
                 </Link>
                 <Link className="block hover:underline" to="/register?role=buyer&intent=fix">
                   Post a job

@@ -152,11 +152,11 @@ export function Onboarding() {
           <PathCard
             icon="basket"
             title="Buy & sell produce (Marketplace)"
-            subtitle="Farmers list, buyers order, drivers deliver."
+            subtitle="Farmers & florists list produce, buyers order, drivers deliver."
             bullets={['Fresh produce listings', 'Order tracking & delivery options', 'Verified reviews on completed orders']}
             actions={[
               { label: 'Browse produce', to: '/marketplace', variant: 'primary', note: 'Explore listings' },
-              { label: 'List produce (farmer)', to: '/register?role=farmer', variant: 'secondary' },
+              { label: 'List produce (farmer / florist)', to: '/register?role=farmer', variant: 'secondary' },
               { label: 'Deliver & earn', to: '/register?role=driver', variant: 'secondary' },
             ]}
           />

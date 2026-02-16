@@ -517,7 +517,7 @@ export function DriverDashboard() {
         <NextStepBanner
           variant="warning"
           title="Waiting for approval"
-          description="To protect buyers and farmers, drivers must be approved before they can claim deliveries. Ask an admin to approve your driver account."
+          description="To protect buyers, farmers and florists, drivers must be approved before they can claim deliveries. Ask an admin to approve your driver account."
         />
       ) : (
       <Card>

@@ -10,6 +10,7 @@ import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { FollowListModal } from '../../components/social/FollowListModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
+import { AvailabilityCalendar } from '../../components/calendar/AvailabilityCalendar.jsx'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -875,13 +876,16 @@ export function PublicProfile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, locked])
 
-  // Load artisan services and availability when viewing artisan profile
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().getMonth())
+  const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear())
+
+  // Load artisan services and availability when viewing artisan profile (12 months ahead)
   useEffect(() => {
     if (!id || user?.role !== 'artisan' || locked) return
     let cancelled = false
     const now = new Date()
     const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
-    const to = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10)
+    const to = new Date(now.getFullYear(), now.getMonth() + 12, 0).toISOString().slice(0, 10)
     setServicesLoading(true)
     setAvailabilityLoading(true)
     Promise.all([
@@ -890,7 +894,14 @@ export function PublicProfile() {
     ]).then(([sRes, aRes]) => {
       if (cancelled) return
       setServices(Array.isArray(sRes.data) ? sRes.data : [])
-      setAvailability(Array.isArray(aRes.data) ? aRes.data : [])
+      const raw = Array.isArray(aRes.data) ? aRes.data : []
+      const normalized = raw.map((d) => {
+        if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d
+        if (d && typeof d === 'object' && typeof d.date === 'string') return d.date.slice(0, 10)
+        if (d != null) return String(d).slice(0, 10)
+        return null
+      }).filter(Boolean)
+      setAvailability(normalized)
     }).finally(() => {
       if (!cancelled) {
         setServicesLoading(false)
@@ -1335,31 +1346,25 @@ export function PublicProfile() {
               </Card>
               <Card>
                 <div className="text-sm font-semibold">Availability</div>
-                <div className="mt-1 text-xs text-slate-600">Dates when this provider is available for bookings.</div>
+                <div className="mt-1 text-xs text-slate-600">Browse dates when this provider is available for bookings.</div>
                 {availabilityLoading ? (
-                  <div className="mt-3 text-sm text-slate-600">Loading…</div>
+                  <div className="mt-4 text-sm text-slate-600">Loading…</div>
                 ) : availability.length === 0 ? (
-                  <div className="mt-3 text-sm text-slate-600">No dates set yet.</div>
+                  <div className="mt-4 text-sm text-slate-600">No dates set yet.</div>
                 ) : (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {availability.slice(0, 14).map((d) => {
-                      const ymd = typeof d === 'string' ? d.slice(0, 10) : (d?.toISOString?.()?.slice(0, 10) ?? '')
-                      const date = /^\d{4}-\d{2}-\d{2}$/.test(ymd) ? new Date(ymd + 'T12:00:00') : null
-                      const label = date && Number.isFinite(date.getTime()) ? date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : ymd || '—'
-                      return (
-                        <span
-                          key={ymd || d}
-                          className="rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800"
-                        >
-                          {label}
-                        </span>
-                      )
-                    })}
-                    {availability.length > 14 ? (
-                      <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-sm text-slate-600">
-                        +{availability.length - 14} more
-                      </span>
-                    ) : null}
+                  <div className="mt-4">
+                    <AvailabilityCalendar
+                      availableDates={availability}
+                      month={calendarMonth}
+                      year={calendarYear}
+                      onMonthChange={(m, y) => {
+                        setCalendarMonth(m)
+                        setCalendarYear(y)
+                      }}
+                      disabledPast={false}
+                      loading={false}
+                      compact
+                    />
                   </div>
                 )}
               </Card>

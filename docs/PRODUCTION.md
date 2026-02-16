@@ -32,7 +32,8 @@ On the platform that runs the Node API for locallink.agency, set:
 | `JWT_SECRET` | Yes | Strong random string (not `dev_secret_change_me`). |
 | `CORS_ORIGINS` | Yes | `https://locallink.agency` (add `https://www.locallink.agency` if you use www). |
 | `ADMIN_BOOTSTRAP_SECRET` | Yes | Strong secret for admin bootstrap (not a placeholder). |
-| `APP_BASE_URL` | Recommended | `https://locallink.agency` (for payment redirects, emails). |
+| `APP_BASE_URL` | Recommended | `https://locallink.agency` (for payment redirects, reset-password links). |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM` | For password reset | Without these, “forgot password” says “email sent” but no email is delivered. Use a transactional provider (SendGrid, Mailgun, Resend, SES) or your mail server; see `backend/.env.example`. |
 | `SENTRY_DSN` | Optional | For error tracking. |
 | `PAYSTACK_SECRET_KEY` | When using Paystack | For escrow payments. |
 

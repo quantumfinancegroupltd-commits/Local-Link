@@ -5,17 +5,7 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
-
-function roleLabel(r) {
-  const s = String(r || '')
-  if (!s) return ''
-  if (s === 'buyer') return 'Buyer'
-  if (s === 'artisan') return 'Provider'
-  if (s === 'farmer') return 'Farmer / Florist'
-  if (s === 'driver') return 'Driver'
-  if (s === 'company') return 'Company'
-  return s.toUpperCase()
-}
+import { getRoleLabel } from '../../lib/roles.js'
 
 function profileLinkForUser(u) {
   if (!u?.id) return '/people'
@@ -35,7 +25,7 @@ function PersonRow({ person, onToggleFollow, busy }) {
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-slate-900">{person?.name || 'User'}</div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-            <span className="rounded-full border bg-slate-50 px-2 py-0.5 font-semibold">{roleLabel(person?.role)}</span>
+            <span className="rounded-full border bg-slate-50 px-2 py-0.5 font-semibold">{getRoleLabel(person?.role)}</span>
             <span className="text-slate-400">•</span>
             <span>
               <span className="font-semibold">{Number(person?.followers ?? 0)}</span> followers

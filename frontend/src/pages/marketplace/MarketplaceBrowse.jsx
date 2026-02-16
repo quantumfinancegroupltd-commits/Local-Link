@@ -9,6 +9,7 @@ import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { haversineKm, formatKm } from '../../lib/geo.js'
 import { getVerificationTier, tierRank } from '../../lib/verification.js'
 import { ui } from '../../components/ui/tokens.js'
+import { FARMER_FLORIST_MARKETPLACE_LABEL } from '../../lib/roles.js'
 import { PRODUCT_CATEGORIES } from '../../lib/productCategories.js'
 
 export function MarketplaceBrowse() {
@@ -153,7 +154,7 @@ export function MarketplaceBrowse() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Farmers & Florists Marketplace"
+        title={`${FARMER_FLORIST_MARKETPLACE_LABEL} Marketplace`}
         subtitle="Produce, flowers & plants — browse by category, location, and verification."
         actions={
           <div className="text-sm font-semibold text-slate-700">

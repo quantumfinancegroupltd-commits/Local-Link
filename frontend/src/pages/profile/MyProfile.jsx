@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
+import { getRoleLabel } from '../../lib/roles.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -2021,7 +2022,7 @@ export function MyProfile() {
 
           {role === 'farmer' ? (
             <Card>
-              <div className="text-sm font-semibold">Farmer / Florist profile</div>
+              <div className="text-sm font-semibold">{getRoleLabel(role)} profile</div>
               <div className="mt-4">
                 <Label>Farm location</Label>
                 <LocationInput

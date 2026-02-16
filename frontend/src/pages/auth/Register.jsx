@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
-import { roleHomePath } from '../../lib/roles.js'
+import { getRoleLabel, roleHomePath } from '../../lib/roles.js'
 import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 
@@ -65,7 +65,7 @@ export function Register() {
             <Select id="reg-role" value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="buyer">Buyer — hire pros, buy produce, post jobs</option>
               <option value="artisan">Artisan — offer skills (events, catering, cleaning, repairs…)</option>
-              <option value="farmer">Farmer / Florist — sell produce, flowers & plants</option>
+              <option value="farmer">{getRoleLabel('farmer')} — sell produce, flowers & plants</option>
               <option value="driver">Driver — delivery partner</option>
               <option value="company">Company — hire staff, manage shifts</option>
             </Select>

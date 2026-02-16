@@ -3,24 +3,14 @@ import { Link } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { useAuth } from '../../auth/useAuth.js'
+import { FARMER_VERTICAL_KEY, getFarmerVerticalLabel, getStoredFarmerVertical } from '../../lib/roles.js'
 import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 
-const FARMER_VERTICAL_KEY = 'locallink_farmer_vertical'
-
-function getStoredVertical() {
-  try {
-    const v = localStorage.getItem(FARMER_VERTICAL_KEY)
-    return v === 'florist' ? 'florist' : 'farmer'
-  } catch {
-    return 'farmer'
-  }
-}
-
 export function FarmerDashboard() {
   const { user } = useAuth()
-  const [vertical, setVertical] = useState(() => getStoredVertical())
+  const [vertical, setVertical] = useState(() => getStoredFarmerVertical())
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -134,7 +124,7 @@ export function FarmerDashboard() {
     <div className="space-y-6">
       <PageHeader
         kicker="Dashboard"
-        title={vertical === 'florist' ? 'Florist' : 'Produce (Farmer / Florist)'}
+        title={getFarmerVerticalLabel(vertical)}
         subtitle={vertical === 'florist' ? 'Orders by delivery date — buyers add occasion & message at checkout.' : `How is your farm business doing today${user?.name ? `, ${user.name}` : ''}?`}
         actions={
           <>

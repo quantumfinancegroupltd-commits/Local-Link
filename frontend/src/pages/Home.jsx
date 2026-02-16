@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth.js'
-import { roleHomePath } from '../lib/roles.js'
+import { FARMER_FLORIST_MARKETPLACE_LABEL, roleHomePath } from '../lib/roles.js'
 import { http } from '../api/http.js'
 import { Button } from '../components/ui/FormControls.jsx'
 import { UseCaseTile } from '../components/home/UseCaseTile.jsx'
@@ -187,7 +187,7 @@ export function Home() {
             imageUrl={images.fix}
           />
           <UseCaseTile
-            title="Buy Fresh Produce & Flowers (Farmers & Florists + Delivery)"
+            title={`Buy Fresh Produce & Flowers (${FARMER_FLORIST_MARKETPLACE_LABEL} + Delivery)`}
             description="Browse listings, order, and track delivery — with escrow protection."
             to="/register?role=buyer&intent=produce"
             accent="lime"

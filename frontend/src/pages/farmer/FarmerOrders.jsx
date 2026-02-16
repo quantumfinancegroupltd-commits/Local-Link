@@ -6,6 +6,7 @@ import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { StatusPill } from '../../components/ui/StatusPill.jsx'
 import { StatusTimeline } from '../../components/ui/StatusTimeline.jsx'
+import { getFarmerVerticalLabel, getStoredFarmerVertical } from '../../lib/roles.js'
 import { buildDeliveryTimeline } from '../../lib/statusTimelines.js'
 import { useToast } from '../../components/ui/Toast.jsx'
 
@@ -44,6 +45,8 @@ export function FarmerOrders() {
       cancelled = true
     }
   }, [])
+
+  const vertical = getStoredFarmerVertical()
 
   // Florist mode: default to "By date" when no tab in URL
   useEffect(() => {
@@ -334,7 +337,7 @@ export function FarmerOrders() {
   return (
     <div className="space-y-6">
       <PageHeader
-        kicker="Farmer / Florist"
+        kicker={getFarmerVerticalLabel(vertical)}
         title="Orders"
         subtitle={`${counts.all} total • ${counts.active} active`}
         actions={

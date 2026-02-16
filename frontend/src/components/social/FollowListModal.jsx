@@ -3,19 +3,9 @@ import { Link } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { Button, Card } from '../ui/FormControls.jsx'
+import { getRoleLabel } from '../../lib/roles.js'
 import { Tabs } from '../ui/Tabs.jsx'
 import { useToast } from '../ui/Toast.jsx'
-
-function roleTag(role) {
-  const r = String(role || '')
-  if (!r) return ''
-  if (r === 'buyer') return 'Buyer'
-  if (r === 'artisan') return 'Provider'
-  if (r === 'farmer') return 'Farmer / Florist'
-  if (r === 'driver') return 'Driver'
-  if (r === 'company') return 'Company'
-  return r.toUpperCase()
-}
 
 function profileLinkForUser(u) {
   if (!u?.id) return '/people'
@@ -141,7 +131,7 @@ export function FollowListModal({ open, onClose, userId, viewerId, initialTab = 
                         <img src={p?.profile_pic || '/locallink-logo.png'} alt="avatar" className="h-10 w-10 rounded-2xl border object-cover" />
                         <div className="min-w-0">
                           <div className="truncate text-sm font-semibold text-slate-900">{p?.name || 'User'}</div>
-                          <div className="mt-0.5 text-xs text-slate-500">{roleTag(p?.role)}</div>
+                          <div className="mt-0.5 text-xs text-slate-500">{getRoleLabel(p?.role)}</div>
                         </div>
                       </Link>
                       {canToggle ? (

@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { getRoleLabel } from '../../lib/roles.js'
 import { Button, Card } from '../ui/FormControls.jsx'
 import { useToast } from '../ui/Toast.jsx'
 
 function profileLinkForLiker(u) {
   if (!u?.id) return '/people'
   return `/u/${encodeURIComponent(u.id)}`
-}
-
-function roleLabel(role) {
-  const r = String(role || '')
-  if (!r) return ''
-  if (r === 'artisan') return 'Provider'
-  if (r === 'farmer') return 'Farmer / Florist'
-  if (r === 'driver') return 'Driver'
-  if (r === 'company') return 'Company'
-  if (r === 'buyer') return 'Buyer'
-  return r.charAt(0).toUpperCase() + r.slice(1)
 }
 
 export function LikersModal({ open, onClose, postId }) {
@@ -83,7 +73,7 @@ export function LikersModal({ open, onClose, postId }) {
                     )}
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold text-slate-900">{u?.name || 'User'}</div>
-                      <div className="text-xs text-slate-500">{roleLabel(u?.role)}</div>
+                      <div className="text-xs text-slate-500">{getRoleLabel(u?.role)}</div>
                     </div>
                   </Link>
                 ))}

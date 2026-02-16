@@ -241,7 +241,7 @@ export function FarmerOrders() {
                   o.produce_dispute_status === 'open'
                     ? 'Admin will review shortly. No action needed.'
                     : o.produce_dispute_status === 'under_review'
-                      ? 'Admin is reviewing. You'll be notified when resolved.'
+                      ? "Admin is reviewing. You'll be notified when resolved."
                       : o.produce_dispute_status === 'resolved'
                         ? 'Resolved. Payout applied per admin decision.'
                         : 'Escrow is frozen while the dispute is reviewed.'

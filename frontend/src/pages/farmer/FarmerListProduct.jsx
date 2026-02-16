@@ -42,7 +42,17 @@ export function FarmerListProduct() {
     const empty = !name && !quantity && !price && !imageUrl
     if (!empty) return
     const d = draft.load()
-    if (!d) return
+    if (!d) {
+      try {
+        if (localStorage.getItem('locallink_farmer_vertical') === 'florist') {
+          setCategory('flowers')
+          setUnit('bouquet')
+        }
+      } catch {
+        // ignore
+      }
+      return
+    }
     setName(String(d.name ?? ''))
     setCategory(String(d.category ?? 'vegetables'))
     setQuantity(String(d.quantity ?? ''))

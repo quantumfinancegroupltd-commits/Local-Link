@@ -45,6 +45,18 @@ export function FarmerOrders() {
     }
   }, [])
 
+  // Florist mode: default to "By date" when no tab in URL
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab')
+    if (tabFromUrl) return
+    try {
+      if (localStorage.getItem('locallink_farmer_vertical') === 'florist') setTab('by_date')
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')

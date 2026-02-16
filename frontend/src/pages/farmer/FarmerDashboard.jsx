@@ -7,8 +7,20 @@ import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 
+const FARMER_VERTICAL_KEY = 'locallink_farmer_vertical'
+
+function getStoredVertical() {
+  try {
+    const v = localStorage.getItem(FARMER_VERTICAL_KEY)
+    return v === 'florist' ? 'florist' : 'farmer'
+  } catch {
+    return 'farmer'
+  }
+}
+
 export function FarmerDashboard() {
   const { user } = useAuth()
+  const [vertical, setVertical] = useState(() => getStoredVertical())
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -109,16 +121,45 @@ export function FarmerDashboard() {
     }
   }
 
+  function setVerticalAndStore(value) {
+    setVertical(value)
+    try {
+      localStorage.setItem(FARMER_VERTICAL_KEY, value)
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         kicker="Dashboard"
-        title="Produce (Farmer / Florist)"
-        subtitle={`How is your farm business doing today${user?.name ? `, ${user.name}` : ''}?`}
+        title={vertical === 'florist' ? 'Florist' : 'Produce (Farmer / Florist)'}
+        subtitle={vertical === 'florist' ? 'Orders by delivery date — buyers add occasion & message at checkout.' : `How is your farm business doing today${user?.name ? `, ${user.name}` : ''}?`}
         actions={
           <>
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+              <span className="px-2 text-xs font-medium text-slate-600">View as:</span>
+              <Button
+                size="sm"
+                variant={vertical === 'farmer' ? 'primary' : 'secondary'}
+                onClick={() => setVerticalAndStore('farmer')}
+              >
+                Farmer
+              </Button>
+              <Button
+                size="sm"
+                variant={vertical === 'florist' ? 'primary' : 'secondary'}
+                onClick={() => setVerticalAndStore('florist')}
+              >
+                Florist
+              </Button>
+            </div>
             <Link to="/farmer/products/new">
-              <Button>List produce</Button>
+              <Button>{vertical === 'florist' ? 'List flowers' : 'List produce'}</Button>
+            </Link>
+            <Link to="/farmer/orders">
+              <Button variant="secondary">Orders</Button>
             </Link>
             <Link to="/messages">
               <Button variant="secondary">Messages</Button>
@@ -126,6 +167,12 @@ export function FarmerDashboard() {
           </>
         }
       />
+
+      {vertical === 'florist' ? (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900">
+          <strong>Florist mode:</strong> Orders open in &quot;By date&quot; view. New listings default to Flowers + bouquet recipe. Buyers can set delivery date, occasion and message at checkout.
+        </div>
+      ) : null}
 
       <VerifyAccountBanner />
 

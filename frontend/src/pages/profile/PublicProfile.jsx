@@ -1322,7 +1322,10 @@ export function PublicProfile() {
                   <div className="mt-3 space-y-3">
                     {services.map((s) => (
                       <div key={s.id} className="flex flex-wrap items-start justify-between gap-2 rounded-xl border bg-slate-50/50 p-3">
-                        <div>
+                        {s.image_url ? (
+                          <img src={s.image_url} alt={s.title} className="h-14 w-14 shrink-0 rounded-lg border object-cover" />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
                           <div className="font-medium text-slate-900">{s.title}</div>
                           {s.description ? <div className="mt-0.5 text-xs text-slate-600">{s.description}</div> : null}
                           <div className="mt-1 text-sm font-semibold text-slate-700">
@@ -1331,6 +1334,7 @@ export function PublicProfile() {
                           </div>
                         </div>
                         <Link
+                          className="shrink-0"
                           to={
                             isAuthed && viewer?.role === 'buyer'
                               ? `/buyer/jobs/new?artisan=${encodeURIComponent(id)}&service=${encodeURIComponent(s.id)}&title=${encodeURIComponent(s.title)}&description=${encodeURIComponent(s.description || '')}&budget=${encodeURIComponent(s.price)}&category=${encodeURIComponent(s.category || '')}`

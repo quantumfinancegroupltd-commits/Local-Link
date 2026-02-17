@@ -130,13 +130,21 @@ artisansRouter.post('/', requireAuth, requireRole(['artisan']), asyncHandler(asy
 // --- Artisan services (productized offerings, shown on profile) ---
 
 const CreateServiceSchema = z.object({
-  title: z.string().min(1).max(120),
-  description: z.string().max(2000).optional().nullable(),
-  price: z.number().min(0),
+  title: z.string().min(1, 'Title is required').max(120),
+  description: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().max(2000).nullable()),
+  price: z.coerce.number().min(0, 'Price must be 0 or more'),
   currency: z.string().max(10).optional().default('GHS'),
-  duration_minutes: z.number().int().min(0).max(10080).optional().nullable(), // up to 1 week
-  category: z.string().max(80).optional().nullable(),
-  sort_order: z.number().int().optional().nullable(),
+  duration_minutes: z.preprocess(
+    (v) => {
+      if (v === '' || v == null) return null
+      const n = Number(v)
+      return Number.isNaN(n) || n <= 0 ? null : Math.min(10080, Math.round(n))
+    },
+    z.number().int().min(0).max(10080).nullable(),
+  ),
+  category: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().max(80).nullable()),
+  sort_order: z.coerce.number().int().optional().nullable(),
+  image_url: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().url().max(2000).nullable().optional()),
 })
 
 const UpdateServiceSchema = CreateServiceSchema.partial()
@@ -144,7 +152,7 @@ const UpdateServiceSchema = CreateServiceSchema.partial()
 // Must define /me/* before /:userId/* so "me" isn't captured as userId
 artisansRouter.get('/me/services', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
   const r = await pool.query(
-    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, created_at, updated_at
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, created_at, updated_at
      from artisan_services
      where artisan_user_id = $1
      order by sort_order asc, created_at asc`,
@@ -176,7 +184,7 @@ artisansRouter.get('/me/availability', requireAuth, requireRole(['artisan']), as
 artisansRouter.get('/:userId/services', asyncHandler(async (req, res) => {
   const userId = req.params.userId
   const r = await pool.query(
-    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, created_at, updated_at
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, created_at, updated_at
      from artisan_services
      where artisan_user_id = $1
      order by sort_order asc, created_at asc`,
@@ -189,8 +197,8 @@ artisansRouter.post('/me/services', requireAuth, requireRole(['artisan']), async
   const parsed = CreateServiceSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
   const r = await pool.query(
-    `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order)
-     values ($1,$2,$3,$4,$5,$6,$7,$8)
+    `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
      returning *`,
     [
       req.user.sub,
@@ -201,6 +209,7 @@ artisansRouter.post('/me/services', requireAuth, requireRole(['artisan']), async
       parsed.data.duration_minutes ?? null,
       parsed.data.category ?? null,
       parsed.data.sort_order ?? 0,
+      parsed.data.image_url ?? null,
     ],
   )
   return res.status(201).json(r.rows[0])
@@ -218,8 +227,9 @@ artisansRouter.patch('/me/services/:id', requireAuth, requireRole(['artisan']), 
        duration_minutes = coalesce($6, duration_minutes),
        category = coalesce($7, category),
        sort_order = coalesce($8, sort_order),
+       image_url = coalesce($9, image_url),
        updated_at = now()
-     where id = $1 and artisan_user_id = $9
+     where id = $1 and artisan_user_id = $10
      returning *`,
     [
       req.params.id,
@@ -230,6 +240,7 @@ artisansRouter.patch('/me/services/:id', requireAuth, requireRole(['artisan']), 
       parsed.data.duration_minutes,
       parsed.data.category,
       parsed.data.sort_order,
+      parsed.data.image_url,
       req.user.sub,
     ],
   )

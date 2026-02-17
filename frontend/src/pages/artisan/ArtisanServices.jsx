@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { uploadMediaFiles } from '../../api/uploads.js'
 import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
@@ -8,7 +9,6 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 
 export function ArtisanServices() {
-  const navigate = useNavigate()
   const toast = useToast()
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
@@ -23,6 +23,9 @@ export function ArtisanServices() {
   const [durationHours, setDurationHours] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [category, setCategory] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [imageFile, setImageFile] = useState(null)
+  const [uploadBusy, setUploadBusy] = useState(false)
   const [busy, setBusy] = useState(false)
   const [deleteBusyId, setDeleteBusyId] = useState(null)
 
@@ -55,6 +58,8 @@ export function ArtisanServices() {
     setDurationHours('')
     setDurationMinutes('')
     setCategory('')
+    setImageUrl('')
+    setImageFile(null)
   }
 
   function startEdit(s) {
@@ -78,6 +83,8 @@ export function ArtisanServices() {
       setDurationMinutes('')
     }
     setCategory(s.category ?? '')
+    setImageUrl(s.image_url ?? '')
+    setImageFile(null)
   }
 
   async function handleSubmit(e) {
@@ -94,33 +101,44 @@ export function ArtisanServices() {
     const totalMinutes = d * 1440 + h * 60 + m
     const durationValue = totalMinutes > 0 ? totalMinutes : null
 
+    let finalImageUrl = imageUrl
+    if (imageFile) {
+      setUploadBusy(true)
+      try {
+        const uploaded = await uploadMediaFiles([imageFile])
+        finalImageUrl = uploaded?.[0]?.url ?? imageUrl
+      } catch {
+        toast.error('Image upload failed. Try again.')
+        setUploadBusy(false)
+        return
+      }
+      setUploadBusy(false)
+    }
+
     setBusy(true)
     try {
+      const payload = {
+        title: title.trim(),
+        description: description.trim() || null,
+        price: priceNum,
+        currency: currency || 'GHS',
+        duration_minutes: durationValue,
+        category: category.trim() || null,
+        image_url: finalImageUrl || null,
+      }
       if (editingId) {
-        await http.patch(`/artisans/me/services/${editingId}`, {
-          title: title.trim(),
-          description: description.trim() || null,
-          price: priceNum,
-          currency: currency || 'GHS',
-          duration_minutes: durationValue,
-          category: category.trim() || null,
-        })
+        await http.patch(`/artisans/me/services/${editingId}`, payload)
         toast.success('Service updated')
       } else {
-        await http.post('/artisans/me/services', {
-          title: title.trim(),
-          description: description.trim() || null,
-          price: priceNum,
-          currency: currency || 'GHS',
-          duration_minutes: durationValue,
-          category: category.trim() || null,
-        })
+        await http.post('/artisans/me/services', payload)
         toast.success('Service added')
       }
       resetForm()
       await load()
     } catch (e) {
-      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save')
+      const msg = e?.response?.data?.message ?? e?.message ?? 'Failed to save'
+      const issues = e?.response?.data?.issues
+      toast.error(issues?.length ? `${msg}: ${issues.map((i) => i.message).join(', ')}` : msg)
     } finally {
       setBusy(false)
     }
@@ -202,6 +220,49 @@ export function ArtisanServices() {
               </div>
             </div>
             <div>
+              <Label>Image (optional)</Label>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                {(imageUrl || imageFile) ? (
+                  <div className="relative">
+                    {imageFile ? (
+                      <img
+                        src={URL.createObjectURL(imageFile)}
+                        alt="Preview"
+                        className="h-24 w-24 rounded-lg border object-cover"
+                      />
+                    ) : (
+                      <img src={imageUrl} alt="Service" className="h-24 w-24 rounded-lg border object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageUrl('')
+                        setImageFile(null)
+                      }}
+                      className="absolute -right-2 -top-2 rounded-full bg-slate-800 px-1.5 py-0.5 text-xs font-medium text-white hover:bg-slate-700"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : null}
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f && f.type.startsWith('image/')) setImageFile(f)
+                      e.target.value = ''
+                    }}
+                  />
+                  <span className="rounded-lg border bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    {uploadBusy ? 'Uploading…' : 'Choose image'}
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div>
               <Label>Category (optional)</Label>
               <Select value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="">—</option>
@@ -211,7 +272,7 @@ export function ArtisanServices() {
               </Select>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={busy || !title.trim()}>
+              <Button type="submit" disabled={busy || uploadBusy || !title.trim()}>
                 {editingId ? 'Update' : 'Add'} service
               </Button>
               <Button type="button" variant="secondary" onClick={resetForm}>
@@ -240,7 +301,10 @@ export function ArtisanServices() {
           <div className="mt-4 space-y-3">
             {services.map((s) => (
               <div key={s.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-slate-50/50 p-4">
-                <div>
+                {s.image_url ? (
+                  <img src={s.image_url} alt={s.title} className="h-16 w-16 shrink-0 rounded-lg border object-cover" />
+                ) : null}
+                <div className="min-w-0 flex-1">
                   <div className="font-semibold text-slate-900">{s.title}</div>
                   {s.description ? <div className="mt-0.5 text-sm text-slate-600">{s.description}</div> : null}
                   <div className="mt-1 text-sm font-medium text-slate-700">
@@ -249,7 +313,7 @@ export function ArtisanServices() {
                     {s.category ? ` • ${s.category}` : ''}
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex shrink-0 gap-2">
                   <Button size="sm" variant="secondary" onClick={() => startEdit(s)}>
                     Edit
                   </Button>

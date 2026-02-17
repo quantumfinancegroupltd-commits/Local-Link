@@ -615,6 +615,8 @@ escrowRouter.post('/jobs/:jobId/release', requireAuth, requireRole(['buyer', 'ad
         idempotencyKey: `escrow_release:${escrow.id}`,
         meta: { type: 'job', job_id: escrow.job_id, platform_fee: platformFee, gross_amount: Number(escrow.amount) },
       })
+      const { tryReferralCreditOnJobRelease } = await import('../services/referralCredit.js')
+      await tryReferralCreditOnJobRelease(client, { refereeUserId: escrow.counterparty_user_id })
     }
 
     const updated = await client.query(

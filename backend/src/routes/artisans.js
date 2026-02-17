@@ -189,6 +189,49 @@ artisansRouter.get('/me/availability', requireAuth, requireRole(['artisan']), as
   return res.json(dates)
 }))
 
+artisansRouter.get('/me/analytics', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const userId = req.user.sub
+  const artisanRes = await pool.query('select id from artisans where user_id = $1', [userId])
+  const artisanId = artisanRes.rows[0]?.id ?? null
+
+  const profilePath = `/u/${userId}`
+  const [viewsRes, quotesRes, jobsRes, walletRes, earningsRes] = await Promise.all([
+    pool.query(
+      `select count(*)::int as n from analytics_events where event_type = 'profile_view' and path = $1`,
+      [profilePath],
+    ),
+    pool.query('select count(*)::int as n from quotes where artisan_id = $1', [artisanId ?? null]),
+    pool.query(
+      `select count(*)::int as n from jobs where assigned_artisan_id = $1 and status = 'completed'`,
+      [artisanId ?? null],
+    ),
+    pool.query('select balance from wallets where user_id = $1', [userId]),
+    pool.query(
+      `select coalesce(sum(amount), 0)::numeric as total
+       from wallet_ledger_entries
+       where user_id = $1 and direction = 'credit' and kind = 'escrow_release'`,
+      [userId],
+    ),
+  ])
+
+  const profile_views = viewsRes.rows[0]?.n ?? 0
+  const quotes_sent = quotesRes.rows[0]?.n ?? 0
+  const jobs_completed = jobsRes.rows[0]?.n ?? 0
+  const wallet_balance = Number(walletRes.rows[0]?.balance ?? 0)
+  const earnings_total = Number(earningsRes.rows[0]?.total ?? 0)
+
+  const conversion_rate = quotes_sent > 0 ? Math.round((jobs_completed / quotes_sent) * 1000) / 10 : null
+
+  return res.json({
+    profile_views,
+    quotes_sent,
+    jobs_completed,
+    conversion_rate,
+    wallet_balance,
+    earnings_total,
+  })
+}))
+
 artisansRouter.get('/:userId/services', asyncHandler(async (req, res) => {
   const userId = req.params.userId
   const r = await pool.query(

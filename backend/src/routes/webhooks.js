@@ -91,6 +91,22 @@ webhooksRouter.post('/paystack', asyncHandler(async (req, res) => {
          where id = any($1::uuid[]) and order_status <> 'cancelled'`,
         [orderIds],
       )
+      // Inventory: decrement product quantity; set out_of_stock when quantity reaches 0
+      for (const orderId of orderIds) {
+        const ord = await pool.query('select product_id, quantity from orders where id = $1', [orderId])
+        const row = ord.rows[0]
+        if (row?.product_id && row.quantity > 0) {
+          const up = await pool.query(
+            `update products
+             set quantity = quantity - $2,
+                 status = case when (quantity - $2) <= 0 then 'out_of_stock'::product_status else status end,
+                 updated_at = now()
+             where id = $1
+             returning id, quantity`,
+            [row.product_id, row.quantity],
+          )
+        }
+      }
       // Notify farmers: order placed and paid (in-app + optional SMS)
       const { notifyWithSms } = await import('../services/messaging/index.js')
       for (const orderId of orderIds) {

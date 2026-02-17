@@ -88,6 +88,8 @@ async function runAutoReleaseJobs() {
           idempotencyKey: `escrow_release:${e.id}`,
           meta: { type: 'job', job_id: e.job_id, platform_fee: platformFee, auto_release: true },
         })
+        const { tryReferralCreditOnJobRelease } = await import('./referralCredit.js')
+        await tryReferralCreditOnJobRelease(client, { refereeUserId: e.counterparty_user_id })
       }
       await client.query(
         `update escrow_transactions

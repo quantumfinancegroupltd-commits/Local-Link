@@ -40,6 +40,7 @@ import { newsRouter } from './routes/news.js'
 import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
 import { analyticsRouter } from './routes/analytics.js'
+import { searchRouter } from './routes/search.js'
 import { logErrorToDb } from './services/errorLog.js'
 
 export function createApp() {
@@ -144,6 +145,7 @@ export function createApp() {
   app.use('/api/analytics', analyticsRouter)
   app.use('/api/news', newsRouter)
   app.use('/api/match', matchRouter)
+  app.use('/api/search', searchRouter)
   app.use('/api/verification', verificationRouter)
   app.use('/api/id-verification', idVerificationRouter)
   app.use('/api/corporate', corporateRouter)

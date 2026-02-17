@@ -1,8 +1,13 @@
+import crypto from 'node:crypto'
 import { Router } from 'express'
 import { z } from 'zod'
 import { pool } from '../db/pool.js'
 import { optionalAuth, requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
+
+function generateReferralCode() {
+  return crypto.randomBytes(8).toString('base64url').slice(0, 12).toUpperCase()
+}
 import { isOffPlatformUrl, maskOffPlatformLinks, maskPhoneNumbers, recordPolicyEvent } from '../services/policy.js'
 import { buildWorkHistory } from '../services/workHistory.js'
 import { computeExperienceBadges } from '../services/experienceBadges.js'
@@ -47,12 +52,24 @@ function mergedDisplayForCompanyOwner(user, profile) {
 
 profileRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const userRes = await pool.query(
-    `select id, name, email, phone, role, verified, rating, profile_pic, created_at
+    `select id, name, email, phone, role, verified, rating, profile_pic, created_at, referral_code
      from users where id = $1`,
     [req.user.sub],
   )
   const user = userRes.rows[0]
   if (!user) return res.status(404).json({ message: 'User not found' })
+
+  // Backfill referral_code for existing users (column added in migration 101)
+  if (user.referral_code == null || user.referral_code === '') {
+    let code = generateReferralCode()
+    for (let i = 0; i < 5; i++) {
+      const exists = await pool.query('select 1 from users where referral_code = $1', [code])
+      if (!exists.rows[0]) break
+      code = generateReferralCode()
+    }
+    await pool.query('update users set referral_code = $1, updated_at = now() where id = $2', [code, req.user.sub])
+    user.referral_code = code
+  }
 
   const profRes = await pool.query('select * from user_profiles where user_id = $1', [req.user.sub])
   const profile = profRes.rows[0] ?? null
@@ -139,6 +156,15 @@ profileRouter.get('/:userId', optionalAuth, asyncHandler(async (req, res) => {
       })
     }
   }
+
+  // Record profile view for provider analytics (path identifies which profile was viewed)
+  pool
+    .query(
+      `insert into analytics_events (event_type, path, user_id, created_at)
+       values ('profile_view', $1, $2, now())`,
+      [`/u/${targetId}`, viewerId],
+    )
+    .catch(() => {})
 
   const [postsCountRes, reviewsCountRes, verifiedReviewsCountRes] = await Promise.all([
     pool.query('select count(*)::int as n from user_posts where user_id = $1', [targetId]),

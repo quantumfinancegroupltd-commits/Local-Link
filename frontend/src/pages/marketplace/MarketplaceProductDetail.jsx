@@ -51,7 +51,14 @@ export function MarketplaceProductDetail() {
   const [orderError, setOrderError] = useState(null)
   const [placed] = useState(false) // reserved for future "success" UI
   const [whatIfOpen, setWhatIfOpen] = useState(false)
+  const [notifyRestockBusy, setNotifyRestockBusy] = useState(false)
+  const [notifyRestockOk, setNotifyRestockOk] = useState(false)
   const formRef = useRef(null)
+
+  const outOfStock = useMemo(() => {
+    const q = Number(product?.quantity ?? 0)
+    return q <= 0 || String(product?.status ?? '') === 'out_of_stock'
+  }, [product?.quantity, product?.status])
 
   useEffect(() => {
     let cancelled = false
@@ -241,7 +248,11 @@ export function MarketplaceProductDetail() {
                 <div className="p-6">
                   <h1 className="text-2xl font-bold">{product?.name || 'Product'}</h1>
                   <div className="mt-2 text-sm text-slate-600">
-                    Available: {product?.quantity ?? '—'} {product?.unit ?? ''}
+                    {outOfStock ? (
+                      <span className="font-semibold text-amber-700">Out of stock</span>
+                    ) : (
+                      <>Available: {product?.quantity ?? '—'} {product?.unit ?? ''}</>
+                    )}
                   </div>
                   {product?.recipe ? (
                     <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-sm text-slate-700">
@@ -293,6 +304,32 @@ export function MarketplaceProductDetail() {
                         </Link>
                       </div>
                     </div>
+                    {outOfStock && canOrder ? (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                        <div className="font-semibold">Out of stock</div>
+                        <div className="mt-1">We&apos;ll notify you when this product is back in stock.</div>
+                        {notifyRestockOk ? (
+                          <div className="mt-3 font-medium text-emerald-700">You&apos;re on the list. We&apos;ll notify you.</div>
+                        ) : (
+                          <Button
+                            type="button"
+                            className="mt-3"
+                            disabled={notifyRestockBusy}
+                            onClick={async () => {
+                              setNotifyRestockBusy(true)
+                              try {
+                                await http.post(`/products/${id}/notify-restock`)
+                                setNotifyRestockOk(true)
+                              } catch {
+                                setNotifyRestockBusy(false)
+                              }
+                            }}
+                          >
+                            {notifyRestockBusy ? 'Adding…' : 'Notify me when back in stock'}
+                          </Button>
+                        )}
+                      </div>
+                    ) : null}
                     {!canOrder ? (
                       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
                         <div className="font-semibold text-slate-900">Sign in to place an order</div>

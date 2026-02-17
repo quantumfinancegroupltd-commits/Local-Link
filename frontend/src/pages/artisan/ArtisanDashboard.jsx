@@ -460,6 +460,9 @@ export function ArtisanDashboard() {
           <Link to="/artisan/availability">
             <Button variant="secondary">Set availability</Button>
           </Link>
+          <Link to="/artisan/analytics">
+            <Button variant="secondary">Analytics</Button>
+          </Link>
           <Link to="/reviews">
             <Button variant="secondary">View reviews</Button>
           </Link>

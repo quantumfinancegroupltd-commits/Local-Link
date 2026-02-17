@@ -29,11 +29,13 @@ const ArtisanJobDetail = lazy(() => import('./pages/artisan/ArtisanJobDetail.jsx
 const ArtisanJobEscrow = lazy(() => import('./pages/artisan/ArtisanJobEscrow.jsx').then((m) => ({ default: m.ArtisanJobEscrow })))
 const ArtisanServices = lazy(() => import('./pages/artisan/ArtisanServices.jsx').then((m) => ({ default: m.ArtisanServices })))
 const ArtisanAvailability = lazy(() => import('./pages/artisan/ArtisanAvailability.jsx').then((m) => ({ default: m.ArtisanAvailability })))
+const ArtisanAnalytics = lazy(() => import('./pages/artisan/ArtisanAnalytics.jsx').then((m) => ({ default: m.ArtisanAnalytics })))
 
 const FarmerDashboard = lazy(() => import('./pages/farmer/FarmerDashboard.jsx').then((m) => ({ default: m.FarmerDashboard })))
 const FarmerListProduct = lazy(() => import('./pages/farmer/FarmerListProduct.jsx').then((m) => ({ default: m.FarmerListProduct })))
 const FarmerEditProduct = lazy(() => import('./pages/farmer/FarmerEditProduct.jsx').then((m) => ({ default: m.FarmerEditProduct })))
 const FarmerOrders = lazy(() => import('./pages/farmer/FarmerOrders.jsx').then((m) => ({ default: m.FarmerOrders })))
+const FarmerAnalytics = lazy(() => import('./pages/farmer/FarmerAnalytics.jsx').then((m) => ({ default: m.FarmerAnalytics })))
 
 const DriverDashboard = lazy(() => import('./pages/driver/DriverDashboard.jsx').then((m) => ({ default: m.DriverDashboard })))
 
@@ -292,6 +294,14 @@ export default function App() {
               </RequireAuth>
             }
           />
+          <Route
+            path="/artisan/analytics"
+            element={
+              <RequireAuth roles={['artisan']}>
+                <ArtisanAnalytics />
+              </RequireAuth>
+            }
+          />
 
           <Route
             path="/farmer"
@@ -306,6 +316,14 @@ export default function App() {
             element={
               <RequireAuth roles={['farmer']}>
                 <FarmerOrders />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/farmer/analytics"
+            element={
+              <RequireAuth roles={['farmer']}>
+                <FarmerAnalytics />
               </RequireAuth>
             }
           />

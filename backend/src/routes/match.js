@@ -92,12 +92,16 @@ matchRouter.get('/artisans', requireAuth, requireRole(['buyer', 'admin']), async
 
     const response01 = responseRateFromLastActive(r.last_active_at)
 
+    // Artisan Pro / premium: boost for featured placement
+    const premiumBoost = r.premium ? 0.08 : 0
+
     // Weighted match score (0..1)
     const base =
       sSkill * 0.4 +
       sDist * 0.25 +
       trust01 * 0.25 +
-      response01 * 0.1
+      response01 * 0.1 +
+      premiumBoost
 
     // Fair exposure: small daily jitter so results rotate without feeling random
     const jitter = deterministicJitter01(`${new Date().toISOString().slice(0, 10)}:${r.user_id}`) * 0.03

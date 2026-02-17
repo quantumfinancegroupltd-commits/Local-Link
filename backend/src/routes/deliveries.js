@@ -67,8 +67,8 @@ deliveriesRouter.get('/available', requireAuth, requireRole(['driver']), require
   )
 
   let rows = Array.isArray(r.rows) ? r.rows : []
-  // Optional: filter by radius around pickup (farm)
-  if (radiusKmOk != null) {
+  // Attach distance to pickup when driver has location; sort by nearest first (dispatch)
+  if (hasDriverGeo) {
     rows = rows
       .map((row) => {
         const farmLat = row?.farm_lat != null ? Number(row.farm_lat) : null
@@ -76,8 +76,14 @@ deliveriesRouter.get('/available', requireAuth, requireRole(['driver']), require
         const km = haversineKm(driverLat, driverLng, farmLat, farmLng)
         return { ...row, distance_km_to_pickup: km }
       })
-      .filter((row) => row.distance_km_to_pickup != null && row.distance_km_to_pickup <= radiusKmOk)
-      .sort((a, b) => Number(a.distance_km_to_pickup) - Number(b.distance_km_to_pickup))
+      .sort((a, b) => {
+        const ka = a.distance_km_to_pickup != null ? Number(a.distance_km_to_pickup) : Infinity
+        const kb = b.distance_km_to_pickup != null ? Number(b.distance_km_to_pickup) : Infinity
+        return ka - kb
+      })
+  }
+  if (radiusKmOk != null && hasDriverGeo) {
+    rows = rows.filter((row) => row.distance_km_to_pickup != null && row.distance_km_to_pickup <= radiusKmOk)
   }
 
   // Optional: text filter by area (simple, Ghana-friendly)

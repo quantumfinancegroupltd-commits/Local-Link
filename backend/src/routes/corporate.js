@@ -329,7 +329,7 @@ const UpsertCompanySchema = z.object({
 })
 
 // --- Enterprise Mode: Workspace members (multi-user) ---
-const WorkspaceRoleSchema = z.enum(['owner', 'ops', 'hr', 'finance', 'supervisor'])
+const WorkspaceRoleSchema = z.enum(['owner', 'ops', 'hr', 'finance', 'supervisor', 'auditor'])
 const AddMemberSchema = z
   .object({
     user_id: z.string().uuid().optional().nullable(),
@@ -558,7 +558,7 @@ corporateRouter.get('/company/members', requireAuth, asyncHandler(async (req, re
        join users u on u.id = cm.user_id
        where cm.company_id = $1
        order by
-         case cm.workspace_role when 'owner' then 0 when 'ops' then 1 when 'hr' then 2 when 'finance' then 3 when 'supervisor' then 4 else 9 end,
+         case cm.workspace_role when 'owner' then 0 when 'ops' then 1 when 'hr' then 2 when 'finance' then 3 when 'supervisor' then 4 when 'auditor' then 5 else 9 end,
          cm.created_at asc`,
       [companyId],
     )
@@ -711,7 +711,7 @@ corporateRouter.get('/company/audit', requireAuth, asyncHandler(async (req, res)
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.json({ items: [], next_before: null })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance', 'auditor'])
   if (!ok.ok) return
 
   const limitRaw = req.query.limit == null ? 50 : Number(req.query.limit)
@@ -1324,7 +1324,7 @@ corporateRouter.get('/company/payroll/runs/:id/export.csv', requireAuth, asyncHa
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.status(404).json({ message: 'Not found' })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'finance'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'finance', 'auditor'])
   if (!ok.ok) return
   try {
     const runRes = await pool.query(
@@ -2598,6 +2598,7 @@ const CreateShiftSchema = z.object({
   title: z.string().min(2).max(200),
   role_tag: z.string().max(80).optional().nullable(),
   location: z.string().max(200).optional().nullable(),
+  department_id: z.string().uuid().optional().nullable(),
   start_at: z.string().datetime(),
   end_at: z.string().datetime(),
   headcount: z.number().int().min(1).max(500).optional().nullable(),
@@ -2616,20 +2617,25 @@ corporateRouter.post('/company/shifts', requireAuth, asyncHandler(async (req, re
   if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
   const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
   if (!ok.ok) return
-
+  const departmentId = parsed.data.department_id ? String(parsed.data.department_id) : null
+  if (departmentId) {
+    const d = await pool.query('select id from company_departments where id=$1 and company_id=$2 limit 1', [departmentId, companyId])
+    if (!d.rowCount) return res.status(400).json({ message: 'Department not found' })
+  }
   const r = await pool.query(
     `insert into shift_blocks (
-       company_id, title, role_tag, location, start_at, end_at, headcount, status, created_by, updated_at,
+       company_id, title, role_tag, location, department_id, start_at, end_at, headcount, status, created_by, updated_at,
        checkin_geo_required, checkin_geo_radius_m, checkin_geo_lat, checkin_geo_lng
      )
-     values ($1,$2,$3,$4,$5,$6,$7,'scheduled',$8,now(),$9,$10,$11,$12)
-     returning id, company_id, title, role_tag, location, start_at, end_at, headcount, status, created_by, created_at, updated_at,
+     values ($1,$2,$3,$4,$5,$6,$7,$8,'scheduled',$9,now(),$10,$11,$12,$13)
+     returning id, company_id, title, role_tag, location, department_id, start_at, end_at, headcount, status, created_by, created_at, updated_at,
                checkin_geo_required, checkin_geo_radius_m, checkin_geo_lat, checkin_geo_lng`,
     [
       companyId,
       parsed.data.title,
       parsed.data.role_tag ?? null,
       parsed.data.location ?? null,
+      departmentId,
       parsed.data.start_at,
       parsed.data.end_at,
       parsed.data.headcount ?? 1,
@@ -2648,10 +2654,10 @@ corporateRouter.get('/company/shifts', requireAuth, asyncHandler(async (req, res
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.json([])
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor', 'auditor'])
   if (!ok.ok) return
   const r = await pool.query(
-    `select s.id, s.company_id, s.title, s.role_tag, s.location, s.start_at, s.end_at, s.headcount, s.status, s.created_by, s.created_at, s.updated_at,
+    `select s.id, s.company_id, s.title, s.role_tag, s.location, s.department_id, s.start_at, s.end_at, s.headcount, s.status, s.created_by, s.created_at, s.updated_at,
             s.series_id,
             s.series_occurrence_date,
             (s.checkin_code_hash is not null)::boolean as checkin_enabled,
@@ -2689,7 +2695,7 @@ corporateRouter.get('/company/shifts/coverage', requireAuth, asyncHandler(async 
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.json({ window_days: days, items: [] })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor', 'auditor'])
   if (!ok.ok) return
 
   const whereStart = includePast ? `s.start_at >= now() - interval '1 day'` : `s.start_at >= now()`
@@ -2733,10 +2739,10 @@ corporateRouter.get('/company/shifts/:id', requireAuth, asyncHandler(async (req,
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.status(404).json({ message: 'Shift not found' })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor', 'auditor'])
   if (!ok.ok) return
   const s = await pool.query(
-    `select id, company_id, title, role_tag, location, start_at, end_at, headcount, status, created_by, created_at, updated_at,
+    `select id, company_id, title, role_tag, location, department_id, start_at, end_at, headcount, status, created_by, created_at, updated_at,
             series_id,
             series_occurrence_date,
             (checkin_code_hash is not null)::boolean as checkin_enabled,
@@ -2776,6 +2782,7 @@ const UpdateShiftSchema = z.object({
   title: z.string().min(2).max(200).optional(),
   role_tag: z.string().max(80).optional().nullable(),
   location: z.string().max(200).optional().nullable(),
+  department_id: z.string().uuid().optional().nullable(),
   start_at: z.string().datetime().optional(),
   end_at: z.string().datetime().optional(),
   headcount: z.number().int().min(1).max(500).optional(),
@@ -2820,7 +2827,7 @@ corporateRouter.put('/company/shifts/:id', requireAuth, asyncHandler(async (req,
   if (!shiftId) return res.status(400).json({ message: 'Invalid shift' })
 
   const curRes = await pool.query(
-    `select id, title, role_tag, location, start_at, end_at, headcount, status
+    `select id, title, role_tag, location, department_id, start_at, end_at, headcount, status
      from shift_blocks
      where id = $1 and company_id = $2
      limit 1`,
@@ -2845,18 +2852,24 @@ corporateRouter.put('/company/shifts/:id', requireAuth, asyncHandler(async (req,
   }
 
   const nextStatus = parsed.data.status ?? cur.status
+  const departmentId = parsed.data.department_id !== undefined ? (parsed.data.department_id ? String(parsed.data.department_id) : null) : undefined
+  if (departmentId !== undefined && departmentId) {
+    const d = await pool.query('select id from company_departments where id=$1 and company_id=$2 limit 1', [departmentId, companyId])
+    if (!d.rowCount) return res.status(400).json({ message: 'Department not found' })
+  }
   const r = await pool.query(
     `update shift_blocks
      set title = coalesce($3, title),
          role_tag = $4,
          location = $5,
+         department_id = $10,
          start_at = coalesce($6, start_at),
          end_at = coalesce($7, end_at),
          headcount = coalesce($8, headcount),
          status = coalesce($9, status),
          updated_at = now()
      where id = $1 and company_id = $2
-     returning id, company_id, title, role_tag, location, start_at, end_at, headcount, status, created_by, created_at, updated_at,
+     returning id, company_id, title, role_tag, location, department_id, start_at, end_at, headcount, status, created_by, created_at, updated_at,
                series_id, series_occurrence_date,
                (checkin_code_hash is not null)::boolean as checkin_enabled,
                checkin_last_rotated_at,
@@ -2875,6 +2888,7 @@ corporateRouter.put('/company/shifts/:id', requireAuth, asyncHandler(async (req,
       parsed.data.end_at ?? null,
       parsed.data.headcount ?? null,
       parsed.data.status ?? null,
+      departmentId !== undefined ? departmentId : (cur.department_id ?? null),
     ],
   )
   const updated = r.rows[0] ?? null
@@ -3040,7 +3054,7 @@ corporateRouter.get('/company/workforce/overview', requireAuth, asyncHandler(asy
       today: { shifts: 0, assignments: 0, by_status: {} },
     })
   }
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor', 'auditor'])
   if (!ok.ok) return
 
   const windowEndIso = new Date().toISOString()
@@ -3133,7 +3147,7 @@ corporateRouter.get('/company/workforce/insights', requireAuth, asyncHandler(asy
       daily: [],
     })
   }
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'supervisor', 'auditor'])
   if (!ok.ok) return
 
   const windowEndIso = new Date().toISOString()
@@ -3238,6 +3252,341 @@ corporateRouter.get('/company/workforce/insights', requireAuth, asyncHandler(asy
     at_risk: atRisk,
     daily: dailyRes.rows || [],
   })
+}))
+
+const CompanyAnalyticsQuerySchema = z.object({
+  days: z.preprocess((v) => (v == null ? 30 : Number(v)), z.number().int().min(1).max(365)).optional(),
+})
+
+corporateRouter.get('/company/analytics', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = CompanyAnalyticsQuerySchema.safeParse(req.query)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const days = Number(parsed.data.days ?? 30)
+
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) {
+    return res.json({
+      window_days: days,
+      workforce: { shifts_total: 0, shifts_completed: 0, no_shows_total: 0, preferred_count: 0, workers_in_pools: 0 },
+      budgets: [],
+      departments_count: 0,
+    })
+  }
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'supervisor', 'auditor'])
+  if (!ok.ok) return
+
+  const wfRes = await pool.query(
+    `select
+       count(distinct s.id)::int as shifts_total,
+       count(distinct case when a.status = 'completed' then s.id end)::int as shifts_with_completed,
+       count(*) filter (where a.status = 'no_show')::int as no_shows_total,
+       count(*) filter (where a.status = 'completed')::int as assignments_completed
+     from shift_blocks s
+     left join shift_assignments a on a.shift_id = s.id
+     where s.company_id = $1
+       and s.start_at >= now() - ($2::text || ' days')::interval`,
+    [companyId, String(days)],
+  )
+  const wf = wfRes.rows[0] ?? {}
+  const prefRes = await pool.query(
+    `select count(*)::int as n from employer_worker_notes where company_id = $1 and preferred = true`,
+    [companyId],
+  )
+  const poolRes = await pool.query(
+    `select count(distinct m.worker_user_id)::int as n
+     from employer_worker_list_members m
+     join employer_worker_lists l on l.id = m.list_id
+     where l.company_id = $1`,
+    [companyId],
+  )
+  let departmentsCount = 0
+  let budgetRows = []
+  try {
+    const deptRes = await pool.query(
+      `select count(*)::int as n from company_departments where company_id = $1`,
+      [companyId],
+    )
+    departmentsCount = Number(deptRes.rows[0]?.n ?? 0)
+    const budgetRes = await pool.query(
+      `select id, department_id, period_start, period_end, budget_limit_ghs, spent_ghs
+       from company_budgets
+       where company_id = $1 and period_end >= current_date
+       order by period_end asc limit 20`,
+      [companyId],
+    )
+    budgetRows = budgetRes.rows ?? []
+  } catch {
+    // Tables may not exist if migration 106 hasn't run
+  }
+
+  const workforce = {
+    shifts_total: Number(wf.shifts_total ?? 0),
+    shifts_completed: Number(wf.assignments_completed ?? 0),
+    no_shows_total: Number(wf.no_shows_total ?? 0),
+    preferred_count: Number(prefRes.rows[0]?.n ?? 0),
+    workers_in_pools: Number(poolRes.rows[0]?.n ?? 0),
+  }
+  const budgets = budgetRows.map((b) => ({
+    id: b.id,
+    department_id: b.department_id,
+    period_start: b.period_start,
+    period_end: b.period_end,
+    budget_limit_ghs: Number(b.budget_limit_ghs ?? 0),
+    spent_ghs: Number(b.spent_ghs ?? 0),
+    utilisation_pct: Number(b.budget_limit_ghs) > 0
+      ? Math.round((100 * Number(b.spent_ghs ?? 0)) / Number(b.budget_limit_ghs))
+      : 0,
+  }))
+
+  return res.json({
+    window_days: days,
+    workforce,
+    budgets,
+    departments_count: departmentsCount,
+  })
+}))
+
+// --- Enterprise: Departments CRUD ---
+corporateRouter.get('/company/departments', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.json({ items: [] })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'supervisor', 'auditor'])
+  if (!ok.ok) return
+  try {
+    const r = await pool.query(
+      `select id, company_id, name, slug, location, created_at
+       from company_departments where company_id = $1 order by name asc`,
+      [companyId],
+    )
+    return res.json({ items: r.rows ?? [] })
+  } catch (e) {
+    if (String(e?.code || '') === '42P01') return res.json({ items: [] })
+    throw e
+  }
+}))
+
+const DepartmentCreateSchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().max(100).optional().nullable(),
+  location: z.string().max(500).optional().nullable(),
+})
+
+corporateRouter.post('/company/departments', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = DepartmentCreateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance'])
+  if (!ok.ok) return
+  const name = String(parsed.data.name).trim()
+  const slug = parsed.data.slug ? String(parsed.data.slug).trim().toLowerCase() || null : null
+  const location = parsed.data.location ? String(parsed.data.location).trim() : null
+  const r = await pool.query(
+    `insert into company_departments (company_id, name, slug, location) values ($1,$2,$3,$4)
+     returning id, company_id, name, slug, location, created_at`,
+    [companyId, name, slug, location],
+  )
+  await logCompanyAudit(req, { companyId, action: 'department.create', targetType: 'department', targetId: r.rows[0]?.id, meta: { name } })
+  return res.status(201).json(r.rows[0])
+}))
+
+corporateRouter.put('/company/departments/:id', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = DepartmentCreateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance'])
+  if (!ok.ok) return
+  const deptId = String(req.params.id)
+  const name = String(parsed.data.name).trim()
+  const slug = parsed.data.slug ? String(parsed.data.slug).trim().toLowerCase() || null : null
+  const location = parsed.data.location ? String(parsed.data.location).trim() : null
+  const r = await pool.query(
+    `update company_departments set name=$3, slug=$4, location=$5, updated_at=now()
+     where id=$1 and company_id=$2 returning id, company_id, name, slug, location, updated_at`,
+    [deptId, companyId, name, slug, location],
+  )
+  if (!r.rowCount) return res.status(404).json({ message: 'Department not found' })
+  await logCompanyAudit(req, { companyId, action: 'department.update', targetType: 'department', targetId: deptId, meta: { name } })
+  return res.json(r.rows[0])
+}))
+
+corporateRouter.delete('/company/departments/:id', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  if (!ok.ok) return
+  const deptId = String(req.params.id)
+  const r = await pool.query('delete from company_departments where id=$1 and company_id=$2 returning id', [deptId, companyId])
+  if (!r.rowCount) return res.status(404).json({ message: 'Department not found' })
+  await logCompanyAudit(req, { companyId, action: 'department.delete', targetType: 'department', targetId: deptId })
+  return res.json({ ok: true })
+}))
+
+// --- Enterprise: Budgets CRUD ---
+corporateRouter.get('/company/budgets', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.json({ items: [] })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'auditor'])
+  if (!ok.ok) return
+  try {
+    const r = await pool.query(
+      `select b.id, b.company_id, b.department_id, d.name as department_name,
+              b.period_start, b.period_end, b.budget_limit_ghs, b.spent_ghs, b.notes, b.created_at
+       from company_budgets b
+       left join company_departments d on d.id = b.department_id
+       where b.company_id = $1 order by b.period_end desc, b.created_at desc limit 100`,
+      [companyId],
+    )
+    const items = (r.rows ?? []).map((x) => ({
+      ...x,
+      utilisation_pct: Number(x.budget_limit_ghs) > 0 ? Math.round((100 * Number(x.spent_ghs ?? 0)) / Number(x.budget_limit_ghs)) : 0,
+    }))
+    return res.json({ items })
+  } catch (e) {
+    if (String(e?.code || '') === '42P01') return res.json({ items: [] })
+    throw e
+  }
+}))
+
+const BudgetCreateSchema = z.object({
+  department_id: z.string().uuid().optional().nullable(),
+  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  budget_limit_ghs: z.preprocess((v) => (v == null ? 0 : Number(v)), z.number().min(0)),
+  spent_ghs: z.preprocess((v) => (v == null ? 0 : Number(v)), z.number().min(0)).optional(),
+  notes: z.string().max(500).optional().nullable(),
+})
+
+corporateRouter.post('/company/budgets', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = BudgetCreateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  if (!ok.ok) return
+  const { department_id, period_start, period_end, budget_limit_ghs, spent_ghs, notes } = parsed.data
+  if (period_end < period_start) return res.status(400).json({ message: 'period_end must be >= period_start' })
+  if (department_id) {
+    const d = await pool.query('select id from company_departments where id=$1 and company_id=$2 limit 1', [department_id, companyId])
+    if (!d.rowCount) return res.status(400).json({ message: 'Department not found' })
+  }
+  const r = await pool.query(
+    `insert into company_budgets (company_id, department_id, period_start, period_end, budget_limit_ghs, spent_ghs, notes, created_by)
+     values ($1,$2,$3,$4,$5,$6,$7,$8)
+     returning id, company_id, department_id, period_start, period_end, budget_limit_ghs, spent_ghs, notes, created_at`,
+    [companyId, department_id || null, period_start, period_end, budget_limit_ghs, spent_ghs ?? 0, notes || null, req.user.sub],
+  )
+  await logCompanyAudit(req, { companyId, action: 'budget.create', targetType: 'budget', targetId: r.rows[0]?.id, meta: { period_start, period_end } })
+  return res.status(201).json(r.rows[0])
+}))
+
+const BudgetUpdateSchema = z.object({
+  spent_ghs: z.preprocess((v) => (v == null ? undefined : Number(v)), z.number().min(0)).optional(),
+  budget_limit_ghs: z.preprocess((v) => (v == null ? undefined : Number(v)), z.number().min(0)).optional(),
+  notes: z.string().max(500).optional().nullable(),
+})
+
+corporateRouter.put('/company/budgets/:id', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = BudgetUpdateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  if (!ok.ok) return
+  const budgetId = String(req.params.id)
+  const updates = []
+  const values = [budgetId, companyId]
+  let idx = 3
+  if (parsed.data.spent_ghs !== undefined) {
+    updates.push(`spent_ghs = $${idx++}`)
+    values.push(parsed.data.spent_ghs)
+  }
+  if (parsed.data.budget_limit_ghs !== undefined) {
+    updates.push(`budget_limit_ghs = $${idx++}`)
+    values.push(parsed.data.budget_limit_ghs)
+  }
+  if (parsed.data.notes !== undefined) {
+    updates.push(`notes = $${idx++}`)
+    values.push(parsed.data.notes)
+  }
+  if (updates.length === 0) return res.status(400).json({ message: 'No fields to update' })
+  updates.push('updated_at = now()')
+  const r = await pool.query(
+    `update company_budgets set ${updates.join(', ')} where id=$1 and company_id=$2 returning *`,
+    values,
+  )
+  if (!r.rowCount) return res.status(404).json({ message: 'Budget not found' })
+  await logCompanyAudit(req, { companyId, action: 'budget.update', targetType: 'budget', targetId: budgetId })
+  return res.json(r.rows[0])
+}))
+
+corporateRouter.delete('/company/budgets/:id', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  if (!ok.ok) return
+  const budgetId = String(req.params.id)
+  const r = await pool.query('delete from company_budgets where id=$1 and company_id=$2 returning id', [budgetId, companyId])
+  if (!r.rowCount) return res.status(404).json({ message: 'Budget not found' })
+  await logCompanyAudit(req, { companyId, action: 'budget.delete', targetType: 'budget', targetId: budgetId })
+  return res.json({ ok: true })
+}))
+
+corporateRouter.post('/company/budgets/:id/sync-from-payroll', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(400).json({ message: 'Create your company profile first.' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'finance'])
+  if (!ok.ok) return
+  const budgetId = String(req.params.id)
+  const b = await pool.query(
+    'select id, company_id, department_id, period_start, period_end from company_budgets where id=$1 and company_id=$2 limit 1',
+    [budgetId, companyId],
+  )
+  const budget = b.rows[0] ?? null
+  if (!budget) return res.status(404).json({ message: 'Budget not found' })
+  const periodStart = budget.period_start
+  const periodEnd = budget.period_end
+  const r = await pool.query(
+    `select coalesce(sum(i.gross_pay), 0)::numeric as total
+     from employer_pay_run_items i
+     join employer_pay_runs r on r.id = i.pay_run_id
+     where r.company_id = $1
+       and r.period_start <= $3
+       and r.period_end >= $2`,
+    [companyId, periodStart, periodEnd],
+  )
+  const spent = Number(r.rows[0]?.total ?? 0)
+  await pool.query(
+    'update company_budgets set spent_ghs = $3, updated_at = now() where id = $1 and company_id = $2',
+    [budgetId, companyId, spent],
+  )
+  await logCompanyAudit(req, { companyId, action: 'budget.sync_from_payroll', targetType: 'budget', targetId: budgetId, meta: { spent_ghs: spent } })
+  const updated = await pool.query(
+    'select id, period_start, period_end, budget_limit_ghs, spent_ghs from company_budgets where id=$1 and company_id=$2 limit 1',
+    [budgetId, companyId],
+  )
+  return res.json(updated.rows[0])
 }))
 
 const AssignWorkersSchema = z.object({
@@ -4038,7 +4387,7 @@ corporateRouter.get('/company/reports/jobs.csv', requireAuth, asyncHandler(async
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.status(404).json({ message: 'Not found' })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'auditor'])
   if (!ok.ok) return
 
   const r = await pool.query(
@@ -4135,7 +4484,7 @@ corporateRouter.get('/company/reports/shifts.csv', requireAuth, asyncHandler(asy
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.status(404).json({ message: 'Not found' })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'supervisor', 'auditor'])
   if (!ok.ok) return
 
   const r = await pool.query(
@@ -4182,7 +4531,7 @@ corporateRouter.get('/company/reports/workers.csv', requireAuth, asyncHandler(as
   if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
   const companyId = resolved.companyId
   if (!companyId) return res.status(404).json({ message: 'Not found' })
-  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr'])
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'auditor'])
   if (!ok.ok) return
 
   const r = await pool.query(
@@ -4212,6 +4561,55 @@ corporateRouter.get('/company/reports/workers.csv', requireAuth, asyncHandler(as
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="workers-${String(companyId).slice(0, 8)}.csv"`)
   return res.send(csv)
+}))
+
+corporateRouter.get('/company/reports/budgets.csv', requireAuth, asyncHandler(async (req, res) => {
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.status(404).json({ message: 'Not found' })
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'auditor'])
+  if (!ok.ok) return
+  try {
+    const r = await pool.query(
+      `select b.id, b.company_id, b.department_id, d.name as department_name,
+              b.period_start, b.period_end, b.budget_limit_ghs, b.spent_ghs, b.notes, b.created_at
+       from company_budgets b
+       left join company_departments d on d.id = b.department_id
+       where b.company_id = $1
+       order by b.period_end desc, b.created_at desc
+       limit 500`,
+      [companyId],
+    )
+    const rows = Array.isArray(r.rows) ? r.rows : []
+    const header = ['id', 'department_name', 'period_start', 'period_end', 'budget_limit_ghs', 'spent_ghs', 'utilisation_pct', 'notes', 'created_at']
+    const lines = [toCsvRow(header)]
+    for (const row of rows) {
+      const limit = Number(row.budget_limit_ghs ?? 0)
+      const spent = Number(row.spent_ghs ?? 0)
+      const pct = limit > 0 ? Math.round((100 * spent) / limit) : 0
+      lines.push(
+        toCsvRow([
+          row.id,
+          row.department_name ?? 'Company-wide',
+          row.period_start ?? '',
+          row.period_end ?? '',
+          limit,
+          spent,
+          pct,
+          row.notes ?? '',
+          row.created_at ?? '',
+        ]),
+      )
+    }
+    const csv = lines.join('\n')
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+    res.setHeader('Content-Disposition', `attachment; filename="budgets-${String(companyId).slice(0, 8)}.csv"`)
+    return res.send(csv)
+  } catch (e) {
+    if (String(e?.code || '') === '42P01') return res.status(400).json({ message: 'Budgets table not ready (run migrations).' })
+    throw e
+  }
 }))
 
 const ApplySchema = z.object({

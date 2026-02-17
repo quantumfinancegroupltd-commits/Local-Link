@@ -31,6 +31,7 @@ function extensionFromMime(mime) {
   if (mime === 'image/webp') return 'webp'
   if (mime === 'image/avif') return 'avif'
   if (mime === 'image/gif') return 'gif'
+  if (mime === 'image/heic') return 'jpg' // converted to JPEG
   if (mime === 'video/mp4') return 'mp4'
   if (mime === 'video/webm') return 'webm'
   if (mime === 'video/quicktime') return 'mov'
@@ -140,12 +141,13 @@ const allowedMimes = new Set([
   'image/webp',
   'image/avif',
   'image/gif',
+  'image/heic',
   'video/mp4',
   'video/webm',
   'video/quicktime',
 ])
 
-const allowedPrivateMimes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'])
+const allowedPrivateMimes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif', 'image/heic'])
 
 const multerStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
@@ -257,6 +259,24 @@ uploadsRouter.post('/media', requireAuth, uploadMediaRateLimit, (req, res, next)
   const files = Array.isArray(req.files) ? req.files : []
   if (!files.length) return res.status(400).json({ message: 'No files uploaded (use field name "files")' })
 
+  // HEIC (iPhone) → JPEG so rest of pipeline and browsers work
+  const sharp = (await import('sharp')).default
+  for (const f of files) {
+    if (f.mimetype !== 'image/heic') continue
+    try {
+      const jpegPath = f.path.replace(/\.(heic|HEIC)$/i, '.jpg') || f.path + '.jpg'
+      await sharp(f.path).rotate().jpeg({ quality: 90 }).toFile(jpegPath)
+      await fs.unlink(f.path).catch(() => {})
+      f.path = jpegPath
+      f.mimetype = 'image/jpeg'
+      f.filename = path.basename(jpegPath)
+      f.size = (await fs.stat(jpegPath)).size
+    } catch {
+      await fs.unlink(f.path).catch(() => {})
+      return res.status(415).json({ message: 'HEIC conversion failed. Try saving as JPEG on your device.' })
+    }
+  }
+
   // Extra safety: verify image content matches the declared mimetype.
   // (We keep videos as-is; deeper video validation is heavier and optional.)
   for (const f of files) {
@@ -319,7 +339,23 @@ uploadsRouter.post('/private/media', requireAuth, uploadPrivateRateLimit, (req, 
   const files = Array.isArray(req.files) ? req.files : []
   if (!files.length) return res.status(400).json({ message: 'No files uploaded (use field name "files")' })
 
+  // HEIC → JPEG for private uploads (e.g. ID verification)
+  const sharp = (await import('sharp')).default
   for (const f of files) {
+    if (f.mimetype === 'image/heic') {
+      try {
+        const jpegPath = f.path.replace(/\.(heic|HEIC)$/i, '.jpg') || f.path + '.jpg'
+        await sharp(f.path).rotate().jpeg({ quality: 90 }).toFile(jpegPath)
+        await fs.unlink(f.path).catch(() => {})
+        f.path = jpegPath
+        f.mimetype = 'image/jpeg'
+        f.filename = path.basename(jpegPath)
+        f.size = (await fs.stat(jpegPath)).size
+      } catch {
+        await fs.unlink(f.path).catch(() => {})
+        return res.status(415).json({ message: 'HEIC conversion failed. Try saving as JPEG.' })
+      }
+    }
     const sniffed = await sniffImageMimeFromFile(f.path)
     if (!sniffed || sniffed !== f.mimetype) {
       await fs.unlink(f.path).catch(() => {})

@@ -1067,6 +1067,11 @@ export function PublicProfile() {
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <TrustBadge trustScore={user?.trust_score} />
+                      {user?.role === 'artisan' && roleProfile?.premium ? (
+                        <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800" title="Artisan Pro">
+                          Pro
+                        </span>
+                      ) : null}
                       {hasBadges ? (
                         <ExperienceBadgesRow
                           badges={badges?.badges ?? []}
@@ -1106,6 +1111,9 @@ export function PublicProfile() {
                       ) : null}
                       {lastActiveLabel ? (
                         <span className="rounded-full border bg-white px-3 py-1 text-xs font-semibold text-slate-700">{lastActiveLabel}</span>
+                      ) : null}
+                      {roleProfile?.premium && user?.role === 'artisan' ? (
+                        <span className="rounded-full border bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800" title="Featured provider">Pro</span>
                       ) : null}
                       {showTier ? (
                         <span className="rounded-full border bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">

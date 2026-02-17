@@ -14,6 +14,8 @@ import { PRODUCT_CATEGORIES } from '../../lib/productCategories.js'
 
 export function MarketplaceBrowse() {
   const [products, setProducts] = useState([])
+  const [searchProducts, setSearchProducts] = useState(null) // when q is set, results from GET /search
+  const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -50,9 +52,33 @@ export function MarketplaceBrowse() {
     }
   }, [])
 
+  // Server-side full-text search when user types in search box
+  useEffect(() => {
+    const term = String(q ?? '').trim()
+    if (!term) {
+      setSearchProducts(null)
+      return
+    }
+    const t = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const res = await http.get('/search', { params: { q: term, type: 'products', limit: 100 } })
+        const list = Array.isArray(res.data?.products) ? res.data.products : []
+        setSearchProducts(list.map((p) => ({ ...p, location: p.location ?? p.farm_location })))
+      } catch {
+        setSearchProducts([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [q])
+
+  const baseProducts = searchProducts !== null ? searchProducts : products
+
   const locations = useMemo(() => {
     const set = new Set()
-    for (const p of products) {
+    for (const p of baseProducts) {
       const loc =
         p?.location ??
         p?.farm_location ??
@@ -63,7 +89,7 @@ export function MarketplaceBrowse() {
       if (typeof loc === 'string' && loc.trim()) set.add(loc.trim())
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b))
-  }, [products])
+  }, [baseProducts])
 
   const filtered = useMemo(() => {
     const origin = nearLat != null && nearLng != null ? { lat: Number(nearLat), lng: Number(nearLng) } : null
@@ -71,7 +97,7 @@ export function MarketplaceBrowse() {
     const minP = minPrice ? Number(minPrice) : null
     const maxP = maxPrice ? Number(maxPrice) : null
 
-    const scored = products
+    const scored = baseProducts
       .map((p) => {
       const matchCat =
         category === 'all' ? true : String(p.category ?? '').toLowerCase() === category
@@ -140,7 +166,7 @@ export function MarketplaceBrowse() {
     })
 
     return scored
-  }, [products, q, category, location, tier, minPrice, maxPrice, nearLat, nearLng, radiusKm, sort])
+  }, [baseProducts, q, category, location, tier, minPrice, maxPrice, nearLat, nearLng, radiusKm, sort])
 
   const results = useMemo(() => filtered.map((x) => ({ ...x.product, meta: { why: x.why } })), [filtered])
 
@@ -158,7 +184,7 @@ export function MarketplaceBrowse() {
         subtitle="Produce, flowers & plants — browse by category, location, and verification."
         actions={
           <div className="text-sm font-semibold text-slate-700">
-            {loading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}`}
+            {loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`}
           </div>
         }
       />

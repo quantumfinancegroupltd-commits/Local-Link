@@ -1621,6 +1621,36 @@ export function MyProfile() {
             )}
           </Card>
 
+          {me?.referral_code ? (
+            <Card>
+              <div className="text-sm font-semibold">Invite friends</div>
+              <div className="mt-2 text-sm text-slate-700">
+                Share your referral link. When someone signs up with it and completes their first job, you get credit.
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Input
+                  readOnly
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${me.referral_code}` : me.referral_code}
+                  className="font-mono text-xs"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    const url = typeof window !== 'undefined' ? `${window.location.origin}/register?ref=${me.referral_code}` : ''
+                    if (url && navigator?.clipboard?.writeText) {
+                      navigator.clipboard.writeText(url)
+                      toast.success('Referral link copied.')
+                    }
+                  }}
+                >
+                  Copy link
+                </Button>
+              </div>
+              <div className="mt-2 text-xs text-slate-500">Your code: <span className="font-mono font-semibold">{me.referral_code}</span></div>
+            </Card>
+          ) : null}
+
           <Card>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>

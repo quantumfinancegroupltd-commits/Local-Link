@@ -497,6 +497,10 @@ jobsRouter.post('/:id/complete', requireAuth, requireRole(['artisan']), asyncHan
       dedupeKey: `job:${job.id}:completed`,
     }).catch(() => {})
 
+    // Recurring: auto-create next occurrence (fire-and-forget)
+    const { createNextRecurringJobIfDue } = await import('../services/recurringJobs.js')
+    createNextRecurringJobIfDue(job).catch(() => {})
+
     return res.json({ ok: true })
   } catch (e) {
     try {

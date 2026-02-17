@@ -7,6 +7,7 @@ import { notify } from '../services/notifications.js'
 import { env } from '../config.js'
 import { makePaystackReference, paystackInitializeTransaction, paystackSecretKey } from '../payments/paystack.js'
 import { creditWalletTx, getIdempotencyKeyFromReq } from '../services/walletLedger.js'
+import { haversineKm } from '../services/algorithms.js'
 
 export const ordersRouter = Router()
 
@@ -197,6 +198,15 @@ ordersRouter.post('/', requireAuth, requireRole(['buyer']), asyncHandler(async (
   )
   const product = productRes.rows[0]
   if (!product) return res.status(404).json({ message: 'Product not found' })
+  const qty = Number(product.quantity ?? 0)
+  if (qty < parsed.data.quantity) {
+    return res.status(400).json({
+      message: qty === 0 ? 'This product is currently out of stock.' : `Only ${qty} ${product.unit ?? 'units'} available.`,
+    })
+  }
+  if (String(product.status ?? '') !== 'available') {
+    return res.status(400).json({ message: 'This product is not available for order.' })
+  }
 
   const client = await pool.connect()
   try {
@@ -256,6 +266,37 @@ ordersRouter.post('/', requireAuth, requireRole(['buyer']), asyncHandler(async (
         parsed.data.delivery_fee ?? 0,
       ],
     )
+
+    // Dispatch: suggest nearest online driver to pickup (farm)
+    const farmRes = await client.query(
+      'select farm_lat, farm_lng from farmers where id = $1',
+      [product.farmer_id ?? null],
+    )
+    const farmLat = farmRes.rows[0]?.farm_lat != null ? Number(farmRes.rows[0].farm_lat) : null
+    const farmLng = farmRes.rows[0]?.farm_lng != null ? Number(farmRes.rows[0].farm_lng) : null
+    if (Number.isFinite(farmLat) && Number.isFinite(farmLng)) {
+      const driversRes = await client.query(
+        `select user_id, last_lat, last_lng from drivers
+         where status = 'approved' and is_online = true
+           and last_lat is not null and last_lng is not null
+           and last_location_at > now() - interval '2 hours'`,
+      )
+      let nearest = null
+      let nearestKm = Infinity
+      for (const d of driversRes.rows || []) {
+        const km = haversineKm(farmLat, farmLng, d.last_lat, d.last_lng)
+        if (km != null && km < nearestKm) {
+          nearestKm = km
+          nearest = d.user_id
+        }
+      }
+      if (nearest) {
+        await client.query(
+          `update deliveries set suggested_driver_user_id = $2, suggested_at = now() where id = $1`,
+          [delivery.rows[0].id, nearest],
+        )
+      }
+    }
 
     // Create escrow rows: produce portion (farmer) + delivery portion (driver later).
     // IMPORTANT: For real payments, these start as pending_payment and become held only after Paystack confirms.

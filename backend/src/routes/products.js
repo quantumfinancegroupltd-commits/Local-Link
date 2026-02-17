@@ -59,7 +59,24 @@ productsRouter.get('/mine', requireAuth, requireRole(['farmer']), asyncHandler(a
   return res.json(list)
 }))
 
-// Public marketplace browse (only shows available listings)
+// Buyer: subscribe to restock notification for a product (when out of stock or low)
+productsRouter.post('/:id/notify-restock', requireAuth, requireRole(['buyer']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `select id, name, status, quantity from products where id = $1`,
+    [req.params.id],
+  )
+  const product = r.rows[0]
+  if (!product) return res.status(404).json({ message: 'Product not found' })
+  await pool.query(
+    `insert into product_restock_notifications (product_id, user_id)
+     values ($1, $2)
+     on conflict (product_id, user_id) do nothing`,
+    [product.id, req.user.sub],
+  )
+  return res.status(201).json({ ok: true, message: "We'll notify you when this product is back in stock." })
+}))
+
+// Public marketplace browse (only shows available listings; excludes out_of_stock)
 productsRouter.get('/', asyncHandler(async (req, res) => {
   const r = await pool.query(
     `select p.*,
@@ -80,6 +97,7 @@ productsRouter.get('/', asyncHandler(async (req, res) => {
       and (u.suspended_until is null or u.suspended_until <= now())
      left join verification_levels v on v.user_id = u.id
      where p.status = 'available'
+       and (p.quantity is null or p.quantity > 0)
      order by p.created_at desc`,
   )
   const list = r.rows.map((row) => ({
@@ -220,7 +238,7 @@ const UpdateSchema = z.object({
   quantity: z.number().int().positive().optional(),
   unit: z.string().min(1).optional(),
   price: z.number().positive().optional(),
-  status: z.enum(['available', 'sold', 'pending', 'cancelled']).optional(),
+  status: z.enum(['available', 'sold', 'pending', 'cancelled', 'out_of_stock']).optional(),
   image_url: z.string().min(1).nullable().optional(),
   recipe: z.string().max(2000).optional().nullable(),
   media: z
@@ -280,6 +298,10 @@ productsRouter.put('/:id', requireAuth, asyncHandler(async (req, res) => {
 
     const mediaJson = next.media == null ? null : JSON.stringify(next.media)
 
+    const wasOutOfStock = Number(product.quantity ?? 0) <= 0
+    const nowInStock = Number(next.quantity ?? 0) > 0
+    const statusToSet = wasOutOfStock && nowInStock ? 'available' : next.status
+
     const updated = await client.query(
       `update products
        set name=$2,
@@ -301,12 +323,34 @@ productsRouter.put('/:id', requireAuth, asyncHandler(async (req, res) => {
         next.quantity,
         next.unit,
         next.price,
-        next.status,
+        statusToSet,
         next.image_url ?? null,
         mediaJson,
         next.recipe ?? null,
       ],
     )
+
+    if (wasOutOfStock && nowInStock) {
+      const notif = await client.query(
+        `select user_id from product_restock_notifications where product_id = $1 and notified_at is null`,
+        [product.id],
+      )
+      const { notify } = await import('../services/notifications.js')
+      for (const r of notif.rows || []) {
+        notify({
+          userId: r.user_id,
+          type: 'product_restock',
+          title: 'Back in stock',
+          body: `${next.name ?? 'A product'} you wanted is back in stock.`,
+          meta: { url: `/marketplace/products/${product.id}`, product_id: product.id },
+          dedupeKey: `restock:${product.id}:${r.user_id}`,
+        }).catch(() => {})
+      }
+      await client.query(
+        `update product_restock_notifications set notified_at = now() where product_id = $1`,
+        [product.id],
+      )
+    }
 
     await client.query('commit')
     return res.json(updated.rows[0])

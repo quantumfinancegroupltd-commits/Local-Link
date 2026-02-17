@@ -151,6 +151,9 @@ export function FarmerDashboard() {
             <Link to="/farmer/orders">
               <Button variant="secondary">Orders</Button>
             </Link>
+            <Link to="/farmer/analytics">
+              <Button variant="secondary">Analytics</Button>
+            </Link>
             <Link to="/messages">
               <Button variant="secondary">Messages</Button>
             </Link>

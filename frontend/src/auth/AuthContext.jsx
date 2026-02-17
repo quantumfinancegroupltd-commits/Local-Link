@@ -34,8 +34,8 @@ export function AuthProvider({ children }) {
     return nextUser
   }, [setSession])
 
-  const register = useCallback(async ({ name, email, phone, password, role }) => {
-    const res = await http.post('/register', { name, email, phone, password, role })
+  const register = useCallback(async ({ name, email, phone, password, role, referral_code }) => {
+    const res = await http.post('/register', { name, email, phone, password, role, referral_code })
     // Support either: register returns token+user, or just user.
     const nextToken = res.data?.token ?? res.data?.accessToken ?? null
     const nextUser = res.data?.user ?? res.data ?? null

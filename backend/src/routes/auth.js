@@ -51,27 +51,48 @@ function baseUrlFromReq(req) {
   return `${proto}://${host}`
 }
 
+function generateReferralCode() {
+  return crypto.randomBytes(8).toString('base64url').slice(0, 12).toUpperCase()
+}
+
 const RegisterSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional().nullable(),
   password: z.string().min(6),
   role: z.enum(['buyer', 'artisan', 'farmer', 'driver', 'company']),
+  referral_code: z.string().max(32).optional().nullable(),
 })
 
 authRouter.post('/register', authRateLimit, asyncHandler(async (req, res) => {
   const parsed = RegisterSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
 
-  const { name, email, phone, password, role } = parsed.data
+  const { name, email, phone, password, role, referral_code: referralCodeIn } = parsed.data
   const passwordHash = await bcrypt.hash(password, 10)
+
+  let referrerUserId = null
+  if (referralCodeIn && String(referralCodeIn).trim()) {
+    const ref = await pool.query(
+      'select id from users where referral_code = $1 and deleted_at is null',
+      [String(referralCodeIn).trim()],
+    )
+    referrerUserId = ref.rows[0]?.id ?? null
+  }
+
+  let referralCode = generateReferralCode()
+  for (let i = 0; i < 5; i++) {
+    const exists = await pool.query('select 1 from users where referral_code = $1', [referralCode])
+    if (!exists.rows[0]) break
+    referralCode = generateReferralCode()
+  }
 
   try {
     const result = await pool.query(
-      `insert into users (name, email, phone, password_hash, role)
-       values ($1,$2,$3,$4,$5)
-       returning id, name, email, phone, role, verified, rating, profile_pic, created_at`,
-      [name, email.toLowerCase(), phone ?? null, passwordHash, role],
+      `insert into users (name, email, phone, password_hash, role, referrer_user_id, referral_code)
+       values ($1,$2,$3,$4,$5,$6,$7)
+       returning id, name, email, phone, role, verified, rating, profile_pic, created_at, referral_code`,
+      [name, email.toLowerCase(), phone ?? null, passwordHash, role, referrerUserId, referralCode],
     )
     const user = result.rows[0]
 

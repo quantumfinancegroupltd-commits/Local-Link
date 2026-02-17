@@ -112,9 +112,11 @@ export function CompanyDashboard() {
   const [selectedShiftId, setSelectedShiftId] = useState('')
   const [shiftDetail, setShiftDetail] = useState(null) // {shift, assignments}
   const [shiftDetailLoading, setShiftDetailLoading] = useState(false)
+  const [shiftDepartmentId, setShiftDepartmentId] = useState('')
   const [shiftEditTitle, setShiftEditTitle] = useState('')
   const [shiftEditRoleTag, setShiftEditRoleTag] = useState('')
   const [shiftEditLocation, setShiftEditLocation] = useState('')
+  const [shiftEditDepartmentId, setShiftEditDepartmentId] = useState('')
   const [shiftEditStartAt, setShiftEditStartAt] = useState('')
   const [shiftEditEndAt, setShiftEditEndAt] = useState('')
   const [shiftEditHeadcount, setShiftEditHeadcount] = useState('1')
@@ -231,6 +233,32 @@ export function CompanyDashboard() {
   const [wfWorkerHistoryLoading, setWfWorkerHistoryLoading] = useState(false)
   const [wfWorkerHistoryError, setWfWorkerHistoryError] = useState(null)
 
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState(null)
+
+  const [departments, setDepartments] = useState([])
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
+  const [departmentsError, setDepartmentsError] = useState(null)
+  const [departmentsBusy, setDepartmentsBusy] = useState(false)
+  const [deptName, setDeptName] = useState('')
+  const [deptSlug, setDeptSlug] = useState('')
+  const [deptLocation, setDeptLocation] = useState('')
+  const [editingDeptId, setEditingDeptId] = useState(null)
+
+  const [budgets, setBudgets] = useState([])
+  const [budgetsLoading, setBudgetsLoading] = useState(false)
+  const [budgetsError, setBudgetsError] = useState(null)
+  const [budgetsBusy, setBudgetsBusy] = useState(false)
+  const [budgetDeptId, setBudgetDeptId] = useState('')
+  const [budgetPeriodStart, setBudgetPeriodStart] = useState('')
+  const [budgetPeriodEnd, setBudgetPeriodEnd] = useState('')
+  const [budgetLimit, setBudgetLimit] = useState('')
+  const [budgetSpent, setBudgetSpent] = useState('')
+  const [budgetNotes, setBudgetNotes] = useState('')
+  const [editingBudgetId, setEditingBudgetId] = useState(null)
+  const [syncBudgetBusyKey, setSyncBudgetBusyKey] = useState(null)
+
   const [downloadBusyKey, setDownloadBusyKey] = useState(null)
 
   // Ops Autopilot (coverage auto-fill)
@@ -312,6 +340,9 @@ export function CompanyDashboard() {
   const canManageRecurring = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
   const canUsePayroll = myWorkspaceRole === 'owner' || myWorkspaceRole === 'finance'
   const canUseInsights = Boolean(myWorkspaceRole) || (user?.role === 'company' && !companyReady)
+  const canManageDepartments = ['owner', 'ops', 'hr', 'finance'].includes(String(myWorkspaceRole || ''))
+  const canManageBudgets = ['owner', 'ops', 'finance'].includes(String(myWorkspaceRole || ''))
+  const canViewDepartments = canManageDepartments || myWorkspaceRole === 'auditor'
   const canSetWorkerPreferred = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops' || myWorkspaceRole === 'hr' || myWorkspaceRole === 'supervisor'
   const canSetWorkerBlocked = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
   const canSaveOpsSettings = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
@@ -873,6 +904,7 @@ export function CompanyDashboard() {
         setShiftEditTitle(String(base.title ?? ''))
         setShiftEditRoleTag(String(base.role_tag ?? ''))
         setShiftEditLocation(String(base.location ?? ''))
+        setShiftEditDepartmentId(base.department_id ?? '')
         setShiftEditStartAt(base.start_at ? new Date(base.start_at).toISOString().slice(0, 16) : '')
         setShiftEditEndAt(base.end_at ? new Date(base.end_at).toISOString().slice(0, 16) : '')
         setShiftEditHeadcount(String(base.headcount ?? 1))
@@ -895,6 +927,7 @@ export function CompanyDashboard() {
         title: shiftEditTitle.trim(),
         role_tag: shiftEditRoleTag.trim() || null,
         location: shiftEditLocation.trim() || null,
+        department_id: shiftEditDepartmentId.trim() || null,
         start_at: shiftEditStartAt ? new Date(shiftEditStartAt).toISOString() : undefined,
         end_at: shiftEditEndAt ? new Date(shiftEditEndAt).toISOString() : undefined,
         headcount: shiftEditHeadcount ? Number(shiftEditHeadcount) : undefined,
@@ -1244,6 +1277,23 @@ export function CompanyDashboard() {
     }
   }
 
+  async function loadCompanyAnalytics(daysOverride) {
+    if (!companyReady) return
+    const days = daysOverride != null ? Number(daysOverride) : Number(wfDays || 30)
+    if (!Number.isFinite(days) || days <= 0) return
+    setAnalyticsLoading(true)
+    setAnalyticsError(null)
+    try {
+      const r = await http.get('/corporate/company/analytics', { params: withCompanyParams({ days }) })
+      setAnalytics(r.data ?? null)
+    } catch (e) {
+      setAnalyticsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load analytics')
+      setAnalytics(null)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
   async function loadWorkforceInsights(daysOverride) {
     if (!companyReady) return
     const days = daysOverride != null ? Number(daysOverride) : Number(wfDays || 30)
@@ -1392,14 +1442,185 @@ export function CompanyDashboard() {
     await addWorkerToPoolFromInsights(uid)
   }
 
+  async function loadDepartments() {
+    if (!companyReady) return
+    setDepartmentsLoading(true)
+    setDepartmentsError(null)
+    try {
+      const r = await http.get('/corporate/company/departments', { params: withCompanyParams() })
+      setDepartments(Array.isArray(r.data?.items) ? r.data.items : [])
+    } catch (e) {
+      setDepartmentsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load departments')
+      setDepartments([])
+    } finally {
+      setDepartmentsLoading(false)
+    }
+  }
+
+  async function loadBudgets() {
+    if (!companyReady) return
+    setBudgetsLoading(true)
+    setBudgetsError(null)
+    try {
+      const r = await http.get('/corporate/company/budgets', { params: withCompanyParams() })
+      setBudgets(Array.isArray(r.data?.items) ? r.data.items : [])
+    } catch (e) {
+      setBudgetsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load budgets')
+      setBudgets([])
+    } finally {
+      setBudgetsLoading(false)
+    }
+  }
+
+  async function saveDepartment() {
+    if (!companyReady || !canManageDepartments) return
+    const name = String(deptName || '').trim()
+    if (!name) return toast.warning('Name required', 'Enter department name.')
+    setDepartmentsBusy(true)
+    try {
+      if (editingDeptId) {
+        await http.put(
+          `/corporate/company/departments/${encodeURIComponent(editingDeptId)}`,
+          { name, slug: deptSlug || null, location: deptLocation || null },
+          { params: withCompanyParams() },
+        )
+        toast.success('Department updated.')
+      } else {
+        await http.post(
+          '/corporate/company/departments',
+          { name, slug: deptSlug || null, location: deptLocation || null },
+          { params: withCompanyParams() },
+        )
+        toast.success('Department added.')
+      }
+      setDeptName('')
+      setDeptSlug('')
+      setDeptLocation('')
+      setEditingDeptId(null)
+      await loadDepartments()
+      await loadCompanyAnalytics(Number(wfDays || 30))
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save')
+    } finally {
+      setDepartmentsBusy(false)
+    }
+  }
+
+  async function deleteDepartment(id) {
+    if (!companyReady || !canManageDepartments) return
+    if (!window.confirm('Delete this department? Shifts linked to it will be unlinked.')) return
+    setDepartmentsBusy(true)
+    try {
+      await http.delete(`/corporate/company/departments/${encodeURIComponent(id)}`, { params: withCompanyParams() })
+      toast.success('Department removed.')
+      await loadDepartments()
+      await loadCompanyAnalytics(Number(wfDays || 30))
+      setEditingDeptId(null)
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete')
+    } finally {
+      setDepartmentsBusy(false)
+    }
+  }
+
+  async function saveBudget() {
+    if (!companyReady || !canManageBudgets) return
+    const limit = Number(budgetLimit)
+    if (!Number.isFinite(limit) || limit < 0) return toast.warning('Limit required', 'Enter budget limit (GHS).')
+    if (!editingBudgetId) {
+      const start = String(budgetPeriodStart || '').trim()
+      const end = String(budgetPeriodEnd || '').trim()
+      if (!start || !end) return toast.warning('Period required', 'Enter period start and end.')
+      if (end < start) return toast.warning('Invalid period', 'End must be >= start.')
+    }
+    setBudgetsBusy(true)
+    try {
+      if (editingBudgetId) {
+        await http.put(
+          `/corporate/company/budgets/${encodeURIComponent(editingBudgetId)}`,
+          { spent_ghs: Number(budgetSpent) || 0, budget_limit_ghs: limit, notes: budgetNotes || null },
+          { params: withCompanyParams() },
+        )
+        toast.success('Budget updated.')
+        setEditingBudgetId(null)
+      } else {
+        await http.post(
+          '/corporate/company/budgets',
+          {
+            department_id: budgetDeptId || null,
+            period_start: start,
+            period_end: end,
+            budget_limit_ghs: limit,
+            spent_ghs: Number(budgetSpent) || 0,
+            notes: budgetNotes || null,
+          },
+          { params: withCompanyParams() },
+        )
+        toast.success('Budget added.')
+      }
+      setBudgetDeptId('')
+      setBudgetPeriodStart('')
+      setBudgetPeriodEnd('')
+      setBudgetLimit('')
+      setBudgetSpent('')
+      setBudgetNotes('')
+      await loadBudgets()
+      await loadCompanyAnalytics(Number(wfDays || 30))
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save')
+    } finally {
+      setBudgetsBusy(false)
+    }
+  }
+
+  async function syncBudgetFromPayroll(id) {
+    if (!companyReady || !canManageBudgets) return
+    setSyncBudgetBusyKey(id)
+    try {
+      const r = await http.post(`/corporate/company/budgets/${encodeURIComponent(id)}/sync-from-payroll`, {}, { params: withCompanyParams() })
+      const updated = r.data ?? null
+      if (updated) {
+        setBudgets((prev) => prev.map((b) => (b.id === id ? { ...b, spent_ghs: updated.spent_ghs, utilisation_pct: Number(updated.budget_limit_ghs) > 0 ? Math.round((100 * Number(updated.spent_ghs ?? 0)) / Number(updated.budget_limit_ghs)) : 0 } : b)))
+        toast.success(`Synced: ₵${Number(updated.spent_ghs ?? 0).toLocaleString()} from payroll.`)
+      }
+      await loadCompanyAnalytics(Number(wfDays || 30))
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to sync')
+    } finally {
+      setSyncBudgetBusyKey(null)
+    }
+  }
+
+  async function deleteBudget(id) {
+    if (!companyReady || !canManageBudgets) return
+    if (!window.confirm('Delete this budget?')) return
+    setBudgetsBusy(true)
+    try {
+      await http.delete(`/corporate/company/budgets/${encodeURIComponent(id)}`, { params: withCompanyParams() })
+      toast.success('Budget removed.')
+      await loadBudgets()
+      await loadCompanyAnalytics(Number(wfDays || 30))
+      setEditingBudgetId(null)
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete')
+    } finally {
+      setBudgetsBusy(false)
+    }
+  }
+
   useEffect(() => {
     if (!companyReady) return
-    if (tab !== 'insights') return
-    loadMembers().catch(() => {})
-    loadInvites().catch(() => {})
-    loadAudit({ reset: true }).catch(() => {})
-    loadWorkforceInsights().catch(() => {})
-    if (canUseOps || canUseStaff) loadWorkerLists().catch(() => {})
+    if (tab === 'insights') {
+      loadMembers().catch(() => {})
+      loadInvites().catch(() => {})
+      loadAudit({ reset: true }).catch(() => {})
+      loadCompanyAnalytics().catch(() => {})
+      loadDepartments().catch(() => {})
+      loadBudgets().catch(() => {})
+      loadWorkforceInsights().catch(() => {})
+      if (canUseOps || canUseStaff) loadWorkerLists().catch(() => {})
+    }
+    if (tab === 'ops') loadDepartments().catch(() => {})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyReady, tab])
 
@@ -2210,6 +2431,7 @@ export function CompanyDashboard() {
           title: shiftTitle.trim(),
           role_tag: shiftRoleTag.trim() || null,
           location: shiftLoc.trim() || null,
+          department_id: shiftDepartmentId.trim() || null,
           start_at: new Date(shiftStartAt).toISOString(),
           end_at: new Date(shiftEndAt).toISOString(),
           headcount: shiftHeadcount ? Number(shiftHeadcount) : 1,
@@ -2224,6 +2446,7 @@ export function CompanyDashboard() {
       setShiftTitle('')
       setShiftRoleTag('')
       setShiftLoc('')
+      setShiftDepartmentId('')
       setShiftStartAt('')
       setShiftEndAt('')
       setShiftHeadcount('1')
@@ -4540,6 +4763,17 @@ export function CompanyDashboard() {
                       <Label>Location</Label>
                       <Input value={shiftLoc} onChange={(e) => setShiftLoc(e.target.value)} placeholder="Accra / Tema…" />
                     </div>
+                    {departments.length > 0 ? (
+                      <div className="md:col-span-2">
+                        <Label>Department</Label>
+                        <Select value={shiftDepartmentId} onChange={(e) => setShiftDepartmentId(e.target.value)}>
+                          <option value="">—</option>
+                          {departments.map((d) => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
+                        </Select>
+                      </div>
+                    ) : null}
                     <div className="md:col-span-3">
                       <Label>Start</Label>
                       <Input type="datetime-local" value={shiftStartAt} onChange={(e) => setShiftStartAt(e.target.value)} />
@@ -4615,6 +4849,9 @@ export function CompanyDashboard() {
                               <div className="text-sm font-semibold text-slate-900">{s.title}</div>
                               <div className="mt-1 text-xs text-slate-600">
                                 {fmtDate(s.start_at)} → {fmtDate(s.end_at)} • headcount: {s.headcount} • assigned: {s.assigned ?? 0}
+                                {s.department_id && departments.find((d) => d.id === s.department_id) ? (
+                                  <span> • {departments.find((d) => d.id === s.department_id).name}</span>
+                                ) : null}
                                 {s.checkin_enabled ? <span className="text-slate-500"> • code check-in</span> : null}
                                 {s.checkin_geo_required ? <span className="text-slate-500"> • geo check-in</span> : null}
                               </div>
@@ -4683,6 +4920,17 @@ export function CompanyDashboard() {
                                 <Label>Location</Label>
                                 <Input value={shiftEditLocation} onChange={(e) => setShiftEditLocation(e.target.value)} disabled={shiftBusy || !online} placeholder="Accra / Tema…" />
                               </div>
+                              {departments.length > 0 ? (
+                                <div className="md:col-span-2">
+                                  <Label>Department</Label>
+                                  <Select value={shiftEditDepartmentId} onChange={(e) => setShiftEditDepartmentId(e.target.value)} disabled={shiftBusy || !online}>
+                                    <option value="">—</option>
+                                    {departments.map((d) => (
+                                      <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
+                                  </Select>
+                                </div>
+                              ) : null}
                               <div className="md:col-span-1">
                                 <Label>Start</Label>
                                 <Input type="datetime-local" value={shiftEditStartAt} onChange={(e) => setShiftEditStartAt(e.target.value)} disabled={shiftBusy || !online} />
@@ -5217,6 +5465,237 @@ export function CompanyDashboard() {
               <Card className="p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
+                    <div className="text-sm font-semibold">Enterprise analytics</div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      Workforce cost and operational metrics. Last {analytics?.window_days ?? 30} days.
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => loadCompanyAnalytics(Number(wfDays || 30)).catch(() => {})}
+                      disabled={analyticsLoading}
+                    >
+                      {analyticsLoading ? 'Loading…' : 'Refresh'}
+                    </Button>
+                  </div>
+                </div>
+                {analyticsError ? <div className="mt-3 text-sm text-red-700">{analyticsError}</div> : null}
+                {analytics ? (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    <div className="rounded-xl border bg-slate-50 p-4">
+                      <div className="text-xs font-semibold text-slate-600">Shifts</div>
+                      <div className="mt-1 text-2xl font-semibold text-slate-900">{analytics.workforce?.shifts_total ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-slate-500">in period</div>
+                    </div>
+                    <div className="rounded-xl border bg-emerald-50 p-4">
+                      <div className="text-xs font-semibold text-emerald-700">Completed</div>
+                      <div className="mt-1 text-2xl font-semibold text-emerald-800">{analytics.workforce?.shifts_completed ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-emerald-600">assignments</div>
+                    </div>
+                    <div className="rounded-xl border bg-amber-50 p-4">
+                      <div className="text-xs font-semibold text-amber-700">No-shows</div>
+                      <div className="mt-1 text-2xl font-semibold text-amber-800">{analytics.workforce?.no_shows_total ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-amber-600">impact</div>
+                    </div>
+                    <div className="rounded-xl border bg-blue-50 p-4">
+                      <div className="text-xs font-semibold text-blue-700">Preferred</div>
+                      <div className="mt-1 text-2xl font-semibold text-blue-800">{analytics.workforce?.preferred_count ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-blue-600">workers</div>
+                    </div>
+                    <div className="rounded-xl border bg-indigo-50 p-4">
+                      <div className="text-xs font-semibold text-indigo-700">In pools</div>
+                      <div className="mt-1 text-2xl font-semibold text-indigo-800">{analytics.workforce?.workers_in_pools ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-indigo-600">unique workers</div>
+                    </div>
+                  </div>
+                ) : analyticsLoading ? (
+                  <div className="mt-4 text-sm text-slate-600">Loading…</div>
+                ) : null}
+                {analytics?.budgets?.length ? (
+                  <div className="mt-4">
+                    <div className="text-xs font-semibold text-slate-700">Active budgets</div>
+                    <div className="mt-2 space-y-2">
+                      {analytics.budgets.slice(0, 5).map((b) => {
+                        const pct = b.utilisation_pct ?? 0
+                        const alertClass = pct >= 100 ? 'border-red-300 bg-red-50' : pct >= 80 ? 'border-amber-300 bg-amber-50' : ''
+                        return (
+                          <div key={b.id} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${alertClass || 'border-slate-200 bg-white'}`}>
+                            <span>
+                              {b.period_start} → {b.period_end}
+                              {pct >= 100 ? <span className="ml-2 text-xs font-semibold text-red-700">Over budget</span> : pct >= 80 ? <span className="ml-2 text-xs font-semibold text-amber-700">Near limit</span> : null}
+                            </span>
+                            <span>
+                              ₵{Number(b.spent_ghs).toLocaleString()} / ₵{Number(b.budget_limit_ghs).toLocaleString()} ({pct}%)
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </Card>
+
+              {canViewDepartments ? (
+                <Card className="p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold">Departments & Budgets</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        Track sites and workforce spend limits. Create departments, then add budgets for each period.
+                      </div>
+                    </div>
+                  </div>
+                  {departmentsError ? <div className="mt-3 text-sm text-red-700">{departmentsError}</div> : null}
+                  {budgetsError ? <div className="mt-2 text-sm text-red-700">{budgetsError}</div> : null}
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <div className="space-y-3">
+                      <div className="text-xs font-semibold text-slate-700">Departments</div>
+                      {canManageDepartments ? (
+                        <div className="flex flex-wrap gap-2">
+                          <Input
+                            value={deptName}
+                            onChange={(e) => setDeptName(e.target.value)}
+                            placeholder="Name (e.g. Site A)"
+                            className="flex-1 min-w-[120px]"
+                          />
+                          <Input
+                            value={deptSlug}
+                            onChange={(e) => setDeptSlug(e.target.value)}
+                            placeholder="Slug (optional)"
+                            className="flex-1 min-w-[80px]"
+                          />
+                          <Input
+                            value={deptLocation}
+                            onChange={(e) => setDeptLocation(e.target.value)}
+                            placeholder="Location (optional)"
+                            className="flex-1 min-w-[120px]"
+                          />
+                          <Button size="sm" onClick={saveDepartment} disabled={departmentsBusy}>
+                            {departmentsBusy ? '…' : editingDeptId ? 'Update' : 'Add'}
+                          </Button>
+                          {editingDeptId ? (
+                            <Button size="sm" variant="secondary" onClick={() => { setEditingDeptId(null); setDeptName(''); setDeptSlug(''); setDeptLocation(''); }}>
+                              Cancel
+                            </Button>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {departmentsLoading ? (
+                        <div className="text-sm text-slate-600">Loading…</div>
+                      ) : departments.length === 0 ? (
+                        <div className="text-sm text-slate-600">No departments yet.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {departments.map((d) => (
+                            <div key={d.id} className="flex items-center justify-between rounded-lg border bg-white px-3 py-2 text-sm">
+                              <span>{d.name || d.slug || d.id}</span>
+                              {d.location ? <span className="text-xs text-slate-500">{d.location}</span> : null}
+                              {canManageDepartments ? (
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={() => { setEditingDeptId(d.id); setDeptName(d.name || ''); setDeptSlug(d.slug || ''); setDeptLocation(d.location || ''); }}>
+                                    Edit
+                                  </Button>
+                                  <Button size="sm" variant="secondary" className="h-7 text-xs text-red-600" onClick={() => deleteDepartment(d.id)} disabled={departmentsBusy}>
+                                    Delete
+                                  </Button>
+                                </div>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <div className="text-xs font-semibold text-slate-700">Budgets</div>
+                      {canManageBudgets ? (
+                        <div className="flex flex-wrap gap-2 items-end">
+                          <div>
+                            <div className="text-xs text-slate-500">Department</div>
+                            <Select value={budgetDeptId} onChange={(e) => setBudgetDeptId(e.target.value)} className="min-w-[100px]" disabled={!!editingBudgetId}>
+                              <option value="">Company-wide</option>
+                              {departments.map((d) => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                              ))}
+                            </Select>
+                          </div>
+                          <Input type="date" value={budgetPeriodStart} onChange={(e) => setBudgetPeriodStart(e.target.value)} placeholder="Start" disabled={!!editingBudgetId} />
+                          <Input type="date" value={budgetPeriodEnd} onChange={(e) => setBudgetPeriodEnd(e.target.value)} placeholder="End" disabled={!!editingBudgetId} />
+                          <Input type="number" min="0" value={budgetLimit} onChange={(e) => setBudgetLimit(e.target.value)} placeholder="Limit ₵" />
+                          <Input type="number" min="0" value={budgetSpent} onChange={(e) => setBudgetSpent(e.target.value)} placeholder="Spent ₵" />
+                          <Button size="sm" onClick={saveBudget} disabled={budgetsBusy}>
+                            {budgetsBusy ? '…' : editingBudgetId ? 'Update' : 'Add'}
+                          </Button>
+                          {editingBudgetId ? (
+                            <Button size="sm" variant="secondary" onClick={() => { setEditingBudgetId(null); setBudgetPeriodStart(''); setBudgetPeriodEnd(''); setBudgetLimit(''); setBudgetSpent(''); setBudgetNotes(''); }}>
+                              Cancel
+                            </Button>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {budgetsLoading ? (
+                        <div className="text-sm text-slate-600">Loading…</div>
+                      ) : budgets.length === 0 ? (
+                        <div className="text-sm text-slate-600">No budgets yet.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {budgets.slice(0, 10).map((b) => {
+                            const pct = b.utilisation_pct ?? 0
+                            const alertClass = pct >= 100 ? 'border-red-300 bg-red-50' : pct >= 80 ? 'border-amber-300 bg-amber-50' : ''
+                            return (
+                            <div key={b.id} className={`flex flex-wrap items-center justify-between gap-2 rounded-lg border px-3 py-2 text-sm ${alertClass || 'border-slate-200 bg-white'}`}>
+                              <span>
+                                {b.department_name || 'Company'} • {b.period_start} → {b.period_end}
+                                {pct >= 100 ? <span className="ml-1 text-xs font-semibold text-red-700">Over budget</span> : pct >= 80 ? <span className="ml-1 text-xs font-semibold text-amber-700">Near limit</span> : null}
+                              </span>
+                              <span>₵{Number(b.spent_ghs ?? 0).toLocaleString()} / ₵{Number(b.budget_limit_ghs ?? 0).toLocaleString()} ({b.utilisation_pct ?? 0}%)</span>
+                              {canManageBudgets ? (
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-7 text-xs"
+                                    onClick={() => syncBudgetFromPayroll(b.id)}
+                                    disabled={syncBudgetBusyKey === b.id || budgetsBusy}
+                                  >
+                                    {syncBudgetBusyKey === b.id ? '…' : 'Sync payroll'}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-7 text-xs"
+                                    onClick={() => {
+                                      setEditingBudgetId(b.id)
+                                      setBudgetPeriodStart(b.period_start)
+                                      setBudgetPeriodEnd(b.period_end)
+                                      setBudgetLimit(String(b.budget_limit_ghs ?? ''))
+                                      setBudgetSpent(String(b.spent_ghs ?? ''))
+                                      setBudgetNotes(b.notes || '')
+                                      setBudgetDeptId(b.department_id || '')
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button size="sm" variant="secondary" className="h-7 text-xs text-red-600" onClick={() => deleteBudget(b.id)} disabled={budgetsBusy}>
+                                    Delete
+                                  </Button>
+                                </div>
+                              ) : null}
+                            </div>
+                          )
+                          })}
+                          {budgets.length > 10 ? <div className="text-xs text-slate-500">Showing 10 of {budgets.length}</div> : null}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ) : null}
+
+              <Card className="p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
                     <div className="text-sm font-semibold">Workforce insights</div>
                     <div className="mt-1 text-sm text-slate-600">
                       Reliability and risk signals from shift outcomes. Preferred/blocked rules are respected in auto-invite.
@@ -5455,6 +5934,15 @@ export function CompanyDashboard() {
                   >
                     {downloadBusyKey === 'workers.csv' ? 'Downloading…' : 'Workers CSV'}
                   </Button>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    disabled={!online || downloadBusyKey === 'budgets.csv'}
+                    onClick={() => downloadAuthedCsv('/corporate/company/reports/budgets.csv', 'budgets.csv')}
+                    title={!online ? 'Reconnect to download' : undefined}
+                  >
+                    {downloadBusyKey === 'budgets.csv' ? 'Downloading…' : 'Budgets CSV'}
+                  </Button>
                 </div>
               </Card>
 
@@ -5494,6 +5982,7 @@ export function CompanyDashboard() {
                         <option value="hr">HR</option>
                         <option value="finance">Finance</option>
                         <option value="supervisor">Supervisor</option>
+                        <option value="auditor">Auditor</option>
                         <option value="owner">Owner</option>
                       </Select>
                     </div>
@@ -5580,6 +6069,7 @@ export function CompanyDashboard() {
                       <option value="hr">HR</option>
                       <option value="finance">Finance</option>
                       <option value="supervisor">Supervisor</option>
+                      <option value="auditor">Auditor</option>
                       <option value="owner">Owner</option>
                     </Select>
                   </div>
@@ -5615,6 +6105,7 @@ export function CompanyDashboard() {
                               <option value="hr">HR</option>
                               <option value="finance">Finance</option>
                               <option value="supervisor">Supervisor</option>
+                              <option value="auditor">Auditor</option>
                               <option value="owner">Owner</option>
                             </Select>
                             <Button

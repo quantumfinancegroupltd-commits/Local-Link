@@ -265,6 +265,11 @@ export function BuyerJobs() {
                     </div>
                   </Link>
                   <div className="flex items-center gap-2">
+                    {j.status === 'completed' && j.assigned_artisan_id ? (
+                      <Link to={`/buyer/jobs/new?rebook=${j.id}`}>
+                        <Button variant="secondary" size="sm">Rebook</Button>
+                      </Link>
+                    ) : null}
                     <div className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                       {j.status || 'open'}
                     </div>

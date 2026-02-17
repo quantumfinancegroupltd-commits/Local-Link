@@ -15,12 +15,15 @@ export function Register() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('buyer')
+  const [referralCode, setReferralCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     const r = params.get('role')
     if (r === 'buyer' || r === 'artisan' || r === 'farmer' || r === 'driver' || r === 'company') setRole(r)
+    const ref = params.get('ref') || params.get('referral')
+    if (ref) setReferralCode(String(ref).trim())
   }, [params])
 
   async function onSubmit(e) {
@@ -28,7 +31,7 @@ export function Register() {
     setError(null)
     setBusy(true)
     try {
-      const u = await register({ name, email, phone, password, role })
+      const u = await register({ name, email, phone, password, role, referral_code: referralCode.trim() || undefined })
       trackEvent('signup')
       const finalRole = u?.role || role
       const intent = String(params.get('intent') ?? '').toLowerCase()
@@ -110,6 +113,17 @@ export function Register() {
               type="password"
               autoComplete="new-password"
               required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="reg-referral">Referral code (optional)</Label>
+            <Input
+              id="reg-referral"
+              value={referralCode}
+              onChange={(e) => setReferralCode(e.target.value)}
+              placeholder="If a friend shared their code"
+              autoComplete="off"
             />
           </div>
 

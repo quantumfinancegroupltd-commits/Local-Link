@@ -16,6 +16,8 @@ export function BuyerProviders() {
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [providers, setProviders] = useState([])
+  const [searchProviders, setSearchProviders] = useState(null) // when q is set, results from GET /search
+  const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -50,6 +52,48 @@ export function BuyerProviders() {
       cancelled = true
     }
   }, [])
+
+  // Server-side full-text search when user types in search box
+  useEffect(() => {
+    const term = String(q ?? '').trim()
+    if (!term) {
+      setSearchProviders(null)
+      return
+    }
+    const t = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const res = await http.get('/search', { params: { q: term, type: 'providers', limit: 100 } })
+        const rows = Array.isArray(res.data?.providers) ? res.data.providers : []
+        const normalized = rows.map((row) => ({
+          id: row.artisan_id,
+          user_id: row.user_id,
+          name: row.name,
+          primary_skill: row.primary_skill,
+          service_area: row.service_area,
+          skills: row.skills,
+          rating: row.rating,
+          profile_pic: row.profile_pic,
+          trust_score: row.trust_score,
+          premium: row.premium,
+          user: {
+            id: row.user_id,
+            name: row.name,
+            rating: row.rating,
+            profile_pic: row.profile_pic,
+            trust_score: row.trust_score,
+            verification_tier: row.verification_tier,
+          },
+        }))
+        setSearchProviders(normalized)
+      } catch {
+        setSearchProviders([])
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [q])
 
   useEffect(() => {
     const nextQ = String(searchParams.get('q') || '')
@@ -126,9 +170,11 @@ export function BuyerProviders() {
     }
   }
 
+  const baseProviders = searchProviders !== null ? searchProviders : providers
+
   const locations = useMemo(() => {
     const set = new Set()
-    for (const p of providers) {
+    for (const p of baseProviders) {
       const loc =
         p?.service_area ??
         p?.serviceArea ??
@@ -139,11 +185,11 @@ export function BuyerProviders() {
       if (typeof loc === 'string' && loc.trim()) set.add(loc.trim())
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b))
-  }, [providers])
+  }, [baseProviders])
 
   const skillOptions = useMemo(() => {
     const set = new Set()
-    for (const p of providers) {
+    for (const p of baseProviders) {
       const skills = p?.skills
       if (Array.isArray(skills)) {
         for (const s of skills) {
@@ -153,7 +199,7 @@ export function BuyerProviders() {
       }
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b)).slice(0, 60)
-  }, [providers])
+  }, [baseProviders])
 
   const skillFromQuery = useMemo(() => {
     const t = String(q || '').trim().toLowerCase()
@@ -167,7 +213,7 @@ export function BuyerProviders() {
     const radius = radiusKm === 'all' ? null : Number(radiusKm)
     const minR = minRating === 'all' ? null : Number(minRating)
 
-    const scored = providers
+    const scored = baseProviders
       .map((p) => {
         const name = p?.name ?? p?.user?.name ?? ''
         const skills = Array.isArray(p?.skills) ? p.skills.join(' ') : p?.skills ?? ''
@@ -234,7 +280,7 @@ export function BuyerProviders() {
     })
 
     return scored
-  }, [providers, q, location, tier, minRating, nearLat, nearLng, radiusKm, sort, skillFromQuery])
+  }, [baseProviders, q, location, tier, minRating, nearLat, nearLng, radiusKm, sort, skillFromQuery])
 
   const results = useMemo(() => filtered.map((x) => ({ ...x.provider, meta: { why: x.why } })), [filtered])
 
@@ -258,7 +304,7 @@ export function BuyerProviders() {
   // Backwards compat: keep old API for callers below
   // eslint-disable-next-line no-unused-vars
   const _legacyFiltered = useMemo(() => {
-    return providers.filter((p) => {
+    return baseProviders.filter((p) => {
       const name = p?.name ?? p?.user?.name ?? ''
       const skills = Array.isArray(p?.skills) ? p.skills.join(' ') : p?.skills ?? ''
       const loc =
@@ -284,7 +330,7 @@ export function BuyerProviders() {
 
       return matchQ && matchLoc && matchTier
     })
-  }, [providers, q, location, tier])
+  }, [baseProviders, q, location, tier])
 
   return (
     <div className="space-y-6">
@@ -294,7 +340,7 @@ export function BuyerProviders() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <div className="text-sm font-semibold text-slate-700">
-              {loading ? 'Loading…' : `${results.length} provider${results.length === 1 ? '' : 's'}`}
+              {loading || searchLoading ? 'Loading…' : `${results.length} provider${results.length === 1 ? '' : 's'}${searchProviders !== null ? ' (search)' : ''}`}
             </div>
             <Button variant="secondary" size="sm" onClick={() => copyCurrentLink().catch(() => {})}>
               Copy link

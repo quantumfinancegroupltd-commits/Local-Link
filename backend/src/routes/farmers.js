@@ -21,6 +21,45 @@ farmersRouter.get('/me', requireAuth, requireRole(['farmer']), asyncHandler(asyn
   return res.json(r.rows[0])
 }))
 
+farmersRouter.get('/me/analytics', requireAuth, requireRole(['farmer']), asyncHandler(async (req, res) => {
+  const userId = req.user.sub
+  const farmerRes = await pool.query('select id from farmers where user_id = $1', [userId])
+  const farmerId = farmerRes.rows[0]?.id ?? null
+
+  const [ordersRes, walletRes, earningsRes, productsRes, outOfStockRes] = await Promise.all([
+    pool.query(
+      `select count(*)::int as n from orders where farmer_id = $1 and order_status = 'delivered'`,
+      [farmerId],
+    ),
+    pool.query('select balance from wallets where user_id = $1', [userId]),
+    pool.query(
+      `select coalesce(sum(amount), 0)::numeric as total
+       from wallet_ledger_entries
+       where user_id = $1 and direction = 'credit' and kind = 'escrow_release'`,
+      [userId],
+    ),
+    pool.query('select count(*)::int as n from products where farmer_id = $1', [farmerId]),
+    pool.query(
+      `select count(*)::int as n from products where farmer_id = $1 and (status = 'out_of_stock' or quantity <= 0)`,
+      [farmerId],
+    ),
+  ])
+
+  const orders_delivered = ordersRes.rows[0]?.n ?? 0
+  const wallet_balance = Number(walletRes.rows[0]?.balance ?? 0)
+  const earnings_total = Number(earningsRes.rows[0]?.total ?? 0)
+  const products_count = productsRes.rows[0]?.n ?? 0
+  const out_of_stock_count = outOfStockRes.rows[0]?.n ?? 0
+
+  return res.json({
+    orders_delivered,
+    wallet_balance,
+    earnings_total,
+    products_count,
+    out_of_stock_count,
+  })
+}))
+
 farmersRouter.post('/me', requireAuth, requireRole(['farmer']), asyncHandler(async (req, res) => {
   const parsed = UpsertSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })

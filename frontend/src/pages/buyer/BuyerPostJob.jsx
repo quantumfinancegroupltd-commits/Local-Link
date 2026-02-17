@@ -36,6 +36,7 @@ export function BuyerPostJob() {
   const [mediaError, setMediaError] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [rebookArtisanId, setRebookArtisanId] = useState(null) // when rebooking, send same artisan
 
   const draftKey = 'draft:buyer:post_job'
   const draftData = useMemo(
@@ -99,6 +100,7 @@ export function BuyerPostJob() {
         const res = await http.get(`/jobs/${rebookId}`)
         const j = res.data?.job ?? res.data
         if (!j || cancelled) return
+        if (j.assigned_artisan_id) setRebookArtisanId(j.assigned_artisan_id)
         setCategory(String(j.category ?? 'Domestic Services'))
         setTitle(String(j.title ?? ''))
         setDescription(String(j.description ?? ''))
@@ -247,6 +249,7 @@ export function BuyerPostJob() {
         location_lng: locationLng,
       }
       if (artisanIdFromUrl) payload.invited_artisan_user_id = artisanIdFromUrl
+      if (rebookArtisanId) payload.invited_artisan_id = rebookArtisanId
 
       const res = await http.post('/jobs', payload)
       const jobId = res.data?.id ?? res.data?.job?.id

@@ -144,7 +144,15 @@ const CreateServiceSchema = z.object({
   ),
   category: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().max(80).nullable()),
   sort_order: z.coerce.number().int().optional().nullable(),
-  image_url: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().url().max(2000).nullable().optional()),
+  image_url: z.preprocess(
+    (v) => (v === '' || v == null ? null : String(v)),
+    z
+      .union([
+        z.null(),
+        z.string().max(2000).refine((s) => s.startsWith('/') || /^https?:\/\//i.test(s), 'Invalid url'),
+      ])
+      .optional(),
+  ),
 })
 
 const UpdateServiceSchema = CreateServiceSchema.partial()

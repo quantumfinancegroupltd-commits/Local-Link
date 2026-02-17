@@ -19,6 +19,8 @@ export function ArtisanServices() {
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
   const [currency, setCurrency] = useState('GHS')
+  const [durationDays, setDurationDays] = useState('')
+  const [durationHours, setDurationHours] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [category, setCategory] = useState('')
   const [busy, setBusy] = useState(false)
@@ -49,6 +51,8 @@ export function ArtisanServices() {
     setDescription('')
     setPrice('')
     setCurrency('GHS')
+    setDurationDays('')
+    setDurationHours('')
     setDurationMinutes('')
     setCategory('')
   }
@@ -60,7 +64,19 @@ export function ArtisanServices() {
     setDescription(s.description ?? '')
     setPrice(String(s.price ?? ''))
     setCurrency(s.currency ?? 'GHS')
-    setDurationMinutes(s.duration_minutes != null ? String(s.duration_minutes) : '')
+    if (s.duration_minutes != null && s.duration_minutes > 0) {
+      const total = s.duration_minutes
+      const d = Math.floor(total / 1440)
+      const h = Math.floor((total % 1440) / 60)
+      const m = total % 60
+      setDurationDays(d > 0 ? String(d) : '')
+      setDurationHours(h > 0 ? String(h) : '')
+      setDurationMinutes(m > 0 ? String(m) : (d === 0 && h === 0 ? String(total) : ''))
+    } else {
+      setDurationDays('')
+      setDurationHours('')
+      setDurationMinutes('')
+    }
     setCategory(s.category ?? '')
   }
 
@@ -72,6 +88,12 @@ export function ArtisanServices() {
       toast.error('Enter a valid price')
       return
     }
+    const d = parseInt(durationDays, 10) || 0
+    const h = parseInt(durationHours, 10) || 0
+    const m = parseInt(durationMinutes, 10) || 0
+    const totalMinutes = d * 1440 + h * 60 + m
+    const durationValue = totalMinutes > 0 ? totalMinutes : null
+
     setBusy(true)
     try {
       if (editingId) {
@@ -80,7 +102,7 @@ export function ArtisanServices() {
           description: description.trim() || null,
           price: priceNum,
           currency: currency || 'GHS',
-          duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : null,
+          duration_minutes: durationValue,
           category: category.trim() || null,
         })
         toast.success('Service updated')
@@ -90,7 +112,7 @@ export function ArtisanServices() {
           description: description.trim() || null,
           price: priceNum,
           currency: currency || 'GHS',
-          duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : null,
+          duration_minutes: durationValue,
           category: category.trim() || null,
         })
         toast.success('Service added')
@@ -162,20 +184,31 @@ export function ArtisanServices() {
                 </Select>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label>Duration (minutes, optional)</Label>
-                <Input type="number" min={0} value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} placeholder="e.g. 60" />
+            <div>
+              <Label>Duration (optional)</Label>
+              <div className="mt-1 flex flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <Input type="number" min={0} value={durationDays} onChange={(e) => setDurationDays(e.target.value)} placeholder="0" className="w-20" />
+                  <span className="text-sm text-slate-600">days</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input type="number" min={0} value={durationHours} onChange={(e) => setDurationHours(e.target.value)} placeholder="0" className="w-20" />
+                  <span className="text-sm text-slate-600">hours</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input type="number" min={0} value={durationMinutes} onChange={(e) => setDurationMinutes(e.target.value)} placeholder="0" className="w-20" />
+                  <span className="text-sm text-slate-600">minutes</span>
+                </div>
               </div>
-              <div>
-                <Label>Category (optional)</Label>
-                <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-                  <option value="">—</option>
-                  {JOB_CATEGORIES_TIER1.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </Select>
-              </div>
+            </div>
+            <div>
+              <Label>Category (optional)</Label>
+              <Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">—</option>
+                {JOB_CATEGORIES_TIER1.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </Select>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={busy || !title.trim()}>

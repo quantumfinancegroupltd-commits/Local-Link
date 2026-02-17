@@ -73,6 +73,11 @@ export function MarketplaceProductDetail() {
     }
   }, [id])
 
+  const isFloristProduct = useMemo(() => {
+    const cat = String(product?.category ?? '').toLowerCase()
+    return cat === 'flowers' || cat === 'plants'
+  }, [product?.category])
+
   const total = useMemo(() => {
     const price = Number(product?.price ?? 0)
     const q = Number(qty ?? 0)
@@ -317,50 +322,54 @@ export function MarketplaceProductDetail() {
                         disabled={busy || !canOrder}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="order_delivery_date">Delivery date (optional)</Label>
-                      <Input
-                        id="order_delivery_date"
-                        type="date"
-                        value={requestedDeliveryDate}
-                        onChange={(e) => setRequestedDeliveryDate(e.target.value)}
-                        disabled={busy || !canOrder}
-                      />
-                      <div className="mt-2 text-xs text-slate-500">
-                        When you need this delivered (e.g. for a specific occasion).
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="order_occasion">Occasion (optional)</Label>
-                      <Select
-                        id="order_occasion"
-                        value={occasion}
-                        onChange={(e) => setOccasion(e.target.value)}
-                        disabled={busy || !canOrder}
-                      >
-                        <option value="">None</option>
-                        <option value="Birthday">Birthday</option>
-                        <option value="Valentine's">Valentine's</option>
-                        <option value="Mother's Day">Mother's Day</option>
-                        <option value="Sympathy">Sympathy</option>
-                        <option value="Get well">Get well</option>
-                        <option value="Thank you">Thank you</option>
-                        <option value="Anniversary">Anniversary</option>
-                        <option value="Just because">Just because</option>
-                        <option value="Other">Other</option>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="order_gift_message">Gift / card message (optional)</Label>
-                      <Textarea
-                        id="order_gift_message"
-                        value={giftMessage}
-                        onChange={(e) => setGiftMessage(e.target.value)}
-                        placeholder="e.g. Happy birthday! Love from us"
-                        rows={2}
-                        disabled={busy || !canOrder}
-                      />
-                    </div>
+                    {isFloristProduct ? (
+                      <>
+                        <div>
+                          <Label htmlFor="order_delivery_date">Delivery date (optional)</Label>
+                          <Input
+                            id="order_delivery_date"
+                            type="date"
+                            value={requestedDeliveryDate}
+                            onChange={(e) => setRequestedDeliveryDate(e.target.value)}
+                            disabled={busy || !canOrder}
+                          />
+                          <div className="mt-2 text-xs text-slate-500">
+                            When you need this delivered (e.g. for a specific occasion).
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="order_occasion">Occasion (optional)</Label>
+                          <Select
+                            id="order_occasion"
+                            value={occasion}
+                            onChange={(e) => setOccasion(e.target.value)}
+                            disabled={busy || !canOrder}
+                          >
+                            <option value="">None</option>
+                            <option value="Birthday">Birthday</option>
+                            <option value="Valentine's">Valentine's</option>
+                            <option value="Mother's Day">Mother's Day</option>
+                            <option value="Sympathy">Sympathy</option>
+                            <option value="Get well">Get well</option>
+                            <option value="Thank you">Thank you</option>
+                            <option value="Anniversary">Anniversary</option>
+                            <option value="Just because">Just because</option>
+                            <option value="Other">Other</option>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="order_gift_message">Gift / card message (optional)</Label>
+                          <Textarea
+                            id="order_gift_message"
+                            value={giftMessage}
+                            onChange={(e) => setGiftMessage(e.target.value)}
+                            placeholder="e.g. Happy birthday! Love from us"
+                            rows={2}
+                            disabled={busy || !canOrder}
+                          />
+                        </div>
+                      </>
+                    ) : null}
                     <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                       <div className="text-xs text-slate-600">Total</div>
                       <div className="mt-1 text-lg font-semibold text-slate-900">GHS {total}</div>

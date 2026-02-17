@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
+import { formatDurationMinutes } from '../../lib/duration.js'
 
 export function ArtisanServices() {
   const toast = useToast()
@@ -309,7 +310,7 @@ export function ArtisanServices() {
                   {s.description ? <div className="mt-0.5 text-sm text-slate-600">{s.description}</div> : null}
                   <div className="mt-1 text-sm font-medium text-slate-700">
                     {s.currency} {Number(s.price).toFixed(0)}
-                    {s.duration_minutes ? ` • ${s.duration_minutes} min` : ''}
+                    {(function () { const d = formatDurationMinutes(s.duration_minutes); return d ? ` • ${d}` : ''; })()}
                     {s.category ? ` • ${s.category}` : ''}
                   </div>
                 </div>

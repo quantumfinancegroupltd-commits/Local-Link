@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { FollowListModal } from '../../components/social/FollowListModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
 import { AvailabilityCalendar } from '../../components/calendar/AvailabilityCalendar.jsx'
+import { formatDurationMinutes } from '../../lib/duration.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -1330,7 +1331,7 @@ export function PublicProfile() {
                           {s.description ? <div className="mt-0.5 text-xs text-slate-600">{s.description}</div> : null}
                           <div className="mt-1 text-sm font-semibold text-slate-700">
                             {s.currency} {Number(s.price).toFixed(0)}
-                            {s.duration_minutes ? ` • ${s.duration_minutes} min` : ''}
+                            {(function () { const d = formatDurationMinutes(s.duration_minutes); return d ? ` • ${d}` : ''; })()}
                           </div>
                         </div>
                         <Link

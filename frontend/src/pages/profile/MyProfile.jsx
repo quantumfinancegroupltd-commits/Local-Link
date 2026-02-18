@@ -11,7 +11,7 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
-import { getRoleLabel } from '../../lib/roles.js'
+import { getRoleLabel, getStoredFarmerVertical, getFarmerVerticalLabel } from '../../lib/roles.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -2055,9 +2055,14 @@ export function MyProfile() {
 
           {role === 'farmer' ? (
             <Card>
-              <div className="text-sm font-semibold">{getRoleLabel(role)} profile</div>
+              {(() => {
+                const vertical = getStoredFarmerVertical()
+                const isFlorist = vertical === 'florist'
+                return (
+                  <>
+              <div className="text-sm font-semibold">{getFarmerVerticalLabel(vertical)} profile</div>
               <div className="mt-4">
-                <Label>Farm location</Label>
+                <Label>{isFlorist ? 'Store location' : 'Farm location'}</Label>
                 <LocationInput
                   value={farmLocation}
                   onChange={(v) => {
@@ -2078,9 +2083,12 @@ export function MyProfile() {
                 ) : null}
               </div>
               <div className="mt-4">
-                <Label>Farm type (comma separated)</Label>
-                <Input value={farmType} onChange={(e) => setFarmType(e.target.value)} placeholder="Vegetables, Fruits, Poultry" />
+                <Label>{isFlorist ? 'Product types (comma separated)' : 'Farm type (comma separated)'}</Label>
+                <Input value={farmType} onChange={(e) => setFarmType(e.target.value)} placeholder={isFlorist ? 'Roses, Lilies, Bouquets' : 'Vegetables, Fruits, Poultry'} />
               </div>
+                  </>
+                )
+              })()}
             </Card>
           ) : null}
 

@@ -105,20 +105,20 @@ export function Home() {
     [],
   )
 
+  // Card images: w=1200&h=900 enforces 4:3 aspect (matches aspect-[4/3] containers) for consistent sizing.
   const images = {
     // Coming-soon doors: professional royalty-free photos (direct CDN URLs).
-    // We intentionally avoid source.unsplash.com because it can be blocked by some browsers/networks.
-    coming_events: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    coming_domestic: 'https://images.unsplash.com/photo-1626379481874-3dc5678fa8ca?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    coming_b2b: 'https://images.unsplash.com/photo-1606824722920-4c652a70f348?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    coming_logistics: 'https://images.unsplash.com/photo-1665521032636-e8d2f6927053?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_events: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_domestic: 'https://images.unsplash.com/photo-1626379481874-3dc5678fa8ca?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_b2b: 'https://images.unsplash.com/photo-1606824722920-4c652a70f348?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    coming_logistics: 'https://images.unsplash.com/photo-1665521032636-e8d2f6927053?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
 
-    // Existing hero door images (can be swapped later if you want all-local assets).
-    fix: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    produce: 'https://images.unsplash.com/photo-1646191920445-2534efe74a82?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    project: 'https://images.unsplash.com/photo-1574313428745-ea9221d581ee?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    supply: 'https://images.unsplash.com/photo-1610851467843-fe4a65aea9c0?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
-    employers: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    // Existing hero door images.
+    fix: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    produce: 'https://images.unsplash.com/photo-1646191920445-2534efe74a82?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    project: 'https://images.unsplash.com/photo-1574313428745-ea9221d581ee?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    supply: 'https://images.unsplash.com/photo-1610851467843-fe4a65aea9c0?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    employers: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
   }
 
   if (isAuthed) return <Navigate to={roleHomePath(user?.role)} replace />
@@ -232,7 +232,7 @@ export function Home() {
                 description="Cleaners, laundry — trust-first, repeat. Care givers coming later."
                 to="/register?role=artisan&category=Domestic%20Services"
                 accent="slate"
-                imageUrl={images.fix}
+                imageUrl={images.coming_domestic}
               />
             ) : (
               <ComingSoonTile

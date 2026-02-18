@@ -85,6 +85,10 @@ async function createFarmerAndProduct(request, baseURL) {
   return { productId }
 }
 
+const skipAdminTests = () =>
+  process.env.E2E_SKIP_ADMIN === '1' || (process.env.E2E_BASE_URL || '').includes('locallink.agency')
+
+test.skip(skipAdminTests(), 'Admin bootstrap disabled in production')
 test('marketplace: product detail shows order UI and respects auth', async ({ page, request, baseURL }) => {
   const { productId } = await createFarmerAndProduct(request, baseURL)
 

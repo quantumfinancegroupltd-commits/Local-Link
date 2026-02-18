@@ -4,7 +4,9 @@
  * Run: node scripts/api-smoke.mjs [API_BASE_URL]
  * e.g. API_BASE_URL=http://localhost:4000 node scripts/api-smoke.mjs
  */
-const API_BASE = process.env.API_BASE_URL || process.env.E2E_API_URL || 'http://localhost:4000'
+// Base URL without /api suffix (script appends /api/health etc.)
+const raw = process.env.API_BASE_URL || process.env.E2E_API_URL || 'http://localhost:4000'
+const API_BASE = raw.replace(/\/api\/?$/, '')
 
 async function fetchJSON(url, opts = {}) {
   const res = await fetch(url, { ...opts, headers: { 'Content-Type': 'application/json', ...opts.headers } })

@@ -47,6 +47,10 @@ test('driver: deliveries pipeline loads', async ({ page, request, baseURL }) => 
   await expect(page.getByText('Driver Dashboard')).toBeVisible()
 })
 
+const skipAdminTests = () =>
+  process.env.E2E_SKIP_ADMIN === '1' || (process.env.E2E_BASE_URL || '').includes('locallink.agency')
+
+test.skip(skipAdminTests(), 'Admin bootstrap disabled in production')
 test('admin: dashboard loads with disputes and payouts', async ({ page, request, baseURL }) => {
   const apiBaseURL = `${baseURL.replace(/\/$/, '')}/api`
   const { token, user } = await ensureAdmin(request, apiBaseURL)

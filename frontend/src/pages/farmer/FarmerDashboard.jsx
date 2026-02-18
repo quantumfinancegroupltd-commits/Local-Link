@@ -172,12 +172,12 @@ export function FarmerDashboard() {
       {!hasFarmLocation ? (
         <NextStepBanner
           variant="warning"
-          title="Set your farm location"
-          description="Add your farm location so buyers can filter by distance and trust you more."
+          title={vertical === 'florist' ? 'Set your store location' : 'Set your farm location'}
+          description={vertical === 'florist' ? 'Add your store location so buyers can filter by distance and trust you more.' : 'Add your farm location so buyers can filter by distance and trust you more.'}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link to="/profile">
-                <Button>Set farm location</Button>
+                <Button>{vertical === 'florist' ? 'Set store location' : 'Set farm location'}</Button>
               </Link>
               <Link to="/farmer/products/new">
                 <Button variant="secondary">List produce</Button>
@@ -189,7 +189,7 @@ export function FarmerDashboard() {
         <NextStepBanner
           variant="warning"
           title="Improve delivery accuracy"
-          description="Pick your farm location from Google Places to save coordinates (better ETA + radius filters)."
+          description={vertical === 'florist' ? 'Pick your store location from Google Places to save coordinates (better ETA + radius filters).' : 'Pick your farm location from Google Places to save coordinates (better ETA + radius filters).'}
           actions={
             <div className="flex flex-wrap gap-2">
               <Link to="/profile">

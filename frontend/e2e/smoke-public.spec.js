@@ -7,8 +7,8 @@ test('public: home loads', async ({ page }) => {
 
 test('public: marketplace loads', async ({ page }) => {
   await page.goto('/marketplace')
-  await expect(page.getByText('Farmers Marketplace')).toBeVisible()
-  await expect(page.getByPlaceholder('Search produce…')).toBeVisible()
+  await expect(page.getByText(/Farmers.*Marketplace/)).toBeVisible()
+  await expect(page.getByPlaceholder(/Search produce/)).toBeVisible()
 })
 
 test('public: providers loads', async ({ page }) => {

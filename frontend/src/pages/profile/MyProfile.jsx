@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
@@ -985,7 +985,10 @@ export function MyProfile() {
 
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(null)
-  const [tab, setTab] = useState('posts') // posts | about | settings
+  const [searchParams] = useSearchParams()
+  const tabFromUrl = (searchParams.get('tab') || '').trim().toLowerCase()
+  const initialTab = ['posts', 'about', 'resume', 'settings'].includes(tabFromUrl) ? tabFromUrl : 'posts'
+  const [tab, setTab] = useState(initialTab) // posts | about | settings
 
   const coverPickerRef = useRef(null)
   const profilePickerRef = useRef(null)

@@ -176,7 +176,7 @@ export function FarmerDashboard() {
           description={vertical === 'florist' ? 'Add your store location so buyers can filter by distance and trust you more.' : 'Add your farm location so buyers can filter by distance and trust you more.'}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link to="/profile">
+              <Link to="/profile?tab=settings">
                 <Button>{vertical === 'florist' ? 'Set store location' : 'Set farm location'}</Button>
               </Link>
               <Link to="/farmer/products/new">
@@ -192,7 +192,7 @@ export function FarmerDashboard() {
           description={vertical === 'florist' ? 'Pick your store location from Google Places to save coordinates (better ETA + radius filters).' : 'Pick your farm location from Google Places to save coordinates (better ETA + radius filters).'}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link to="/profile">
+              <Link to="/profile?tab=settings">
                 <Button>Save coordinates</Button>
               </Link>
               <Link to="/marketplace">

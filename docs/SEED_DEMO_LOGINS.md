@@ -48,10 +48,10 @@ Re-running the script is **idempotent**: it removes existing demo users (by emai
 
 ## Product images still not showing?
 
-1. **Re-seed on the server** so products get the correct image URLs in the DB:
+1. **Re-seed on the server** so products get the correct image URLs in the DB (required after any change to seed image URLs):
    ```bash
    cd ~/LocalLink
    docker compose -f docker-compose.selfhost.yml run --rm api node scripts/seed-demo-users.js
    ```
-2. **Confirm the new frontend is live**: hard refresh (Cmd+Shift+R / Ctrl+Shift+R) or open the site in an incognito window. Product images are loaded via `/api/news/image?src=...` (same-origin proxy).
-3. **Check the Network tab**: filter by `news/image` or `products`. If you see `404` on the image proxy, the API may not be receiving the request; if you see `200`, the image is loading (clear cache if you still see placeholders).
+2. **Deploy the latest frontend** so the browser uses the image proxy for Unsplash and loads Wikimedia images directly. Then hard refresh (Cmd+Shift+R) or use an incognito window.
+3. **Check the Network tab**: for **Okro, Garden eggs, Plantain** the request goes directly to `upload.wikimedia.org` (no proxy). For **Tomatoes** it goes to `/api/news/image?src=...`. If any show red/failed, note the status code and URL.

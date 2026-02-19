@@ -30,13 +30,19 @@ newsRouter.get('/image', asyncHandler(async (req, res) => {
   if (!['http:', 'https:'].includes(u.protocol)) return res.status(400).json({ message: 'Invalid protocol' })
   if (!ALLOWED_IMAGE_HOSTS.has(u.hostname)) return res.status(400).json({ message: 'Host not allowed' })
 
-  const r = await fetch(u.toString(), {
-    redirect: 'follow',
-    headers: {
-      'User-Agent': 'LocalLink/1.0 (+https://locallink.agency)',
-      Accept: 'image/*,*/*;q=0.8',
-    },
-  })
+  let r
+  try {
+    r = await fetch(u.toString(), {
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'LocalLink/1.0 (+https://locallink.agency)',
+        Accept: 'image/*,*/*;q=0.8',
+      },
+      signal: AbortSignal.timeout(15000),
+    })
+  } catch (err) {
+    return res.status(502).json({ message: 'Upstream image unreachable' })
+  }
 
   if (!r.ok) {
     return res.status(404).json({ message: 'Image not found' })

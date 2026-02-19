@@ -12,6 +12,7 @@ import { FollowListModal } from '../../components/social/FollowListModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
 import { AvailabilityCalendar } from '../../components/calendar/AvailabilityCalendar.jsx'
 import { formatDurationMinutes } from '../../lib/duration.js'
+import { imageProxySrc } from '../../lib/imageProxy.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
@@ -44,6 +45,37 @@ function formatDate(d) {
   } catch {
     return String(d)
   }
+}
+
+function ProduceCard({ product: p, imgSrc }) {
+  const [imgError, setImgError] = useState(false)
+  const showImg = imgSrc && !imgError
+  return (
+    <Link to={`/marketplace/products/${p.id}`} className="flex gap-3 rounded-xl border bg-slate-50/50 p-3 hover:bg-slate-100/70">
+      {showImg ? (
+        <img
+          src={imgSrc}
+          alt={p.name}
+          className="h-20 w-20 shrink-0 rounded-lg border object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border bg-gradient-to-br from-emerald-400/30 to-lime-300/30 text-xs font-medium text-slate-600">
+          {p?.name?.slice(0, 8) || '—'}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="font-medium text-slate-900">{p.name}</div>
+        <div className="mt-0.5 text-xs text-slate-600">{p.category ?? 'Produce'}</div>
+        <div className="mt-1 text-sm font-semibold text-slate-700">
+          GHS {Number(p.price).toFixed(0)}
+          {p.quantity != null && p.unit ? ` · ${p.quantity} ${p.unit}` : ''}
+        </div>
+      </div>
+    </Link>
+  )
 }
 
 function PostCard({ post, canDelete, canInteract, onRefresh, viewerId }) {
@@ -649,6 +681,9 @@ export function PublicProfile() {
   const [availability, setAvailability] = useState([])
   const [availabilityLoading, setAvailabilityLoading] = useState(false)
 
+  const [products, setProducts] = useState([])
+  const [productsLoading, setProductsLoading] = useState(false)
+
   const cover = user?.display_cover_url || profile?.cover_photo || user?.company_cover_url || null
   const links = Array.isArray(profile?.links) ? profile.links : []
   const isOwner = viewer?.id && id && String(viewer.id) === String(id)
@@ -881,8 +916,9 @@ export function PublicProfile() {
   const [calendarYear, setCalendarYear] = useState(() => new Date().getFullYear())
 
   // Load artisan services and availability when viewing artisan profile (12 months ahead)
+  const artisanUserId = user?.id ?? id
   useEffect(() => {
-    if (!id || user?.role !== 'artisan' || locked) return
+    if (!artisanUserId || user?.role !== 'artisan' || locked) return
     let cancelled = false
     const now = new Date()
     const from = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
@@ -890,11 +926,12 @@ export function PublicProfile() {
     setServicesLoading(true)
     setAvailabilityLoading(true)
     Promise.all([
-      http.get(`/artisans/${encodeURIComponent(id)}/services`).catch(() => ({ data: [] })),
-      http.get(`/artisans/${encodeURIComponent(id)}/availability`, { params: { from, to } }).catch(() => ({ data: [] })),
+      http.get(`/artisans/${encodeURIComponent(artisanUserId)}/services`).catch(() => ({ data: [] })),
+      http.get(`/artisans/${encodeURIComponent(artisanUserId)}/availability`, { params: { from, to } }).catch(() => ({ data: [] })),
     ]).then(([sRes, aRes]) => {
       if (cancelled) return
-      setServices(Array.isArray(sRes.data) ? sRes.data : [])
+      const list = Array.isArray(sRes.data) ? sRes.data : (sRes.data?.items ?? [])
+      setServices(list)
       const raw = Array.isArray(aRes.data) ? aRes.data : []
       const normalized = raw.map((d) => {
         if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d
@@ -910,7 +947,29 @@ export function PublicProfile() {
       }
     })
     return () => { cancelled = true }
-  }, [id, user?.role, locked])
+  }, [artisanUserId, user?.role, locked])
+
+  // Load farmer products when viewing farmer profile
+  const farmerUserId = user?.id ?? id
+  useEffect(() => {
+    if (!farmerUserId || user?.role !== 'farmer' || locked) return
+    let cancelled = false
+    setProductsLoading(true)
+    http
+      .get('/products', { params: { farmer_user_id: farmerUserId } })
+      .then((res) => {
+        if (cancelled) return
+        const list = Array.isArray(res.data) ? res.data : []
+        setProducts(list)
+      })
+      .catch(() => {
+        if (!cancelled) setProducts([])
+      })
+      .finally(() => {
+        if (!cancelled) setProductsLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [farmerUserId, user?.role, locked])
 
   const roleLabel = useMemo(() => {
     const r = String(user?.role || '')
@@ -1378,6 +1437,30 @@ export function PublicProfile() {
                       loading={false}
                       compact
                     />
+                  </div>
+                )}
+              </Card>
+            </div>
+          ) : null}
+
+          {user?.role === 'farmer' ? (
+            <div className="mt-6">
+              <Card>
+                <div className="text-sm font-semibold">Produce</div>
+                <div className="mt-1 text-xs text-slate-600">Fresh produce from this farmer. Browse or order via the marketplace.</div>
+                {productsLoading ? (
+                  <div className="mt-3 text-sm text-slate-600">Loading…</div>
+                ) : products.length === 0 ? (
+                  <div className="mt-3 text-sm text-slate-600">No produce listed yet.</div>
+                ) : (
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {products.map((p) => {
+                      const img = (Array.isArray(p?.media) && p.media.find((m) => m?.kind === 'image' && m?.url))?.url ?? p?.image_url ?? null
+                      const imgSrc = img ? (imageProxySrc(img) || img) : null
+                      return (
+                        <ProduceCard key={p.id} product={p} imgSrc={imgSrc} />
+                      )
+                    })}
                   </div>
                 )}
               </Card>

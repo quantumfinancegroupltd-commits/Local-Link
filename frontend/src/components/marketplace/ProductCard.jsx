@@ -28,6 +28,14 @@ function productImage(p) {
   return pick(p, ['image_url', 'imageUrl', 'photo_url', 'photoUrl', 'thumbnail_url', 'thumbnailUrl'])
 }
 
+function farmerFromProduct(product) {
+  const f = product?.farmer ?? product?.farmer_profile ?? product?.farmerProfile ?? null
+  if (f && (f.id || f.user_id)) return { id: f.id ?? f.user_id, name: f.name ?? 'Seller' }
+  const uid = product?.farmer_user_id ?? product?.farmer_user ?? product?.farmerUserId
+  if (uid) return { id: uid, name: product?.farmer_name ?? 'Seller' }
+  return null
+}
+
 export function ProductCard({ product }) {
   const img = productImage(product)
   const loc = productLocation(product)
@@ -36,12 +44,13 @@ export function ProductCard({ product }) {
   const price = product?.price ?? '—'
   const verifyEntity = product?.farmer ?? product?.farmer_profile ?? product?.farmerProfile ?? product?.farmer_user ?? product?.farmerUser ?? product
   const trustScore = product?.farmer?.trust_score ?? product?.farmer_trust_score ?? null
+  const farmer = farmerFromProduct(product)
   const [imgError, setImgError] = useState(false)
   const showImg = img && !imgError
 
   return (
-    <Link to={`/marketplace/products/${product.id}`} className="group">
-      <div className={['overflow-hidden', ui.card, ui.cardHover].join(' ')}>
+    <div className={['overflow-hidden', ui.card, ui.cardHover].join(' ')}>
+      <Link to={`/marketplace/products/${product.id}`} className="group block">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
           {showImg ? (
             <img
@@ -85,8 +94,20 @@ export function ProductCard({ product }) {
           </div>
           {product?.meta?.why ? <div className="mt-3 text-xs font-medium text-slate-600">{product.meta.why}</div> : null}
         </div>
-      </div>
-    </Link>
+      </Link>
+      {farmer?.id ? (
+        <div className="border-t border-slate-100 px-4 py-2">
+          <span className="text-xs text-slate-500">Sold by </span>
+          <Link
+            to={`/u/${encodeURIComponent(farmer.id)}`}
+            className="text-xs font-medium text-slate-700 hover:text-slate-900 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {farmer.name}
+          </Link>
+        </div>
+      ) : null}
+    </div>
   )
 }
 

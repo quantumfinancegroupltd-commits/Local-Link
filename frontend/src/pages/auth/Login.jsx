@@ -93,7 +93,7 @@ export function Login() {
           {expiredInfo ? (
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
               <div className="font-semibold">Session expired</div>
-              <div className="mt-1">Please sign in again to continue.</div>
+              <div className="mt-1">Please sign in again to continue. Any unsaved changes (e.g. profile photo, service edits) were not saved — you’ll need to make them again after logging in.</div>
             </div>
           ) : null}
           <div>

@@ -1,8 +1,8 @@
 /**
- * Use same-origin image proxy for CDNs that block referrers (Unsplash, Pexels).
- * Wikimedia allows hotlinking — load directly with no-referrer to avoid proxy failures.
+ * Use same-origin image proxy so all product images load reliably (avoids referrer/CORS).
+ * Backend: GET /api/news/image?src=...
  */
-const PROXY_HOSTS = ['images.unsplash.com', 'images.pexels.com']
+const PROXY_HOSTS = ['images.unsplash.com', 'images.pexels.com', 'upload.wikimedia.org']
 
 export function imageProxySrc(url) {
   if (!url || typeof url !== 'string') return url

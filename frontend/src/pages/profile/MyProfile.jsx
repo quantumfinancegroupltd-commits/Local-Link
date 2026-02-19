@@ -1018,6 +1018,12 @@ export function MyProfile() {
   const [followRequestsLoading, setFollowRequestsLoading] = useState(false)
   const [followRequestsBusyId, setFollowRequestsBusyId] = useState(null)
 
+  const [myServices, setMyServices] = useState([])
+  const [myServicesLoading, setMyServicesLoading] = useState(false)
+
+  const [myProducts, setMyProducts] = useState([])
+  const [myProductsLoading, setMyProductsLoading] = useState(false)
+
   const role = user?.role
 
   const canEditRole = role === 'artisan' || role === 'farmer' || role === 'driver'
@@ -1149,6 +1155,44 @@ export function MyProfile() {
     return () => {
       cancelled = true
     }
+  }, [role])
+
+  // Load artisan services for "My services" on profile (Settings tab)
+  useEffect(() => {
+    if (role !== 'artisan') return
+    let cancelled = false
+    setMyServicesLoading(true)
+    http
+      .get('/artisans/me/services')
+      .then((res) => {
+        if (!cancelled) setMyServices(Array.isArray(res.data) ? res.data : [])
+      })
+      .catch(() => {
+        if (!cancelled) setMyServices([])
+      })
+      .finally(() => {
+        if (!cancelled) setMyServicesLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [role])
+
+  // Load farmer products for "My produce" on profile (Settings tab)
+  useEffect(() => {
+    if (role !== 'farmer') return
+    let cancelled = false
+    setMyProductsLoading(true)
+    http
+      .get('/products/mine')
+      .then((res) => {
+        if (!cancelled) setMyProducts(Array.isArray(res.data) ? res.data : [])
+      })
+      .catch(() => {
+        if (!cancelled) setMyProducts([])
+      })
+      .finally(() => {
+        if (!cancelled) setMyProductsLoading(false)
+      })
+    return () => { cancelled = true }
   }, [role])
 
   async function refreshFollowRequests() {
@@ -2026,7 +2070,7 @@ export function MyProfile() {
                 <Label>Service area</Label>
                 <Input value={serviceArea} onChange={(e) => setServiceArea(e.target.value)} placeholder="e.g. Accra, Tema" />
               </div>
-              <div className="mt-4">
+                <div className="mt-4">
                 <Label>Job categories I serve</Label>
                 <div className="mt-2 text-xs text-slate-500">Select the types of jobs you do (e.g. Events & Catering, Domestic Services). Helps buyers find you.</div>
                 <div className="mt-2 flex flex-wrap gap-3">
@@ -2050,10 +2094,38 @@ export function MyProfile() {
                   })}
                 </div>
               </div>
+
+              <div className="mt-6 border-t border-slate-200 pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-semibold">My services</div>
+                  <Link to="/artisan/services">
+                    <Button variant="secondary" size="sm">Manage services</Button>
+                  </Link>
+                </div>
+                <div className="mt-1 text-xs text-slate-500">Fixed-price offerings buyers can book. These appear on your public profile.</div>
+                {myServicesLoading ? (
+                  <div className="mt-3 text-sm text-slate-600">Loading…</div>
+                ) : myServices.length === 0 ? (
+                  <div className="mt-3 text-sm text-slate-600">No services yet. Add offerings (e.g. catering packages) so buyers can book you.</div>
+                ) : (
+                  <ul className="mt-3 space-y-2">
+                    {myServices.map((s) => (
+                      <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-slate-50/50 px-3 py-2 text-sm">
+                        <span className="font-medium text-slate-900">{s.title}</span>
+                        <span className="text-slate-600">
+                          {s.currency ?? 'GHS'} {Number(s.price).toFixed(0)}
+                          {s.duration_minutes ? ` · ${s.duration_minutes} min` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Card>
           ) : null}
 
           {role === 'farmer' ? (
+            <>
             <Card>
               {(() => {
                 const vertical = getStoredFarmerVertical()
@@ -2090,6 +2162,33 @@ export function MyProfile() {
                 )
               })()}
             </Card>
+            <Card className="mt-6">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-sm font-semibold">My produce</div>
+                <Link to="/farmer">
+                  <Button variant="secondary" size="sm">Manage products</Button>
+                </Link>
+              </div>
+              <div className="mt-1 text-xs text-slate-500">Products you list here appear on your public profile and in the marketplace.</div>
+              {myProductsLoading ? (
+                <div className="mt-3 text-sm text-slate-600">Loading…</div>
+              ) : myProducts.length === 0 ? (
+                <div className="mt-3 text-sm text-slate-600">No produce yet. Add listings (e.g. tomatoes, plantain) so buyers can order from you.</div>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {myProducts.map((p) => (
+                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-slate-50/50 px-3 py-2 text-sm">
+                      <span className="font-medium text-slate-900">{p.name}</span>
+                      <span className="text-slate-600">
+                        GHS {Number(p.price).toFixed(0)}
+                        {p.quantity != null && p.unit ? ` · ${p.quantity} ${p.unit}` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+            </>
           ) : null}
 
           {(role === 'artisan' || role === 'farmer' || role === 'driver') ? (

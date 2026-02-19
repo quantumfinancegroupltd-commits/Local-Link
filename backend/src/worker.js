@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { env } from './config.js'
 import { startSchedulers } from './services/schedulers.js'
 

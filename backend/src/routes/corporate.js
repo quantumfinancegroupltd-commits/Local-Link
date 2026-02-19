@@ -64,8 +64,11 @@ async function resolveCompanyIdForReq(req) {
     if (req.user?.role === 'admin') return { ok: true, companyId }
     try {
       const r = await pool.query('select 1 from company_members where company_id = $1 and user_id = $2 limit 1', [companyId, req.user?.sub])
-      if (!r.rowCount) return { ok: false, code: 'NOT_A_MEMBER' }
-      return { ok: true, companyId }
+      if (r.rowCount) return { ok: true, companyId }
+      // Owner may not be in company_members yet (e.g. seed-created company); allow if they own the company.
+      const o = await pool.query('select 1 from companies where id = $1 and owner_user_id = $2 limit 1', [companyId, req.user?.sub])
+      if (o.rowCount) return { ok: true, companyId }
+      return { ok: false, code: 'NOT_A_MEMBER' }
     } catch (e) {
       if (String(e?.code || '') !== '42P01') throw e
       const o = await pool.query('select 1 from companies where id = $1 and owner_user_id = $2 limit 1', [companyId, req.user?.sub])

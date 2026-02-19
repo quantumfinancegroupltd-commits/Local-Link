@@ -307,6 +307,18 @@ async function run() {
       )
       const comp = await pool.query('select id from companies where owner_user_id = $1 limit 1', [userId])
       const companyId = comp.rows[0]?.id
+      if (companyId) {
+        try {
+          await pool.query(
+            `insert into company_members (company_id, user_id, workspace_role, created_by, updated_at)
+             values ($1, $2, 'owner', $2, now())
+             on conflict (company_id, user_id) do update set workspace_role = 'owner', updated_at = now()`,
+            [companyId, userId],
+          )
+        } catch (e) {
+          if (String(e?.code || '') !== '42P01') console.warn('company_members insert skipped:', e?.message)
+        }
+      }
       if (companyId && u.job_posts?.length) {
         for (const j of u.job_posts) {
           try {

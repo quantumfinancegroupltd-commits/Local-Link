@@ -157,6 +157,8 @@ export function Home() {
     fix: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
     produce: 'https://images.unsplash.com/photo-1646191920445-2534efe74a82?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
     project: 'https://images.unsplash.com/photo-1574313428745-ea9221d581ee?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
+    // Events & Catering card: local screenshot (copy to public/images/events-catering.png)
+    events_catering: '/images/events-catering.png',
     supply: 'https://images.unsplash.com/photo-1610851467843-fe4a65aea9c0?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
     employers: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1200&h=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0',
   }
@@ -252,7 +254,7 @@ export function Home() {
                 description="Caterers, chairs/tents, staff — scheduling + escrow."
                 to="/register?role=artisan&category=Events%20%26%20Catering"
                 accent="orange"
-                imageUrl={images.project}
+                imageUrl={images.events_catering}
               />
             ) : (
               <ComingSoonTile

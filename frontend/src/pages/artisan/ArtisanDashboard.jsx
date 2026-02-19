@@ -9,6 +9,8 @@ import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 import { StatusPill } from '../../components/ui/StatusPill.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
+import { EarningsGoalWidget } from '../../components/artisan/EarningsGoalWidget.jsx'
+import { ProfileCompletionWidget } from '../../components/artisan/ProfileCompletionWidget.jsx'
 
 export function ArtisanDashboard() {
   const toast = useToast()
@@ -37,6 +39,9 @@ export function ArtisanDashboard() {
   const [withdrawBusy, setWithdrawBusy] = useState(false)
   const [withdrawError, setWithdrawError] = useState(null)
   const [withdrawSuccess, setWithdrawSuccess] = useState(null)
+  const [instantBookEnabled, setInstantBookEnabled] = useState(false)
+  const [instantBookAmount, setInstantBookAmount] = useState('')
+  const [instantBookBusy, setInstantBookBusy] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -50,7 +55,14 @@ export function ArtisanDashboard() {
         ])
         if (!cancelled) setJobs(Array.isArray(jobsRes.data?.items) ? jobsRes.data.items : [])
         if (!cancelled) setJobCounts(jobsRes.data?.counts && typeof jobsRes.data.counts === 'object' ? jobsRes.data.counts : {})
-        if (!cancelled) setArtisanProfile(profileRes.data ?? null)
+        if (!cancelled) {
+          const p = profileRes.data ?? null
+          setArtisanProfile(p)
+          if (p) {
+            setInstantBookEnabled(Boolean(p.instant_book_enabled))
+            setInstantBookAmount(p.instant_book_amount != null ? String(p.instant_book_amount) : '')
+          }
+        }
       } catch (err) {
         if (!cancelled) setError(err?.response?.data?.message ?? err?.message ?? 'Failed to load work')
       } finally {
@@ -67,7 +79,7 @@ export function ArtisanDashboard() {
     const nextTab = String(searchParams.get('tab') || '').trim()
     const nextQ = String(searchParams.get('q') || '')
     const nextCat = String(searchParams.get('category') || '')
-    const allowed = new Set(['all', 'new', 'quoted', 'booked', 'in_progress', 'completed', 'paid', 'disputed', 'rejected', 'by_date'])
+    const allowed = new Set(['all', 'new', 'quoted', 'booked', 'in_progress', 'completed', 'paid', 'disputed', 'rejected', 'by_date', 'calendar'])
     if (nextTab && allowed.has(nextTab) && nextTab !== jobsTab) setJobsTab(nextTab)
     if (nextQ !== query) setQuery(nextQ)
     if (nextCat !== category) setCategory(nextCat)
@@ -199,6 +211,7 @@ export function ArtisanDashboard() {
   const stages = useMemo(
     () => [
       { key: 'all', label: 'All' },
+      { key: 'calendar', label: 'Calendar' },
       { key: 'by_date', label: 'By date' },
       { key: 'new', label: 'New' },
       { key: 'quoted', label: 'Quoted' },
@@ -211,6 +224,37 @@ export function ArtisanDashboard() {
     ],
     [],
   )
+
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date()
+    return { year: d.getFullYear(), month: d.getMonth() }
+  })
+  const jobsByCalendarDate = useMemo(() => {
+    const map = {}
+    const list = Array.isArray(jobs) ? jobs : []
+    for (const j of list) {
+      if (!j?.scheduled_at) continue
+      const d = new Date(j.scheduled_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      if (!map[key]) map[key] = []
+      map[key].push(j)
+    }
+    return map
+  }, [jobs])
+  const calendarDays = useMemo(() => {
+    const { year, month } = calendarMonth
+    const first = new Date(year, month, 1)
+    const last = new Date(year, month + 1, 0)
+    const startPad = (first.getDay() + 6) % 7
+    const daysInMonth = last.getDate()
+    const cells = []
+    for (let i = 0; i < startPad; i++) cells.push(null)
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+      cells.push({ key, date: d, jobs: jobsByCalendarDate[key] || [] })
+    }
+    return cells
+  }, [calendarMonth, jobsByCalendarDate])
 
   // For "By date" view: group jobs by event/scheduled date or recurring/no date
   const jobsForDateView = useMemo(() => {
@@ -272,6 +316,25 @@ export function ArtisanDashboard() {
       setJobCounts(r.data?.counts && typeof r.data.counts === 'object' ? r.data.counts : {})
     } catch {
       // ignore
+    }
+  }
+
+  async function saveInstantBook() {
+    if (instantBookBusy) return
+    setInstantBookBusy(true)
+    try {
+      const amount = instantBookAmount.trim() ? Number(instantBookAmount) : null
+      await http.patch('/artisans/me', {
+        instant_book_enabled: instantBookEnabled,
+        instant_book_amount: instantBookEnabled && amount != null && amount > 0 ? amount : null,
+      })
+      const res = await http.get('/artisans/me')
+      setArtisanProfile(res.data ?? null)
+      toast.success('Saved', 'Instant book settings updated.')
+    } catch (err) {
+      toast.error('Failed', err?.response?.data?.message ?? err?.message ?? 'Could not save')
+    } finally {
+      setInstantBookBusy(false)
     }
   }
 
@@ -415,6 +478,8 @@ export function ArtisanDashboard() {
         />
       )}
 
+      {artisanProfile ? <ProfileCompletionWidget artisanProfile={artisanProfile} /> : null}
+
       <div className="grid gap-3 md:grid-cols-3">
         <Card>
           <div className="text-xs text-slate-600">Available balance</div>
@@ -447,6 +512,45 @@ export function ArtisanDashboard() {
           <div className="mt-1 text-xs text-slate-600">After platform fees</div>
         </Card>
       </div>
+
+      <EarningsGoalWidget thisMonthEarnings={completed} currency={currency} loading={summaryLoading} />
+
+      {artisanProfile ? (
+        <Card>
+          <div className="text-sm font-semibold">Instant book</div>
+          <p className="mt-1 text-xs text-slate-600">When a buyer invites you to a job, get confirmed immediately at your set price—no quote wait.</p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={instantBookEnabled}
+                onChange={(e) => setInstantBookEnabled(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-emerald-600"
+              />
+              <span className="text-sm font-medium">Offer instant book</span>
+            </label>
+            {instantBookEnabled ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="instant_book_amount" className="!mb-0 text-xs">Price (GHS)</Label>
+                  <Input
+                    id="instant_book_amount"
+                    type="number"
+                    min="1"
+                    value={instantBookAmount}
+                    onChange={(e) => setInstantBookAmount(e.target.value)}
+                    placeholder="e.g. 150"
+                    className="w-24"
+                  />
+                </div>
+                <Button size="sm" disabled={instantBookBusy} onClick={saveInstantBook}>
+                  {instantBookBusy ? 'Saving…' : 'Save'}
+                </Button>
+              </>
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
 
       <Card>
         <div className="text-sm font-semibold">Quick actions</div>
@@ -735,7 +839,7 @@ export function ArtisanDashboard() {
 
         <div className="mt-3 flex flex-wrap gap-2">
           {stages.map((t) => {
-            const n = t.key === 'all' ? (Array.isArray(jobs) ? jobs.length : 0) : t.key === 'by_date' ? jobsForDateView.length : Number(jobCounts?.[t.key] ?? 0)
+            const n = t.key === 'all' ? (Array.isArray(jobs) ? jobs.length : 0) : t.key === 'by_date' ? jobsForDateView.length : t.key === 'calendar' ? Object.keys(jobsByCalendarDate).reduce((s, k) => s + (jobsByCalendarDate[k]?.length ?? 0), 0) : Number(jobCounts?.[t.key] ?? 0)
             const active = jobsTab === t.key
             return (
               <Button key={t.key} variant={active ? 'primary' : 'secondary'} onClick={() => setJobsTab(t.key)}>
@@ -749,6 +853,43 @@ export function ArtisanDashboard() {
           <div className="mt-3 text-sm text-slate-600">Loading…</div>
         ) : error ? (
           <div className="mt-3 text-sm text-red-700">{error}</div>
+        ) : jobsTab === 'calendar' ? (
+          <div className="mt-3">
+            <div className="mb-3 flex items-center justify-between">
+              <Button variant="secondary" size="sm" onClick={() => setCalendarMonth((m) => (m.month === 0 ? { year: m.year - 1, month: 11 } : { year: m.year, month: m.month - 1 }))}>
+                ← Prev
+              </Button>
+              <span className="text-sm font-semibold text-slate-900">
+                {new Date(calendarMonth.year, calendarMonth.month, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
+              </span>
+              <Button variant="secondary" size="sm" onClick={() => setCalendarMonth((m) => (m.month === 11 ? { year: m.year + 1, month: 0 } : { year: m.year, month: m.month + 1 }))}>
+                Next →
+              </Button>
+            </div>
+            <div className="grid grid-cols-7 gap-px rounded-xl border border-slate-200 bg-slate-200 text-center text-xs">
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                <div key={day} className="rounded-t bg-slate-100 py-2 font-semibold text-slate-600">{day}</div>
+              ))}
+              {calendarDays.map((cell, i) =>
+                cell === null ? (
+                  <div key={`empty-${i}`} className="min-h-[72px] bg-slate-50" />
+                ) : (
+                  <div key={cell.key} className="min-h-[72px] bg-white p-1">
+                    <div className="text-right font-medium text-slate-700">{cell.date}</div>
+                    <div className="mt-1 space-y-1">
+                      {(cell.jobs || []).slice(0, 3).map((j) => (
+                        <Link key={j.id} to={`/artisan/jobs/${j.id}`} className="block truncate rounded bg-emerald-50 px-1 py-0.5 text-left text-xs text-emerald-900 hover:bg-emerald-100">
+                          {j.title || 'Job'}
+                        </Link>
+                      ))}
+                      {(cell.jobs?.length ?? 0) > 3 ? <div className="text-xs text-slate-500">+{(cell.jobs?.length ?? 0) - 3} more</div> : null}
+                    </div>
+                  </div>
+                ),
+              )}
+            </div>
+            <div className="mt-2 text-xs text-slate-500">Jobs with a scheduled date. Click a job to open it.</div>
+          </div>
         ) : jobsTab === 'by_date' ? (
           jobsGroupedByDate.length === 0 ? (
             <div className="mt-3 text-sm text-slate-600">No jobs with dates. Post a job with an event date or recurring pattern to see it here.</div>

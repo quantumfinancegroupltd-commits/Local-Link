@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext.jsx'
 import { http } from '../../api/http.js'
 import { ProviderCard } from '../../components/providers/ProviderCard.jsx'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
@@ -13,6 +14,7 @@ import { ui } from '../../components/ui/tokens.js'
 import { useToast } from '../../components/ui/Toast.jsx'
 
 export function BuyerProviders() {
+  const { user } = useAuth()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const [providers, setProviders] = useState([])
@@ -20,6 +22,10 @@ export function BuyerProviders() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [viewMode, setViewMode] = useState('all') // 'all' | 'saved'
+  const [savedIds, setSavedIds] = useState(new Set())
+  const [savedProviders, setSavedProviders] = useState([])
+  const [savedLoading, setSavedLoading] = useState(false)
 
   const [q, setQ] = useState('')
   const [location, setLocation] = useState('all') // legacy text-based filter
@@ -52,6 +58,63 @@ export function BuyerProviders() {
       cancelled = true
     }
   }, [])
+
+  // Load saved provider IDs (and full list when on Saved tab) for buyers
+  const isBuyer = user?.role === 'buyer'
+  useEffect(() => {
+    if (!isBuyer) return
+    let cancelled = false
+    async function loadSaved() {
+      try {
+        const res = await http.get('/buyer/saved-providers')
+        const ids = res.data?.saved_artisan_ids ?? []
+        if (!cancelled) setSavedIds(new Set(ids))
+      } catch {
+        if (!cancelled) setSavedIds(new Set())
+      }
+    }
+    loadSaved()
+    return () => { cancelled = true }
+  }, [isBuyer])
+
+  useEffect(() => {
+    if (!isBuyer || viewMode !== 'saved') return
+    let cancelled = false
+    setSavedLoading(true)
+    http.get('/buyer/saved-providers', { params: { full: 1 } })
+      .then((res) => {
+        const items = res.data?.items ?? []
+        if (!cancelled) setSavedProviders(items)
+      })
+      .catch(() => { if (!cancelled) setSavedProviders([]) })
+      .finally(() => { if (!cancelled) setSavedLoading(false) })
+    return () => { cancelled = true }
+  }, [isBuyer, viewMode])
+
+  const handleSave = useCallback(async (artisanUserId) => {
+    try {
+      await http.post('/buyer/saved-providers', { artisan_user_id: artisanUserId })
+      setSavedIds((prev) => new Set([...prev, artisanUserId]))
+      toast.success('Added to my trusted providers.')
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? 'Could not save provider.')
+    }
+  }, [toast])
+
+  const handleUnsave = useCallback(async (artisanUserId) => {
+    try {
+      await http.delete(`/buyer/saved-providers/${artisanUserId}`)
+      setSavedIds((prev) => {
+        const next = new Set(prev)
+        next.delete(artisanUserId)
+        return next
+      })
+      if (viewMode === 'saved') setSavedProviders((prev) => prev.filter((p) => p.artisan_user_id !== artisanUserId))
+      toast.success('Removed from saved.')
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? 'Could not remove.')
+    }
+  }, [toast, viewMode])
 
   // Server-side full-text search when user types in search box
   useEffect(() => {
@@ -170,7 +233,9 @@ export function BuyerProviders() {
     }
   }
 
-  const baseProviders = searchProviders !== null ? searchProviders : providers
+  const baseProviders = viewMode === 'saved'
+    ? savedProviders
+    : (searchProviders !== null ? searchProviders : providers)
 
   const locations = useMemo(() => {
     const set = new Set()
@@ -282,7 +347,13 @@ export function BuyerProviders() {
     return scored
   }, [baseProviders, q, location, tier, minRating, nearLat, nearLng, radiusKm, sort, skillFromQuery])
 
-  const results = useMemo(() => filtered.map((x) => ({ ...x.provider, meta: { why: x.why } })), [filtered])
+  const results = useMemo(
+    () =>
+      viewMode === 'saved'
+        ? savedProviders.map((p) => ({ ...p, meta: null }))
+        : filtered.map((x) => ({ ...x.provider, meta: { why: x.why } })),
+    [viewMode, savedProviders, filtered],
+  )
 
   const canUseRadius = nearLat != null && nearLng != null
   const activeFilterCount = useMemo(() => {
@@ -339,8 +410,26 @@ export function BuyerProviders() {
         subtitle="Browse artisans with verification tiers and real profiles."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            {isBuyer ? (
+              <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('all')}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium ${viewMode === 'all' ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  All providers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('saved')}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium ${viewMode === 'saved' ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  My trusted ({savedIds.size})
+                </button>
+              </div>
+            ) : null}
             <div className="text-sm font-semibold text-slate-700">
-              {loading || searchLoading ? 'Loading…' : `${results.length} provider${results.length === 1 ? '' : 's'}${searchProviders !== null ? ' (search)' : ''}`}
+              {loading || searchLoading || (viewMode === 'saved' && savedLoading) ? 'Loading…' : `${results.length} provider${results.length === 1 ? '' : 's'}${searchProviders !== null && viewMode === 'all' ? ' (search)' : ''}${viewMode === 'saved' ? ' saved' : ''}`}
             </div>
             <Button variant="secondary" size="sm" onClick={() => copyCurrentLink().catch(() => {})}>
               Copy link
@@ -454,7 +543,7 @@ export function BuyerProviders() {
         </div>
       </Card>
 
-      {loading ? (
+      {(loading || (viewMode === 'saved' && savedLoading)) ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-3xl border border-slate-200 bg-white p-5">
@@ -476,6 +565,16 @@ export function BuyerProviders() {
         <Card>
           <div className="text-sm text-red-700">{error}</div>
         </Card>
+      ) : viewMode === 'saved' && results.length === 0 ? (
+        <EmptyState
+          title="No saved providers yet"
+          description="Browse providers and tap the heart to add them to My trusted. Then you can post jobs only to them or find them quickly here."
+          actions={
+            <Button variant="primary" onClick={() => setViewMode('all')}>
+              Browse all providers
+            </Button>
+          }
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           title="No providers found"
@@ -495,9 +594,20 @@ export function BuyerProviders() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {results.map((p) => (
-            <ProviderCard key={p.id ?? `${p.user_id ?? ''}-${p.created_at ?? ''}`} provider={p} meta={p.meta} />
-          ))}
+          {results.map((p) => {
+            const uid = p.user_id ?? p.user?.id ?? p.artisan_user_id
+            return (
+              <ProviderCard
+                key={p.id ?? uid ?? `${p.created_at ?? ''}`}
+                provider={p}
+                meta={p.meta}
+                showSaveButton={isBuyer}
+                saved={savedIds.has(uid)}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            )
+          })}
         </div>
       )}
 

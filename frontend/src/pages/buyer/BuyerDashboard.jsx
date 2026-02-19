@@ -1,11 +1,25 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { readDraft, clearDraft } from '../../lib/drafts.js'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
+import { SpendSummaryWidget } from '../../components/buyer/SpendSummaryWidget.jsx'
+import { JobSuggestionsWidget } from '../../components/buyer/JobSuggestionsWidget.jsx'
+
+const POST_JOB_DRAFT_KEY = 'draft:buyer:post_job'
+
+function hasDraftContent(d) {
+  if (!d || typeof d !== 'object') return false
+  const t = String(d.title ?? '').trim()
+  const desc = String(d.description ?? '').trim()
+  const loc = String(d.location ?? '').trim()
+  const cat = String(d.category ?? '').trim()
+  return t.length > 0 || desc.length > 0 || loc.length > 0 || cat.length > 0
+}
 
 export function BuyerJobs() {
   const toast = useToast()
@@ -18,6 +32,28 @@ export function BuyerJobs() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
   const [exportBusy, setExportBusy] = useState(false)
+  const [postJobDraft, setPostJobDraft] = useState(null) // { title, saved_at } or null
+  const [draftDiscardBusy, setDraftDiscardBusy] = useState(false)
+
+  const refreshDraft = useCallback(() => {
+    const d = readDraft(POST_JOB_DRAFT_KEY)
+    if (hasDraftContent(d)) {
+      const title = String(d?.title ?? '').trim() || 'Untitled draft'
+      setPostJobDraft({ title, saved_at: d?.saved_at ?? null })
+    } else {
+      setPostJobDraft(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshDraft()
+  }, [refreshDraft])
+
+  useEffect(() => {
+    const onFocus = () => refreshDraft()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshDraft])
 
   useEffect(() => {
     let cancelled = false
@@ -145,6 +181,20 @@ export function BuyerJobs() {
     }
   }
 
+  function discardPostJobDraft() {
+    if (draftDiscardBusy) return
+    const ok = window.confirm('Discard this draft? You can’t undo this.')
+    if (!ok) return
+    setDraftDiscardBusy(true)
+    try {
+      clearDraft(POST_JOB_DRAFT_KEY)
+      setPostJobDraft(null)
+      toast.success('Draft discarded.')
+    } finally {
+      setDraftDiscardBusy(false)
+    }
+  }
+
   async function deleteJob(jobId) {
     const ok = window.confirm(
       'Delete this job? This removes it from your list.\n\nYou can only delete jobs that are not in progress (e.g. open, cancelled, or completed).',
@@ -185,6 +235,39 @@ export function BuyerJobs() {
           </>
         }
       />
+
+      {postJobDraft ? (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-amber-900">Draft job post</div>
+              <div className="mt-0.5 truncate text-sm text-amber-800">{postJobDraft.title}</div>
+              {postJobDraft.saved_at ? (
+                <div className="mt-1 text-xs text-amber-700">
+                  Last saved {new Date(postJobDraft.saved_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <Link to="/buyer/jobs/new">
+                <Button>Continue editing</Button>
+              </Link>
+              <Button
+                variant="secondary"
+                className="border-amber-300 text-amber-800 hover:bg-amber-100"
+                disabled={draftDiscardBusy}
+                onClick={discardPostJobDraft}
+              >
+                {draftDiscardBusy ? 'Discarding…' : 'Discard draft'}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      <SpendSummaryWidget />
+
+      <JobSuggestionsWidget />
 
       <Card>
         <div className="grid gap-3 md:grid-cols-12 md:items-end">

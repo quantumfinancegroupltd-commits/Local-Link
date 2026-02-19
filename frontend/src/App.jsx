@@ -23,6 +23,7 @@ const BuyerProviders = lazy(() => import('./pages/buyer/BuyerProviders.jsx').the
 const BuyerJobEscrow = lazy(() => import('./pages/buyer/BuyerJobEscrow.jsx').then((m) => ({ default: m.BuyerJobEscrow })))
 const PaystackCallback = lazy(() => import('./pages/buyer/PaystackCallback.jsx').then((m) => ({ default: m.PaystackCallback })))
 const BuyerOrders = lazy(() => import('./pages/buyer/BuyerOrders.jsx').then((m) => ({ default: m.BuyerOrders })))
+const BuyerJobHistory = lazy(() => import('./pages/buyer/BuyerJobHistory.jsx').then((m) => ({ default: m.BuyerJobHistory })))
 
 const ArtisanDashboard = lazy(() => import('./pages/artisan/ArtisanDashboard.jsx').then((m) => ({ default: m.ArtisanDashboard })))
 const ArtisanJobDetail = lazy(() => import('./pages/artisan/ArtisanJobDetail.jsx').then((m) => ({ default: m.ArtisanJobDetail })))
@@ -218,6 +219,14 @@ export default function App() {
             element={
               <RequireAuth roles={['buyer']}>
                 <BuyerOrders />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/buyer/history"
+            element={
+              <RequireAuth roles={['buyer']}>
+                <BuyerJobHistory />
               </RequireAuth>
             }
           />

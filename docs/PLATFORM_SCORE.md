@@ -56,4 +56,6 @@ Weighted view: Security and Testing pull the average down (security gaps and thi
 
 **68** = solid foundation (auth, validation, SQL safety, CI + smoke, role-based flows, good UX building blocks) with clear gaps: no API versioning, no CSP/CSRF, no JWT refresh/revocation, sparse unit tests, no rollback story, and missing env/API docs. Appropriate for internal/demo or controlled partners; for a full public launch, security and observability need to be strengthened.
 
+**Depth (workflow completeness): 58/100** — platform is wide but shallow; each role is ~50–60% of what it should be before external integrations; power-user workflows are missing. Full list by role and cross-cutting: **[WORKFLOW_DEPTH_GAPS.md](./WORKFLOW_DEPTH_GAPS.md)**. Almost all of it is buildable with zero new external dependencies.
+
 *Assessment date: Feb 2025. Excludes external integrations (payments, email, storage, etc.).*

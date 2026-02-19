@@ -37,6 +37,12 @@ export function BuyerPostJob() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const [rebookArtisanId, setRebookArtisanId] = useState(null) // when rebooking, send same artisan
+  const [rebookSourceTitle, setRebookSourceTitle] = useState(null) // show "Rebooking: [title]" when set
+  const [templates, setTemplates] = useState([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
+  const [saveTemplateName, setSaveTemplateName] = useState('')
+  const [saveTemplateBusy, setSaveTemplateBusy] = useState(false)
+  const [postToSavedOnly, setPostToSavedOnly] = useState(false)
 
   const draftKey = 'draft:buyer:post_job'
   const draftData = useMemo(
@@ -57,9 +63,10 @@ export function BuyerPostJob() {
       eventHeadCount,
       eventMenuNotes,
       eventEquipment,
+      postToSavedOnly,
       saved_at: Date.now(),
     }),
-    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget, scheduledAt, scheduledEndAt, recurringFrequency, recurringEndDate, accessInstructions, eventHeadCount, eventMenuNotes, eventEquipment],
+    [title, description, category, location, locationLat, locationLng, locationPlaceId, budget, scheduledAt, scheduledEndAt, recurringFrequency, recurringEndDate, accessInstructions, eventHeadCount, eventMenuNotes, eventEquipment, postToSavedOnly],
   )
   const draft = useDraftAutosave({ key: draftKey, data: draftData, enabled: true, debounceMs: 700 })
 
@@ -87,6 +94,7 @@ export function BuyerPostJob() {
     setEventHeadCount(String(d.eventHeadCount ?? ''))
     setEventMenuNotes(String(d.eventMenuNotes ?? ''))
     setEventEquipment(String(d.eventEquipment ?? ''))
+    setPostToSavedOnly(Boolean(d.postToSavedOnly))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -100,6 +108,7 @@ export function BuyerPostJob() {
         const res = await http.get(`/jobs/${rebookId}`)
         const j = res.data?.job ?? res.data
         if (!j || cancelled) return
+        setRebookSourceTitle(j.title ? String(j.title) : 'Previous job')
         if (j.assigned_artisan_id) setRebookArtisanId(j.assigned_artisan_id)
         setCategory(String(j.category ?? 'Domestic Services'))
         setTitle(String(j.title ?? ''))
@@ -126,7 +135,10 @@ export function BuyerPostJob() {
           setScheduledAt(`${y}-${m}-${d}T${h}:${min}`)
         }
       } catch {
-        if (!cancelled) toast.warning('Could not load job', 'Rebook pre-fill skipped. You can still post a new job.')
+        if (!cancelled) {
+          setRebookSourceTitle(null)
+          toast.warning('Could not load job', 'Rebook pre-fill skipped. You can still post a new job.')
+        }
       }
     }
     loadJob()
@@ -181,6 +193,73 @@ export function BuyerPostJob() {
     if (fromQuery && !category) setCategory(fromQuery)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
+
+  // Load job templates for "Use a template"
+  useEffect(() => {
+    let cancelled = false
+    setTemplatesLoading(true)
+    http.get('/buyer/job-templates')
+      .then((res) => { if (!cancelled) setTemplates(Array.isArray(res.data) ? res.data : []) })
+      .catch(() => { if (!cancelled) setTemplates([]) })
+      .finally(() => { if (!cancelled) setTemplatesLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  function applyTemplate(template) {
+    if (!template) return
+    setCategory(String(template.category ?? ''))
+    setTitle(String(template.title ?? ''))
+    setDescription(String(template.description ?? ''))
+    setLocation(String(template.location ?? ''))
+    setLocationLat(template.location_lat != null ? Number(template.location_lat) : null)
+    setLocationLng(template.location_lng != null ? Number(template.location_lng) : null)
+    setLocationPlaceId(template.location_place_id ?? null)
+    setBudget(template.budget != null ? String(template.budget) : '')
+    setAccessInstructions(String(template.access_instructions ?? ''))
+    setRecurringFrequency(String(template.recurring_frequency ?? ''))
+    setRecurringEndDate(template.recurring_end_date ? String(template.recurring_end_date).slice(0, 10) : '')
+    setEventHeadCount(template.event_head_count != null ? String(template.event_head_count) : '')
+    setEventMenuNotes(String(template.event_menu_notes ?? ''))
+    setEventEquipment(String(template.event_equipment ?? ''))
+    toast.success('Form filled from template. Edit as needed and post.')
+  }
+
+  async function handleSaveAsTemplate(e) {
+    e.preventDefault()
+    const name = String(saveTemplateName ?? '').trim()
+    if (!name) {
+      toast.warning('Enter a name', 'Give your template a name (e.g. "Weekly house cleaning").')
+      return
+    }
+    setSaveTemplateBusy(true)
+    try {
+      await http.post('/buyer/job-templates', {
+        name,
+        title,
+        description,
+        location,
+        location_place_id: locationPlaceId,
+        location_lat: locationLat,
+        location_lng: locationLng,
+        category: category || null,
+        budget: budget ? Number(budget) : null,
+        recurring_frequency: recurringFrequency || null,
+        recurring_end_date: recurringEndDate.trim() || null,
+        access_instructions: accessInstructions.trim() || null,
+        event_head_count: eventHeadCount.trim() ? Number(eventHeadCount) : null,
+        event_menu_notes: eventMenuNotes.trim() || null,
+        event_equipment: eventEquipment.trim() || null,
+      })
+      const listRes = await http.get('/buyer/job-templates')
+      setTemplates(Array.isArray(listRes.data) ? listRes.data : [])
+      setSaveTemplateName('')
+      toast.success('Template saved.', `"${name}" is in your template list for next time.`)
+    } catch (err) {
+      toast.error(err?.response?.data?.message ?? 'Could not save template')
+    } finally {
+      setSaveTemplateBusy(false)
+    }
+  }
 
   // Pre-fill from "Book" on artisan profile (service booking)
   useEffect(() => {
@@ -250,6 +329,7 @@ export function BuyerPostJob() {
       }
       if (artisanIdFromUrl) payload.invited_artisan_user_id = artisanIdFromUrl
       if (rebookArtisanId) payload.invited_artisan_id = rebookArtisanId
+      if (postToSavedOnly) payload.post_to_saved_only = true
 
       const res = await http.post('/jobs', payload)
       const jobId = res.data?.id ?? res.data?.job?.id
@@ -301,6 +381,36 @@ export function BuyerPostJob() {
             </Button>
           </div>
         </div>
+
+        {rebookSourceTitle ? (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+            Rebooking from: <span className="font-medium">{rebookSourceTitle}</span> — form prefilled; same provider will be invited. Edit and post when ready.
+          </div>
+        ) : null}
+
+        {templates.length > 0 && !templatesLoading ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Label className="!mb-0">Start from a template</Label>
+            <Select
+              value=""
+              onChange={(e) => {
+                const id = e.target.value
+                if (!id) return
+                const t = templates.find((x) => x.id === id)
+                if (t) applyTemplate(t)
+                e.target.value = ''
+              }}
+              className="max-w-xs"
+            >
+              <option value="">Choose a template…</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        ) : null}
 
         {params.get('rebook') ? (
           <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
@@ -547,6 +657,40 @@ export function BuyerPostJob() {
               </div>
             ) : null}
           </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={postToSavedOnly}
+                onChange={(e) => setPostToSavedOnly(e.target.checked)}
+                disabled={busy}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="text-sm">
+                <span className="font-medium text-slate-900">Post only to my trusted providers</span>
+                <span className="ml-1 text-slate-600">— only providers you’ve saved can see and quote on this job.</span>
+              </span>
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-2 border-t border-slate-200 pt-4">
+            <div className="min-w-0 flex-1">
+              <Label htmlFor="save_template_name" className="text-xs text-slate-600">Save as template</Label>
+              <Input
+                id="save_template_name"
+                value={saveTemplateName}
+                onChange={(e) => setSaveTemplateName(e.target.value)}
+                placeholder="e.g. Weekly house cleaning"
+                className="mt-1 max-w-xs"
+                disabled={saveTemplateBusy}
+              />
+            </div>
+            <Button type="button" variant="secondary" onClick={handleSaveAsTemplate} disabled={saveTemplateBusy}>
+              {saveTemplateBusy ? 'Saving…' : 'Save template'}
+            </Button>
+          </div>
+          <div className="text-xs text-slate-500">Save this form as a template to reuse next time (title, description, location, budget, etc.).</div>
 
           {error && (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">

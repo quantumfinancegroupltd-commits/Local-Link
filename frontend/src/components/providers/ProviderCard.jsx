@@ -19,7 +19,7 @@ function titleCaseWords(s) {
     .join(' ')
 }
 
-export function ProviderCard({ provider, meta }) {
+export function ProviderCard({ provider, meta, saved, onSave, onUnsave, showSaveButton }) {
   const name = provider?.name ?? provider?.user?.name ?? provider?.user_name ?? provider?.userName ?? 'Artisan'
   const professionRaw = provider?.primary_skill ?? provider?.primarySkill ?? provider?.user?.primary_skill ?? null
   const profession = professionRaw ? titleCaseWords(professionRaw) : null
@@ -36,10 +36,35 @@ export function ProviderCard({ provider, meta }) {
   const trustScore = provider?.user?.trust_score ?? provider?.trust_score ?? null
   const profilePic = provider?.user?.profile_pic ?? provider?.profile_pic ?? null
   const verifiedReviews = provider?.user?.verified_reviews_count ?? provider?.verified_reviews_count ?? null
+  const isSaved = !!saved
+  const canSave = showSaveButton && userId && (saved ? onUnsave : onSave)
+
+  const handleSaveClick = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isSaved && onUnsave) onUnsave(userId)
+    else if (!isSaved && onSave) onSave(userId)
+  }
 
   return (
-    <Link to={userId ? `/u/${userId}` : '/buyer/providers'} className="group">
+    <Link to={userId ? `/u/${userId}` : '/buyer/providers'} className="group relative">
       <div className={['overflow-hidden', ui.card, ui.cardHover].join(' ')}>
+        {/* Save / favourite (buyer only); stop propagation so link still works for card click */}
+        {canSave ? (
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 shadow backdrop-blur transition hover:bg-white"
+            aria-label={isSaved ? 'Remove from saved providers' : 'Save to my trusted providers'}
+            title={isSaved ? 'Remove from saved' : 'Save provider'}
+          >
+            {isSaved ? (
+              <span className="text-lg text-rose-500" aria-hidden>♥</span>
+            ) : (
+              <span className="text-lg text-slate-400 hover:text-rose-500" aria-hidden>♡</span>
+            )}
+          </button>
+        ) : null}
         {/* Media header (matches marketplace cards) */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
           {profilePic ? (

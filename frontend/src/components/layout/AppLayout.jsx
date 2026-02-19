@@ -72,6 +72,7 @@ export function AppLayout() {
       return [
         { to: '/buyer', label: 'Today' },
         { to: '/buyer/jobs', label: 'Jobs' },
+        { to: '/buyer/history', label: 'History' },
         { to: '/buyer/orders', label: 'Orders' },
         { to: '/messages', label: 'Messages' },
       ]

@@ -127,6 +127,39 @@ artisansRouter.post('/', requireAuth, requireRole(['artisan']), asyncHandler(asy
   return res.status(201).json(row)
 }))
 
+const InstantBookSchema = z.object({
+  instant_book_enabled: z.boolean().optional(),
+  instant_book_amount: z.number().positive().optional().nullable(),
+})
+artisansRouter.patch('/me', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
+  const parsed = InstantBookSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const r = await pool.query('select id from artisans where user_id = $1', [req.user.sub])
+  const artisan = r.rows[0]
+  if (!artisan) return res.status(400).json({ message: 'Artisan profile required' })
+  const updates = []
+  const values = []
+  let idx = 0
+  if (parsed.data.instant_book_enabled !== undefined) {
+    idx += 1
+    updates.push(`instant_book_enabled = $${idx}`)
+    values.push(parsed.data.instant_book_enabled)
+  }
+  if (parsed.data.instant_book_amount !== undefined) {
+    idx += 1
+    updates.push(`instant_book_amount = $${idx}`)
+    values.push(parsed.data.instant_book_amount)
+  }
+  if (updates.length === 0) return res.json((await pool.query('select * from artisans where id = $1', [artisan.id])).rows[0])
+  idx += 1
+  values.push(artisan.id)
+  const q = await pool.query(
+    `update artisans set ${updates.join(', ')}, updated_at = now() where id = $${idx} returning *`,
+    values,
+  )
+  return res.json(q.rows[0])
+}))
+
 // --- Artisan services (productized offerings, shown on profile) ---
 
 const CreateServiceSchema = z.object({
@@ -144,6 +177,15 @@ const CreateServiceSchema = z.object({
   ),
   category: z.preprocess((v) => (v === '' || v == null ? null : String(v)), z.string().max(80).nullable()),
   sort_order: z.coerce.number().int().optional().nullable(),
+  bundle_items: z.preprocess(
+    (v) => {
+      if (v == null) return []
+      if (Array.isArray(v)) return v.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 80))
+      if (typeof v === 'string') return v.split(/[,;]/).map((s) => s.trim()).filter(Boolean).slice(0, 20)
+      return []
+    },
+    z.array(z.string().max(80)).optional().default([]),
+  ),
   image_url: z.preprocess(
     (v) => (v === '' || v == null ? null : String(v)),
     z
@@ -160,7 +202,7 @@ const UpdateServiceSchema = CreateServiceSchema.partial()
 // Must define /me/* before /:userId/* so "me" isn't captured as userId
 artisansRouter.get('/me/services', requireAuth, requireRole(['artisan']), asyncHandler(async (req, res) => {
   const r = await pool.query(
-    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, created_at, updated_at
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, bundle_items, created_at, updated_at
      from artisan_services
      where artisan_user_id = $1
      order by sort_order asc, created_at asc`,
@@ -235,7 +277,7 @@ artisansRouter.get('/me/analytics', requireAuth, requireRole(['artisan']), async
 artisansRouter.get('/:userId/services', asyncHandler(async (req, res) => {
   const userId = req.params.userId
   const r = await pool.query(
-    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, created_at, updated_at
+    `select id, artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, bundle_items, created_at, updated_at
      from artisan_services
      where artisan_user_id = $1
      order by sort_order asc, created_at asc`,
@@ -248,8 +290,8 @@ artisansRouter.post('/me/services', requireAuth, requireRole(['artisan']), async
   const parsed = CreateServiceSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
   const r = await pool.query(
-    `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url, bundle_items)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::text[])
      returning *`,
     [
       req.user.sub,
@@ -261,6 +303,7 @@ artisansRouter.post('/me/services', requireAuth, requireRole(['artisan']), async
       parsed.data.category ?? null,
       parsed.data.sort_order ?? 0,
       parsed.data.image_url ?? null,
+      (parsed.data.bundle_items?.length ? parsed.data.bundle_items : null) ?? [],
     ],
   )
   return res.status(201).json(r.rows[0])
@@ -279,8 +322,9 @@ artisansRouter.patch('/me/services/:id', requireAuth, requireRole(['artisan']), 
        category = coalesce($7, category),
        sort_order = coalesce($8, sort_order),
        image_url = coalesce($9, image_url),
+       bundle_items = coalesce($10::text[], bundle_items),
        updated_at = now()
-     where id = $1 and artisan_user_id = $10
+     where id = $1 and artisan_user_id = $11
      returning *`,
     [
       req.params.id,
@@ -292,6 +336,7 @@ artisansRouter.patch('/me/services/:id', requireAuth, requireRole(['artisan']), 
       parsed.data.category,
       parsed.data.sort_order,
       parsed.data.image_url,
+      parsed.data.bundle_items ?? null,
       req.user.sub,
     ],
   )

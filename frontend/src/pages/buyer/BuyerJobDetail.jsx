@@ -82,6 +82,7 @@ export function BuyerJobDetail() {
   const [job, setJob] = useState(null)
   const [quotes, setQuotes] = useState([])
   const [selectedQuoteId, setSelectedQuoteId] = useState(null)
+  const [quotesViewMode, setQuotesViewMode] = useState('compare') // 'table' | 'compare'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [busyQuoteId, setBusyQuoteId] = useState(null)
@@ -492,9 +493,9 @@ export function BuyerJobDetail() {
                   {deleteBusy ? 'Deleting…' : 'Delete job'}
                 </Button>
               ) : null}
-              {job?.status === 'completed' && job?.category === 'Domestic Services' ? (
+              {job?.status === 'completed' ? (
                 <Link to={`/buyer/jobs/new?rebook=${encodeURIComponent(job.id)}`}>
-                  <Button variant="secondary">Rebook this slot</Button>
+                  <Button variant="secondary">Rebook</Button>
                 </Link>
               ) : null}
             </div>
@@ -662,10 +663,122 @@ export function BuyerJobDetail() {
           </Card>
 
           <Card id="quotes">
-            <div className="text-sm font-semibold">Quotes</div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-semibold">Quotes</div>
+              {quotes.length >= 2 ? (
+                <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                  <button
+                    type="button"
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${quotesViewMode === 'compare' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                    onClick={() => setQuotesViewMode('compare')}
+                  >
+                    Compare
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium ${quotesViewMode === 'table' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                    onClick={() => setQuotesViewMode('table')}
+                  >
+                    Table
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {quotes.length === 0 ? (
               <div className="mt-3 text-sm text-slate-600">
                 No quotes yet. Tip: add clear photos/videos and a specific location to get faster responses.
+              </div>
+            ) : quotesViewMode === 'compare' && quotes.length >= 2 ? (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {quotes.map((q) => {
+                  const price = q.quote_amount ?? q.quoteAmount ?? null
+                  const startDays = q.start_within_days ?? q.startWithinDays ?? null
+                  const availability = q.availability_text ?? q.availabilityText ?? null
+                  const warrantyDays = q.warranty_days ?? q.warrantyDays ?? null
+                  const includes = q.includes_materials ?? q.includesMaterials ?? null
+                  const isSelected = selectedQuoteId === q.id
+                  const avatar = q.artisan_profile_pic || '/locallink-logo.png'
+                  const trustScore = q.artisan_trust_score ?? q.artisanTrustScore ?? null
+                  const verificationTier = q.verification_tier ?? null
+                  const profession =
+                    q.artisan_primary_skill ||
+                    (Array.isArray(q.artisan_skills) ? q.artisan_skills.filter(Boolean)[0] : null) ||
+                    null
+                  return (
+                    <div
+                      key={q.id}
+                      className={['rounded-2xl border-2 bg-white p-4 transition-shadow', isSelected ? 'border-emerald-500 shadow-md' : 'border-slate-200 hover:border-slate-300'].join(' ')}
+                      onClick={() => setSelectedQuoteId(q.id)}
+                      onKeyDown={(e) => e.key === 'Enter' && setSelectedQuoteId(q.id)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Quote from ${q.artisan_name || 'artisan'}, GHS ${price ?? '—'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <img
+                          src={avatar}
+                          alt=""
+                          className="h-12 w-12 shrink-0 rounded-2xl border border-slate-200 object-cover"
+                          loading="lazy"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-semibold text-slate-900">{q.artisan_name || 'Artisan'}</div>
+                          {profession ? <div className="mt-0.5 text-xs font-semibold text-slate-600">{String(profession)}</div> : null}
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <TrustBadge trustScore={trustScore} />
+                            <VerificationBadge tier={verificationTier} />
+                            <span className="text-xs font-semibold text-slate-700">
+                              ★ {q.artisan_rating != null ? Number(q.artisan_rating).toFixed(1) : '0.0'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 border-t border-slate-100 pt-3">
+                        <div className="text-2xl font-bold text-slate-900">GHS {price ?? '—'}</div>
+                        <div className="mt-1 text-xs text-slate-500">🔒 Escrow protected</div>
+                      </div>
+                      <dl className="mt-3 space-y-1.5 text-sm">
+                        <div>
+                          <dt className="text-xs text-slate-500">Availability</dt>
+                          <dd className="text-slate-900">
+                            {startDays != null ? `Start within ${startDays} day(s)` : '—'}
+                            {availability ? ` · ${availability.slice(0, 60)}${availability.length > 60 ? '…' : ''}` : ''}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-slate-500">Warranty</dt>
+                          <dd className="text-slate-900">{warrantyDays != null ? `${warrantyDays} day(s)` : '—'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-slate-500">Materials</dt>
+                          <dd className="text-slate-900">
+                            {includes === true ? 'Included' : includes === false ? 'Not included' : '—'}
+                          </dd>
+                        </div>
+                      </dl>
+                      {q.message ? (
+                        <div className="mt-3 line-clamp-3 text-xs text-slate-600 whitespace-pre-wrap">{q.message}</div>
+                      ) : null}
+                      <div className="mt-4 flex flex-wrap items-center gap-2">
+                        {q.artisan_user_id ? (
+                          <Link to={`/u/${q.artisan_user_id}`} onClick={(e) => e.stopPropagation()} className="text-xs font-semibold text-emerald-700 hover:underline">
+                            View profile
+                          </Link>
+                        ) : null}
+                        <Button
+                          className="ml-auto"
+                          disabled={busyQuoteId === q.id || q.status === 'accepted'}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            acceptQuote(q.id)
+                          }}
+                        >
+                          {q.status === 'accepted' ? 'Accepted' : busyQuoteId === q.id ? 'Accepting…' : 'Accept'}
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <div className="mt-3 overflow-x-auto rounded-2xl border bg-white">

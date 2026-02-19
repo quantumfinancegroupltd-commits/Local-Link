@@ -26,6 +26,10 @@ export function ArtisanJobDetail() {
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [submitted, setSubmitted] = useState(false)
+  const [quoteTemplates, setQuoteTemplates] = useState([])
+  const [quoteTemplatesLoading, setQuoteTemplatesLoading] = useState(false)
+  const [saveTemplateName, setSaveTemplateName] = useState('')
+  const [saveTemplateBusy, setSaveTemplateBusy] = useState(false)
 
   const [proofs, setProofs] = useState([])
   const [proofsLoading, setProofsLoading] = useState(false)
@@ -34,6 +38,10 @@ export function ArtisanJobDetail() {
   const [proofNote, setProofNote] = useState('')
   const [proofFiles, setProofFiles] = useState([])
   const [proofBusy, setProofBusy] = useState(false)
+
+  const [clientNotes, setClientNotes] = useState('')
+  const [clientNotesLoading, setClientNotesLoading] = useState(false)
+  const [clientNotesSaving, setClientNotesSaving] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -54,6 +62,41 @@ export function ArtisanJobDetail() {
       cancelled = true
     }
   }, [id])
+
+  useEffect(() => {
+    if (job?.status !== 'open' || submitted) return
+    let cancelled = false
+    async function load() {
+      setQuoteTemplatesLoading(true)
+      try {
+        const res = await http.get('/artisan/quote-templates')
+        if (!cancelled) setQuoteTemplates(Array.isArray(res.data) ? res.data : [])
+      } catch {
+        if (!cancelled) setQuoteTemplates([])
+      } finally {
+        if (!cancelled) setQuoteTemplatesLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [id, job?.status, submitted])
+
+  useEffect(() => {
+    const buyerId = job?.buyer_id
+    if (!buyerId) {
+      setClientNotes('')
+      return
+    }
+    let cancelled = false
+    setClientNotesLoading(true)
+    http.get(`/artisan/client-notes/${encodeURIComponent(buyerId)}`)
+      .then((r) => {
+        if (!cancelled) setClientNotes(r.data?.notes ?? '')
+      })
+      .catch(() => { if (!cancelled) setClientNotes('') })
+      .finally(() => { if (!cancelled) setClientNotesLoading(false) })
+    return () => { cancelled = true }
+  }, [job?.buyer_id])
 
   const canUseProof = useMemo(() => {
     const s = String(job?.status || '')
@@ -136,6 +179,46 @@ export function ArtisanJobDetail() {
     }
   }
 
+  function applyQuoteTemplate(template) {
+    if (!template) return
+    setQuoteAmount(template.quote_amount != null ? String(template.quote_amount) : '')
+    setMessage(template.message ?? '')
+    setAvailabilityText(template.availability_text ?? '')
+    setStartWithinDays(template.start_within_days != null ? String(template.start_within_days) : '')
+    setWarrantyDays(template.warranty_days != null ? String(template.warranty_days) : '')
+    setIncludesMaterials(Boolean(template.includes_materials))
+  }
+
+  async function handleSaveQuoteAsTemplate(e) {
+    e.preventDefault()
+    const name = String(saveTemplateName ?? '').trim()
+    if (!name) {
+      toast.warning('Enter a name', 'Give this template a name to save it.')
+      return
+    }
+    if (saveTemplateBusy) return
+    setSaveTemplateBusy(true)
+    try {
+      await http.post('/artisan/quote-templates', {
+        name,
+        message: message || null,
+        quote_amount: quoteAmount ? Number(quoteAmount) : null,
+        availability_text: availabilityText || null,
+        start_within_days: startWithinDays ? Number(startWithinDays) : null,
+        warranty_days: warrantyDays ? Number(warrantyDays) : null,
+        includes_materials: includesMaterials,
+      })
+      const res = await http.get('/artisan/quote-templates')
+      setQuoteTemplates(Array.isArray(res.data) ? res.data : [])
+      setSaveTemplateName('')
+      toast.success('Saved', 'Quote template saved.')
+    } catch (err) {
+      toast.error('Failed', err?.response?.data?.message ?? err?.message ?? 'Could not save template')
+    } finally {
+      setSaveTemplateBusy(false)
+    }
+  }
+
   async function submitQuote(e) {
     e.preventDefault()
     setSubmitError(null)
@@ -180,6 +263,20 @@ export function ArtisanJobDetail() {
       setActionMsg(err?.response?.data?.message ?? err?.message ?? 'Failed to start job')
     } finally {
       setActionBusy(false)
+    }
+  }
+
+  async function saveClientNotes() {
+    const buyerId = job?.buyer_id
+    if (!buyerId) return
+    setClientNotesSaving(true)
+    try {
+      await http.put(`/artisan/client-notes/${encodeURIComponent(buyerId)}`, { notes: clientNotes || null })
+      toast.success('Notes saved')
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save notes')
+    } finally {
+      setClientNotesSaving(false)
     }
   }
 
@@ -352,6 +449,34 @@ export function ArtisanJobDetail() {
             {actionMsg ? <div className="mt-3 text-sm text-slate-700">{actionMsg}</div> : null}
           </Card>
 
+          {job?.buyer_id ? (
+            <Card>
+              <div className="text-sm font-semibold text-slate-900">Private notes about this client</div>
+              <p className="mt-1 text-xs text-slate-500">Only you can see these. Use them to remember preferences, access details, or follow-ups.</p>
+              {clientNotesLoading ? (
+                <div className="mt-3 text-sm text-slate-600">Loading…</div>
+              ) : (
+                <>
+                  <Textarea
+                    value={clientNotes}
+                    onChange={(e) => setClientNotes(e.target.value)}
+                    placeholder="e.g. Prefers morning slots, gate code 1234…"
+                    rows={3}
+                    className="mt-3"
+                  />
+                  <Button
+                    type="button"
+                    className="mt-2"
+                    disabled={clientNotesSaving}
+                    onClick={saveClientNotes}
+                  >
+                    {clientNotesSaving ? 'Saving…' : 'Save notes'}
+                  </Button>
+                </>
+              )}
+            </Card>
+          ) : null}
+
           <Card id="work-proof">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -462,7 +587,32 @@ export function ArtisanJobDetail() {
                 Quote submitted. You can track it in the next Phase of the MVP.
               </div>
             ) : (
-              <form onSubmit={submitQuote} className="mt-4 space-y-4">
+              <>
+                {quoteTemplates.length > 0 && !quoteTemplatesLoading && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <Label className="!mb-0">Start from a template</Label>
+                    <Select
+                      value=""
+                      onChange={(e) => {
+                        const templateId = e.target.value
+                        if (!templateId) return
+                        const t = quoteTemplates.find((x) => x.id === templateId)
+                        if (t) applyQuoteTemplate(t)
+                        e.target.value = ''
+                      }}
+                      className="max-w-xs"
+                    >
+                      <option value="">Choose…</option>
+                      {quoteTemplates.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                          {t.quote_amount != null ? ` — GHS ${Number(t.quote_amount).toFixed(0)}` : ''}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+                <form onSubmit={submitQuote} className="mt-4 space-y-4">
                 <div>
                   <Label>Quote amount (GHS)</Label>
                   <Input
@@ -526,6 +676,25 @@ export function ArtisanJobDetail() {
 
                 <Button disabled={busy || job?.status !== 'open'}>{busy ? 'Submitting…' : 'Submit quote'}</Button>
               </form>
+
+                <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-slate-200 pt-4">
+                  <div className="min-w-0 flex-1">
+                    <Label htmlFor="save_quote_template_name" className="text-xs text-slate-600">Save as template</Label>
+                    <Input
+                      id="save_quote_template_name"
+                      value={saveTemplateName}
+                      onChange={(e) => setSaveTemplateName(e.target.value)}
+                      placeholder="e.g. Standard cleaning quote"
+                      className="mt-1 max-w-xs"
+                      disabled={saveTemplateBusy}
+                    />
+                  </div>
+                  <Button type="button" variant="secondary" onClick={handleSaveQuoteAsTemplate} disabled={saveTemplateBusy}>
+                    {saveTemplateBusy ? 'Saving…' : 'Save template'}
+                  </Button>
+                </div>
+                <div className="text-xs text-slate-500">Reuse this quote text and amount on similar jobs.</div>
+              </>
             )}
           </Card>
         </>

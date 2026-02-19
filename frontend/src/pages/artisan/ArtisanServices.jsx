@@ -24,6 +24,7 @@ export function ArtisanServices() {
   const [durationHours, setDurationHours] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [category, setCategory] = useState('')
+  const [bundleItemsText, setBundleItemsText] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [uploadBusy, setUploadBusy] = useState(false)
@@ -59,6 +60,7 @@ export function ArtisanServices() {
     setDurationHours('')
     setDurationMinutes('')
     setCategory('')
+    setBundleItemsText('')
     setImageUrl('')
     setImageFile(null)
   }
@@ -84,6 +86,7 @@ export function ArtisanServices() {
       setDurationMinutes('')
     }
     setCategory(s.category ?? '')
+    setBundleItemsText(Array.isArray(s.bundle_items) && s.bundle_items.length ? s.bundle_items.join(', ') : '')
     setImageUrl(s.image_url ?? '')
     setImageFile(null)
   }
@@ -118,6 +121,7 @@ export function ArtisanServices() {
 
     setBusy(true)
     try {
+      const bundleItems = bundleItemsText.trim() ? bundleItemsText.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : []
       const payload = {
         title: title.trim(),
         description: description.trim() || null,
@@ -125,6 +129,7 @@ export function ArtisanServices() {
         currency: currency || 'GHS',
         duration_minutes: durationValue,
         category: category.trim() || null,
+        bundle_items: bundleItems.length ? bundleItems : [],
         image_url: finalImageUrl || null,
       }
       if (editingId) {
@@ -264,6 +269,15 @@ export function ArtisanServices() {
               </div>
             </div>
             <div>
+              <Label>Bundle items (optional)</Label>
+              <Input
+                value={bundleItemsText}
+                onChange={(e) => setBundleItemsText(e.target.value)}
+                placeholder="e.g. 3-room clean, iron, laundry"
+              />
+              <p className="mt-1 text-xs text-slate-500">List what’s included in this package; shown as “Includes: …” on your profile.</p>
+            </div>
+            <div>
               <Label>Category (optional)</Label>
               <Select value={category} onChange={(e) => setCategory(e.target.value)}>
                 <option value="">—</option>
@@ -308,6 +322,9 @@ export function ArtisanServices() {
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold text-slate-900">{s.title}</div>
                   {s.description ? <div className="mt-0.5 text-sm text-slate-600">{s.description}</div> : null}
+                  {Array.isArray(s.bundle_items) && s.bundle_items.length > 0 ? (
+                    <div className="mt-0.5 text-sm text-slate-600">Includes: {s.bundle_items.join(', ')}</div>
+                  ) : null}
                   <div className="mt-1 text-sm font-medium text-slate-700">
                     {s.currency} {Number(s.price).toFixed(0)}
                     {(function () { const d = formatDurationMinutes(s.duration_minutes); return d ? ` • ${d}` : ''; })()}

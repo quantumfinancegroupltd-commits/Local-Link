@@ -7,6 +7,12 @@ import * as Sentry from '@sentry/node'
 import { env, corsOrigins } from './config.js'
 import { requestContext } from './middleware/requestContext.js'
 import { authRouter } from './routes/auth.js'
+import { buyerSavedProvidersRouter } from './routes/buyerSaved.js'
+import { buyerJobHistoryRouter } from './routes/buyerJobHistory.js'
+import { buyerJobSuggestionsRouter } from './routes/buyerJobSuggestions.js'
+import { artisanQuoteTemplatesRouter } from './routes/artisanQuoteTemplates.js'
+import { artisanClientNotesRouter } from './routes/artisanClientNotes.js'
+import { jobTemplatesRouter } from './routes/jobTemplates.js'
 import { jobsRouter } from './routes/jobs.js'
 import { quotesRouter } from './routes/quotes.js'
 import { artisansRouter } from './routes/artisans.js'
@@ -128,11 +134,17 @@ export function createApp() {
   })
 
   app.use('/api', authRouter)
+  app.use('/api/buyer/saved-providers', buyerSavedProvidersRouter)
+  app.use('/api/buyer/job-history', buyerJobHistoryRouter)
+  app.use('/api/buyer/job-suggestions', buyerJobSuggestionsRouter)
+  app.use('/api/buyer/job-templates', jobTemplatesRouter)
   app.use('/api/features', featuresRouter)
   app.use('/api/uploads', uploadsRouter)
   app.use('/api/jobs', jobsRouter)
   app.use('/api/quotes', quotesRouter)
   app.use('/api/artisans', artisansRouter)
+  app.use('/api/artisan/quote-templates', artisanQuoteTemplatesRouter)
+  app.use('/api/artisan/client-notes', artisanClientNotesRouter)
   app.use('/api/farmers', farmersRouter)
   app.use('/api/products', productsRouter)
   app.use('/api/marketplace', marketplaceRouter)

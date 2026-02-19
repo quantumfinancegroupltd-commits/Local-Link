@@ -28,6 +28,8 @@ If admin already exists (409), use normal login to get a token.
 SMOKE_FULL=1 SMOKE_CLEANUP=1 SMOKE_ADMIN_TOKEN='<admin_jwt>' BASE_URL=https://locallink.agency ./scripts/smoke-test.sh
 ```
 
+**Remove "Smoke Test Ltd" companies and their roles from the DB (one-off):** On the server, the most reliable way is via the DB container (no .env or host psql needed): `cd ~/LocalLink && docker compose -f docker-compose.selfhost.yml exec db psql -U locallink -d locallink -c "delete from companies where name = 'Smoke Test Ltd';"` (adjust `-U`/`-d` if your DB user/database differ). Alternatively: Node script in API container after `build api`, or `psql "$DATABASE_URL" -f scripts/delete-smoke-test-company.sql` if DATABASE_URL is set on the host.
+
 ---
 
 ## 2. Playwright E2E (Mac)

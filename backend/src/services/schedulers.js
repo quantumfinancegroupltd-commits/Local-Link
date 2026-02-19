@@ -5,6 +5,7 @@ import { processWebhookQueue } from './webhookQueue.js'
 import { runGuardedTask } from './opsGuardrails.js'
 import { runStuckMoneyDetectors } from './opsDetectors.js'
 import { runCompanyOpsAlertsSweep, runCompanyOpsWeeklyDigestSweep } from './companyOps.js'
+import { runQuoteFollowUpNudge } from './quoteFollowUp.js'
 import { runShiftCompletionSweep, runShiftCoverageAutoFillSweep, runShiftNoShowSweep, runShiftSeriesAutoGenerateSweep } from './workforce.js'
 import { creditWalletTx } from './walletLedger.js'
 
@@ -270,6 +271,13 @@ export function startSchedulers() {
           { baseDelayMs: 10_000, maxDelayMs: 30 * 60_000 },
         )
       }
+
+      // Artisan: nudge buyers to review quotes if no response after 24h (one nudge per job).
+      await runGuardedTask('quote_followup_nudge', () => runQuoteFollowUpNudge({ limit: 50 }), {
+        baseDelayMs: 30_000,
+        maxDelayMs: 60 * 60_000,
+        successCooldownMs: 60 * 60_000,
+      })
 
       // Keep trust_score reasonably fresh (safe best-effort; early stage scale is low)
       await runGuardedTask('trust_recompute', () => recomputeTrustScores({ limit: 2000 }), {

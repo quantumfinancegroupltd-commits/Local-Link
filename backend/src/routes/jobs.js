@@ -18,7 +18,14 @@ jobsRouter.get('/', requireAuth, asyncHandler(async (req, res) => {
     const r = await pool.query('select * from jobs where buyer_id = $1 and deleted_at is null order by created_at desc', [userId])
     rows = r.rows
   } else if (role === 'artisan') {
-    const r = await pool.query("select * from jobs where status = 'open' and deleted_at is null order by created_at desc")
+    const r = await pool.query(
+      `select j.* from jobs j
+       where j.status = 'open' and j.deleted_at is null
+         and (coalesce(j.post_to_saved_only, false) = false
+              or exists (select 1 from buyer_saved_providers bsp where bsp.buyer_id = j.buyer_id and bsp.artisan_user_id = $1))
+       order by j.created_at desc`,
+      [userId],
+    )
     rows = r.rows
   } else {
     const includeDeleted =
@@ -92,6 +99,8 @@ jobsRouter.get('/mine', requireAuth, requireRole(['artisan']), asyncHandler(asyn
          and j.status = 'open'
          and (j.invited_artisan_id is null or j.invited_artisan_id = $1)
          and not exists (select 1 from quotes q where q.job_id = j.id and q.artisan_id = $1)
+         and (coalesce(j.post_to_saved_only, false) = false
+              or exists (select 1 from buyer_saved_providers bsp where bsp.buyer_id = j.buyer_id and bsp.artisan_user_id = $3))
        order by j.created_at desc
        limit $2
      ),
@@ -134,7 +143,7 @@ jobsRouter.get('/mine', requireAuth, requireRole(['artisan']), asyncHandler(asyn
      select *
      from with_dispute
      order by greatest(coalesce(quote_created_at, created_at), coalesce(updated_at, created_at)) desc`,
-    [artisanId, openLimit],
+    [artisanId, openLimit, req.user.sub],
   )
 
   const items = (r.rows || []).map((row) => {
@@ -238,6 +247,8 @@ const CreateJobSchema = z.object({
   // Service booking: direct job to a specific artisan (from their profile). Resolved to invited_artisan_id.
   invited_artisan_id: z.string().uuid().optional().nullable(),
   invited_artisan_user_id: z.string().uuid().optional().nullable(),
+  // Private job: only visible to buyer's saved (vetted) providers.
+  post_to_saved_only: z.boolean().optional(),
 })
 
 jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(async (req, res) => {
@@ -265,6 +276,7 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
     event_equipment: eventEquipment,
     invited_artisan_id: invitedArtisanId,
     invited_artisan_user_id: invitedArtisanUserId,
+    post_to_saved_only: postToSavedOnly,
   } = parsed.data
 
   // Resolve invited artisan: prefer artisan_id, else look up by user_id
@@ -282,8 +294,8 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
   const recurringEndDateVal = recurringEndDate && recurringEndDate !== '' ? recurringEndDate : null
 
   const r = await pool.query(
-    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng, access_instructions, event_head_count, event_menu_notes, event_equipment, invited_artisan_id)
-     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19,$20)
+    `insert into jobs (buyer_id, title, description, location, category, budget, scheduled_at, scheduled_end_at, recurring_frequency, recurring_end_date, image_url, media, location_place_id, location_lat, location_lng, access_instructions, event_head_count, event_menu_notes, event_equipment, invited_artisan_id, post_to_saved_only)
+     values ($1,$2,$3,$4,$5,$6,$7::timestamptz,$8::timestamptz,$9,$10::date,$11,$12::jsonb,$13,$14,$15,$16,$17,$18,$19,$20,$21)
      returning *`,
     [
       req.user.sub,
@@ -306,9 +318,55 @@ jobsRouter.post('/', requireAuth, requireRole(['buyer', 'admin']), asyncHandler(
       eventMenuNotes ?? null,
       eventEquipment ?? null,
       resolvedInvitedArtisanId,
+      postToSavedOnly === true,
     ],
   )
-  return res.status(201).json(r.rows[0])
+  const job = r.rows[0]
+
+  // Instant-book: if buyer invited an artisan who has instant-book enabled, auto-create and accept quote
+  if (job && resolvedInvitedArtisanId) {
+    const artRes = await pool.query(
+      'select instant_book_enabled, instant_book_amount from artisans where id = $1',
+      [resolvedInvitedArtisanId],
+    )
+    const art = artRes.rows[0]
+    if (art?.instant_book_enabled && art.instant_book_amount != null && Number(art.instant_book_amount) > 0) {
+      const amount = Number(art.instant_book_amount)
+      const quoteRes = await pool.query(
+        `insert into quotes (job_id, artisan_id, quote_amount, message, updated_at)
+         values ($1,$2,$3,'Instant book', now())
+         returning *`,
+        [job.id, resolvedInvitedArtisanId, amount],
+      )
+      const quote = quoteRes.rows[0]
+      if (quote) {
+        await pool.query(
+          `update jobs set status = 'assigned', assigned_artisan_id = $1, accepted_quote = $2, updated_at = now() where id = $3`,
+          [resolvedInvitedArtisanId, amount, job.id],
+        )
+        await pool.query(
+          `update quotes set status = 'rejected' where job_id = $1 and id <> $2 and status = 'pending'`,
+          [job.id, quote.id],
+        )
+        const { notifyWithSms } = await import('../services/messaging/index.js')
+        const artisanUserRes = await pool.query('select user_id from artisans where id = $1', [resolvedInvitedArtisanId])
+        const artisanUserId = artisanUserRes.rows[0]?.user_id ?? null
+        if (artisanUserId) {
+          notifyWithSms(artisanUserId, {
+            type: 'quote_accepted',
+            title: 'Instant book',
+            body: 'A buyer booked you instantly. Open the job to continue.',
+            meta: { url: `/artisan/jobs/${job.id}`, job_id: job.id, quote_id: quote.id },
+            dedupeKey: `job:${job.id}:quote`,
+          }).catch(() => {})
+        }
+        const updatedJob = (await pool.query('select * from jobs where id = $1', [job.id])).rows[0]
+        return res.status(201).json(updatedJob ?? job)
+      }
+    }
+  }
+
+  return res.status(201).json(job)
 }))
 
 jobsRouter.get('/:id', requireAuth, asyncHandler(async (req, res) => {
@@ -325,7 +383,12 @@ jobsRouter.get('/:id', requireAuth, asyncHandler(async (req, res) => {
     if (job.buyer_id !== req.user.sub) return res.status(403).json({ message: 'Forbidden' })
   } else if (req.user.role === 'artisan') {
     const artisanId = await ensureArtisanId(req.user.sub)
-    const canSee = job.status === 'open' || (artisanId && job.assigned_artisan_id === artisanId)
+    const assigned = artisanId && job.assigned_artisan_id === artisanId
+    const openAndVisible =
+      job.status === 'open' &&
+      (job.post_to_saved_only !== true ||
+        (await pool.query('select 1 from buyer_saved_providers where buyer_id = $1 and artisan_user_id = $2 limit 1', [job.buyer_id, req.user.sub])).rows.length > 0)
+    const canSee = assigned || openAndVisible
     if (!canSee) return res.status(403).json({ message: 'Forbidden' })
   }
 

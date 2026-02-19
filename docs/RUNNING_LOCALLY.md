@@ -17,8 +17,9 @@
    ```bash
    cd backend
    cp .env.example .env
-   # Edit .env: set DATABASE_URL, e.g.:
-   # DATABASE_URL=postgresql://YOUR_MAC_USER@localhost:5432/locallink
+   # Edit .env: replace USER in DATABASE_URL with your Mac username, e.g.:
+   # DATABASE_URL=postgresql://richardholland@localhost:5432/locallink
+   # (If you leave USER literally, you'll get: error: role "USER" does not exist)
    ```
 
 3. **Run migrations**

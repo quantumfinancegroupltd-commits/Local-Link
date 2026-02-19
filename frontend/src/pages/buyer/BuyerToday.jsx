@@ -5,6 +5,8 @@ import { Button, Card } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { UseCaseTile } from '../../components/home/UseCaseTile.jsx'
 import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
+import { SpendSummaryWidget } from '../../components/buyer/SpendSummaryWidget.jsx'
+import { JobSuggestionsWidget } from '../../components/buyer/JobSuggestionsWidget.jsx'
 
 export function BuyerToday() {
   const [params] = useSearchParams()
@@ -38,6 +40,10 @@ export function BuyerToday() {
           </>
         }
       />
+
+      <SpendSummaryWidget />
+
+      <JobSuggestionsWidget />
 
       <BuyerFirstSteps counts={counts} />
 

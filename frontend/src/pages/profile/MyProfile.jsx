@@ -987,8 +987,14 @@ export function MyProfile() {
   const [saved, setSaved] = useState(null)
   const [searchParams] = useSearchParams()
   const tabFromUrl = (searchParams.get('tab') || '').trim().toLowerCase()
-  const initialTab = ['posts', 'about', 'resume', 'settings'].includes(tabFromUrl) ? tabFromUrl : 'posts'
+  const defaultTab = role === 'farmer' ? 'settings' : 'posts' // farmers land on Edit profile so they see My produce
+  const initialTab = ['posts', 'about', 'resume', 'settings'].includes(tabFromUrl) ? tabFromUrl : defaultTab
   const [tab, setTab] = useState(initialTab) // posts | about | settings
+
+  // Once we know user is a farmer and URL has no tab, show Settings so they see My produce
+  useEffect(() => {
+    if (role === 'farmer' && !tabFromUrl) setTab('settings')
+  }, [role, tabFromUrl])
 
   const coverPickerRef = useRef(null)
   const profilePickerRef = useRef(null)

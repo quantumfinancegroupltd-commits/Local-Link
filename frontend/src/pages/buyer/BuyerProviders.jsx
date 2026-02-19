@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthContext.jsx'
+import { useAuth } from '../../auth/useAuth.js'
 import { http } from '../../api/http.js'
 import { ProviderCard } from '../../components/providers/ProviderCard.jsx'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'

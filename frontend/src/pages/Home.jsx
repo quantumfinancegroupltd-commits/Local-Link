@@ -6,6 +6,8 @@ import { http } from '../api/http.js'
 import { Button } from '../components/ui/FormControls.jsx'
 import { UseCaseTile } from '../components/home/UseCaseTile.jsx'
 import { ComingSoonModal } from '../components/home/ComingSoonModal.jsx'
+import { ProductCard } from '../components/marketplace/ProductCard.jsx'
+import { ServiceCard } from '../components/marketplace/ServiceCard.jsx'
 import { ui } from '../components/ui/tokens.js'
 
 function ComingSoonTile({ title, description, imageUrl, onClick }) {
@@ -37,11 +39,28 @@ function ComingSoonTile({ title, description, imageUrl, onClick }) {
   )
 }
 
+function moneyRange(j) {
+  const min = j?.pay_min != null ? Number(j.pay_min) : null
+  const max = j?.pay_max != null ? Number(j.pay_max) : null
+  const c = j?.currency || 'GHS'
+  const per = String(j?.pay_period || '').trim().toLowerCase()
+  const suffix = per ? ` / ${per}` : ''
+  if (min == null && max == null) return null
+  if (min != null && max != null) return `${c} ${min.toFixed(0)}–${max.toFixed(0)}${suffix}`
+  if (min != null) return `${c} ${min.toFixed(0)}+${suffix}`
+  return `${c} up to ${max.toFixed(0)}${suffix}`
+}
+
 export function Home() {
   const { isAuthed, user } = useAuth()
   const [features, setFeatures] = useState(null)
   const [comingOpen, setComingOpen] = useState(false)
   const [comingKey, setComingKey] = useState(null)
+
+  const [products, setProducts] = useState([])
+  const [services, setServices] = useState([])
+  const [jobs, setJobs] = useState([])
+  const [carouselsLoading, setCarouselsLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -55,6 +74,27 @@ export function Home() {
       }
     }
     load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setCarouselsLoading(true)
+    Promise.all([
+      http.get('/products').then((r) => (Array.isArray(r.data) ? r.data : r.data?.products ?? [])).catch(() => []),
+      http.get('/marketplace/services').then((r) => (Array.isArray(r.data) ? r.data : [])).catch(() => []),
+      http.get('/corporate/jobs', { params: { limit: 15 } }).then((r) => (Array.isArray(r.data) ? r.data : [])).catch(() => []),
+    ]).then(([prods, svcs, jbs]) => {
+      if (!cancelled) {
+        setProducts(prods.slice(0, 12))
+        setServices(svcs.slice(0, 12))
+        setJobs(jbs.slice(0, 12))
+      }
+    }).finally(() => {
+      if (!cancelled) setCarouselsLoading(false)
+    })
     return () => {
       cancelled = true
     }
@@ -286,8 +326,102 @@ export function Home() {
         </div>
       </div>
 
-      {/* SLIDE BARS */}
-      {/* (Intentionally keeping launch page focused; no broad discovery UI here.) */}
+      {/* SLIDING CAROUSELS — browse products, services & jobs like Alibaba/Amazon */}
+      <div className="space-y-8">
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-bold text-slate-900">Provider services</h2>
+            <Link to="/marketplace?tab=services" className="text-sm font-semibold text-brand-emerald hover:underline">
+              See all →
+            </Link>
+          </div>
+          <div className="relative -mx-2">
+            <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory scrollbar-thin" style={{ scrollbarGutter: 'stable' }}>
+              {carouselsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-72 h-64 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse snap-start" />
+                ))
+              ) : services.length === 0 ? (
+                <div className="flex-shrink-0 w-full py-8 text-center text-sm text-slate-500 rounded-2xl border border-dashed border-slate-200">
+                  No services yet. Artisans add services from their dashboard.
+                </div>
+              ) : (
+                services.map((s) => (
+                  <div key={s.id} className="flex-shrink-0 w-72 snap-start">
+                    <ServiceCard service={s} />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-bold text-slate-900">{FARMER_FLORIST_MARKETPLACE_LABEL}</h2>
+            <Link to="/marketplace" className="text-sm font-semibold text-brand-emerald hover:underline">
+              See all →
+            </Link>
+          </div>
+          <div className="relative -mx-2">
+            <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory" style={{ scrollbarGutter: 'stable' }}>
+              {carouselsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-72 h-64 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse snap-start" />
+                ))
+              ) : products.length === 0 ? (
+                <div className="flex-shrink-0 w-full py-8 text-center text-sm text-slate-500 rounded-2xl border border-dashed border-slate-200">
+                  No produce listed yet.
+                </div>
+              ) : (
+                products.map((p) => (
+                  <div key={p.id} className="flex-shrink-0 w-72 snap-start">
+                    <ProductCard product={p} />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-bold text-slate-900">Employers — open roles</h2>
+            <Link to="/jobs" className="text-sm font-semibold text-brand-emerald hover:underline">
+              See all →
+            </Link>
+          </div>
+          <div className="relative -mx-2">
+            <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory" style={{ scrollbarGutter: 'stable' }}>
+              {carouselsLoading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex-shrink-0 w-80 h-40 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse snap-start" />
+                ))
+              ) : jobs.length === 0 ? (
+                <div className="flex-shrink-0 w-full py-8 text-center text-sm text-slate-500 rounded-2xl border border-dashed border-slate-200">
+                  No open roles yet. Companies can post jobs from their dashboard.
+                </div>
+              ) : (
+                jobs.map((j) => (
+                  <Link
+                    key={j.id}
+                    to={`/jobs/${j.id}`}
+                    className={['flex-shrink-0 w-80 snap-start rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-brand-emerald/50 hover:shadow-md', ui.cardHover].join(' ')}
+                  >
+                    <div className="font-semibold text-slate-900 line-clamp-1">{j.title}</div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      {j.company_name || 'Company'}
+                      {j.location ? ` · ${j.location}` : ''}
+                    </div>
+                    {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
+                    <div className="mt-3 text-xs font-medium text-brand-emerald">View role →</div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* TRUST STRIP */}
       <div className="grid gap-4 md:grid-cols-4">

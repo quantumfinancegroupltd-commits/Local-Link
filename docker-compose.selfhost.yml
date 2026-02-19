@@ -21,7 +21,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://locallink:locallink@db:5432/locallink}
       CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
       # Run background jobs in the separate worker service
       SCHEDULERS_ENABLED: "false"
@@ -35,6 +36,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:4000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     volumes:
       - locallink_uploads:/app/uploads
     restart: unless-stopped
@@ -46,7 +53,8 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://locallink:locallink@db:5432/locallink
+      NODE_OPTIONS: "--dns-result-order=ipv4first"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://locallink:locallink@db:5432/locallink}
       CORS_ORIGINS: "https://locallink.agency,https://www.locallink.agency"
       SCHEDULERS_ENABLED: "true"
       WEBHOOK_QUEUE_ENABLED: "true"
@@ -80,8 +88,10 @@ services:
     volumes:
       - ./deploy/nginx/gateway.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - web
-      - api
+      web:
+        condition: service_started
+      api:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

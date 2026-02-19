@@ -1,0 +1,355 @@
+/**
+ * Seed demo users for all verticals — Ghana-based, diverse names.
+ * Run from backend: DATABASE_URL=... node scripts/seed-demo-users.js
+ * Password for all: Ghana2025!
+ */
+import 'dotenv/config'
+import crypto from 'node:crypto'
+import bcrypt from 'bcryptjs'
+import { pool } from '../src/db/pool.js'
+
+const SEED_PASSWORD = 'Ghana2025!'
+
+function genRefCode() {
+  return crypto.randomBytes(8).toString('base64url').slice(0, 12).toUpperCase()
+}
+
+const USERS = [
+  {
+    name: 'Akua Mensah',
+    email: 'akua.mensah@demo.locallink.agency',
+    phone: '+233 24 123 4567',
+    role: 'buyer',
+    bio: 'Based in Accra. I hire for events, home cleaning, and small repairs. I prefer verified providers and clear pricing.',
+  },
+  {
+    name: 'Kofi Asante',
+    email: 'kofi.asante@demo.locallink.agency',
+    phone: '+233 55 234 5678',
+    role: 'artisan',
+    bio: 'Professional caterer and event planner from Kumasi. 8+ years cooking for weddings, corporate events, and parties across Ghana. I offer full catering packages and drop-off platters.',
+    service_area: 'Kumasi, Accra, Tema',
+    skills: ['Catering', 'Event planning', 'Traditional & continental cuisine'],
+    job_categories: ['Events & Catering'],
+    experience_years: 8,
+    services: [
+      { title: 'Full event catering (per head)', description: 'Buffet or plated. Jollof, waakye, fried rice, salads, proteins. Minimum 30 guests.', price: 85, duration_minutes: 480, category: 'Events & Catering', image_seed: 'catering1' },
+      { title: 'Drop-off platters (office/lunch)', description: 'Jollof with chicken, waakye, or fried rice. Serves 5–10. Order by 10am for same-day delivery in Accra.', price: 120, duration_minutes: null, category: 'Events & Catering', image_seed: 'platter1' },
+      { title: 'Traditional ceremony catering', description: 'Full traditional setup: fufu, soup, banku, grilled fish. Ideal for outdoor ceremonies.', price: 45, duration_minutes: 360, category: 'Events & Catering', image_seed: 'traditional1' },
+    ],
+  },
+  {
+    name: 'Abena Osei',
+    email: 'abena.osei@demo.locallink.agency',
+    phone: '+233 20 345 6789',
+    role: 'farmer',
+    bio: 'Smallholder farmer from the Eastern Region. I grow vegetables and plantain and sell fresh at farm gate and via LocalLink. No chemicals, good for the family table.',
+    farm_location: 'Koforidua, Eastern Region',
+    farm_lat: 6.0941,
+    farm_lng: -0.2592,
+    products: [
+      { name: 'Fresh tomatoes (crate)', category: 'vegetables', quantity: 20, unit: 'crate', price: 180, image_seed: 'tomatoes' },
+      { name: 'Plantain (ripe, medium)', category: 'fruits', quantity: 50, unit: 'bunch', price: 35, image_seed: 'plantain' },
+      { name: 'Garden eggs (basket)', category: 'vegetables', quantity: 15, unit: 'bag', price: 25, image_seed: 'garden-eggs' },
+      { name: 'Okro (fresh)', category: 'vegetables', quantity: 30, unit: 'kg', price: 18, image_seed: 'okro' },
+    ],
+  },
+  {
+    name: 'Yaw Boateng',
+    email: 'yaw.boateng@demo.locallink.agency',
+    phone: '+233 54 456 7890',
+    role: 'driver',
+    bio: 'Delivery driver in Accra and Tema. I do marketplace and job-related deliveries. Bike and car available. Reliable and on time.',
+    vehicle_type: 'bike',
+    area_of_operation: 'Accra, Tema, East Legon, Spintex',
+  },
+  {
+    name: 'Afia Addo',
+    email: 'afia.addo@demo.locallink.agency',
+    phone: '+233 50 678 9012',
+    role: 'artisan',
+    bio: 'Domestic services professional in Accra. Cleaning, laundry, and home organisation. Reliable, discreet, and thorough. Available for one-off or recurring bookings.',
+    service_area: 'Accra, East Legon, Cantonments, Osu',
+    skills: ['House cleaning', 'Laundry', 'Home organisation'],
+    job_categories: ['Domestic Services'],
+    experience_years: 6,
+    services: [
+      { title: 'Standard home cleaning (3–4 hrs)', description: 'Full house clean: sweep, mop, dust, bathrooms, kitchen. Bring my own supplies. Ideal for 2–3 bedroom homes.', price: 150, duration_minutes: 240, category: 'Domestic Services', image_seed: 'cleaning1' },
+      { title: 'Deep clean (half day)', description: 'Thorough deep clean including inside cupboards, windows, and high-traffic areas. Good for move-in/move-out or seasonal refresh.', price: 280, duration_minutes: 360, category: 'Domestic Services', image_seed: 'cleaning2' },
+      { title: 'Laundry & ironing (per load)', description: 'Wash, dry, and iron. I collect and deliver in Accra. Minimum 2 loads.', price: 60, duration_minutes: 120, category: 'Domestic Services', image_seed: 'laundry1' },
+    ],
+  },
+  {
+    name: 'Ama Serwaa',
+    email: 'ama.serwaa@demo.locallink.agency',
+    phone: '+233 26 567 8901',
+    role: 'company',
+    bio: 'HR and operations at a small retail chain in Ghana. We use LocalLink to staff our stores and warehouses. Looking for reliable workers we can rehire.',
+    company_name: 'Serwaa Retail Ltd',
+    company_industry: 'Retail',
+    company_location: 'Accra',
+    company_size: '11-50',
+    job_posts: [
+      { title: 'Store Associate (Accra)', description: 'Full-time store associate for our Accra branch. Cash handling, stock, customer service. Reliable and presentable.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1200, pay_max: 1500, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'customer service'] },
+      { title: 'Warehouse Packer (Tema)', description: 'Packing and dispatching orders. Morning shifts, 5 days/week. Start ASAP.', location: 'Tema', employment_type: 'part_time', work_mode: 'onsite', pay_min: 15, pay_max: 18, currency: 'GHS', pay_period: 'hour', job_term: 'contract', tags: ['warehouse', 'logistics'] },
+      { title: 'Supervisor – Retail Operations', description: 'Supervise daily operations at one of our Accra stores. 2+ years retail experience. Good with people and systems.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1800, pay_max: 2200, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'supervisor'] },
+    ],
+  },
+]
+
+// Stable, correct images: Wikimedia Commons (CC) for food/produce; Unsplash for domestic services
+const IMAGE_URLS = {
+  // Kofi – Events & Catering (Ghanaian dishes)
+  catering1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Ghana_Jollof_Rice_with_Chicken.jpg/400px-Ghana_Jollof_Rice_with_Chicken.jpg',
+  platter1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Jollof_rice_with_fried_fish_and_plantain.jpg/400px-Jollof_rice_with_fried_fish_and_plantain.jpg',
+  traditional1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Ghana_fufu.jpg/400px-Ghana_fufu.jpg',
+  // Afia – Domestic (cleaning/laundry)
+  cleaning1: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
+  cleaning2: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=300&fit=crop',
+  laundry1: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&h=300&fit=crop',
+  // Abena – Produce (explicit Wikimedia/Pexels so images match)
+  tomatoes: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/400px-Tomato_je.jpg',
+  plantain: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Plantains_cooking_in_Benin.jpg/400px-Plantains_cooking_in_Benin.jpg',
+  'garden-eggs': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Eggplant_plant_in_Tanzania.jpg/400px-Eggplant_plant_in_Tanzania.jpg',
+  okro: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Okra_%28Abelmoschus_esculentus%29.jpg/400px-Okra_%28Abelmoschus_esculentus%29.jpg',
+}
+function productImage(seed) {
+  if (IMAGE_URLS[seed]) return IMAGE_URLS[seed]
+  if (String(seed).startsWith('profile-')) return 'https://images.unsplash.com/photo-1535713875002-d1d0f377253a?w=400&h=300&fit=crop'
+  return 'https://images.unsplash.com/photo-1577223625814-096a56d7e7b6?w=400&h=300&fit=crop'
+}
+
+// Cover/banner for profile depth (Ghana-appropriate scene)
+const COVER_IMAGE = 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200&h=400&fit=crop'
+
+const DEMO_EMAILS = USERS.map((u) => u.email)
+
+async function run() {
+  // Idempotent: remove existing demo users and their dependent data
+  const demoIds = await pool.query(
+    "select id from users where email = any($1::text[]) and deleted_at is null",
+    [DEMO_EMAILS],
+  )
+  const ids = demoIds.rows.map((r) => r.id)
+  if (ids.length) {
+    await pool.query('delete from artisan_services where artisan_user_id = any($1::uuid[])', [ids])
+    const farmerIds = await pool.query('select id from farmers where user_id = any($1::uuid[])', [ids])
+    const fid = farmerIds.rows.map((r) => r.id)
+    if (fid.length) await pool.query('delete from products where farmer_id = any($1::uuid[])', [fid])
+    await pool.query('delete from user_profiles where user_id = any($1::uuid[])', [ids])
+    await pool.query('delete from wallets where user_id = any($1::uuid[])', [ids])
+    await pool.query('delete from artisans where user_id = any($1::uuid[])', [ids])
+    await pool.query('delete from farmers where user_id = any($1::uuid[])', [ids])
+    await pool.query('delete from drivers where user_id = any($1::uuid[])', [ids])
+    const companyIds = await pool.query('select id from companies where owner_user_id = any($1::uuid[])', [ids])
+    const cids = companyIds.rows.map((r) => r.id)
+    if (cids.length) await pool.query('delete from job_posts where company_id = any($1::uuid[])', [cids])
+    await pool.query('delete from companies where owner_user_id = any($1::uuid[])', [ids])
+    await pool.query('delete from users where id = any($1::uuid[])', [ids])
+  }
+
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10)
+  const logins = []
+  let totalArtisanServices = 0
+  let totalJobPosts = 0
+
+  for (const u of USERS) {
+    const refCode = genRefCode()
+    const profilePic = productImage(`profile-${u.email}`)
+    const r = await pool.query(
+      `insert into users (name, email, phone, password_hash, role, referral_code, profile_pic)
+       values ($1, $2, $3, $4, $5, $6, $7)
+       on conflict (email) do update set
+         name = excluded.name,
+         phone = excluded.phone,
+         password_hash = excluded.password_hash,
+         role = excluded.role,
+         profile_pic = excluded.profile_pic,
+         updated_at = now()
+       returning id, email, role`,
+      [u.name, u.email, u.phone ?? null, passwordHash, u.role, refCode, profilePic],
+    )
+    const user = r.rows[0]
+    if (!user) continue
+
+    const userId = user.id
+
+    await pool.query(
+      `insert into wallets (user_id, balance, currency) values ($1, 0, 'GHS')
+       on conflict (user_id) do nothing`,
+      [userId],
+    )
+
+    await pool.query(
+      `insert into user_profiles (user_id, bio, cover_photo, private_profile, updated_at)
+       values ($1, $2, $3, false, now())
+       on conflict (user_id) do update set bio = excluded.bio, cover_photo = coalesce(excluded.cover_photo, user_profiles.cover_photo), updated_at = now()`,
+      [userId, u.bio ?? null, COVER_IMAGE],
+    )
+
+    logins.push({ name: u.name, email: u.email, role: u.role, password: SEED_PASSWORD })
+
+    if (u.role === 'artisan') {
+      await pool.query(
+        `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, job_categories, updated_at)
+         values ($1, $2, $3, $4, $5, $6::text[], now())
+         on conflict (user_id) do update set
+           skills = excluded.skills,
+           primary_skill = excluded.primary_skill,
+           experience_years = excluded.experience_years,
+           service_area = excluded.service_area,
+           job_categories = excluded.job_categories,
+           updated_at = now()`,
+        [
+          userId,
+          u.skills ?? null,
+          u.skills?.[0] ?? null,
+          u.experience_years ?? 5,
+          u.service_area ?? null,
+          u.job_categories ?? null,
+        ],
+      )
+
+      if (u.services?.length) {
+        const art = await pool.query('select id from artisans where user_id = $1', [userId])
+        const artisanId = art.rows[0]?.id
+        if (artisanId) {
+          for (const s of u.services) {
+            await pool.query(
+              `insert into artisan_services (artisan_user_id, title, description, price, currency, duration_minutes, category, sort_order, image_url)
+               values ($1, $2, $3, $4, 'GHS', $5, $6, 0, $7)`,
+              [
+                userId,
+                s.title,
+                s.description ?? null,
+                s.price,
+                s.duration_minutes ?? null,
+                s.category ?? null,
+                productImage(s.image_seed),
+              ],
+            )
+            totalArtisanServices += 1
+          }
+        }
+      }
+    }
+
+    if (u.role === 'farmer') {
+      await pool.query(
+        `insert into farmers (user_id, farm_location, farm_lat, farm_lng, updated_at)
+         values ($1, $2, $3, $4, now())
+         on conflict (user_id) do update set
+           farm_location = excluded.farm_location,
+           farm_lat = excluded.farm_lat,
+           farm_lng = excluded.farm_lng,
+           updated_at = now()`,
+        [userId, u.farm_location ?? null, u.farm_lat ?? null, u.farm_lng ?? null],
+      )
+
+      const far = await pool.query('select id from farmers where user_id = $1', [userId])
+      const farmerId = far.rows[0]?.id
+      if (farmerId && u.products?.length) {
+        for (const p of u.products) {
+          const media = [{ url: productImage(p.image_seed), kind: 'image' }]
+          await pool.query(
+            `insert into products (farmer_id, name, category, quantity, unit, price, status, image_url, media, updated_at)
+             values ($1, $2, $3, $4, $5, $6, 'available', $7, $8::jsonb, now())`,
+            [
+              farmerId,
+              p.name,
+              p.category,
+              p.quantity,
+              p.unit,
+              p.price,
+              productImage(p.image_seed),
+              JSON.stringify(media),
+            ],
+          )
+        }
+      }
+    }
+
+    if (u.role === 'driver') {
+      await pool.query(
+        `insert into drivers (user_id, vehicle_type, area_of_operation, status, updated_at)
+         values ($1, $2, $3, 'approved', now())
+         on conflict (user_id) do update set
+           vehicle_type = excluded.vehicle_type,
+           area_of_operation = excluded.area_of_operation,
+           status = 'approved',
+           updated_at = now()`,
+        [userId, u.vehicle_type ?? 'bike', u.area_of_operation ?? null],
+      )
+    }
+
+    if (u.role === 'company') {
+      const companySlug = (u.company_name ?? 'demo-company').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      await pool.query(
+        `insert into companies (owner_user_id, slug, name, industry, location, size_range, description, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, now())
+         on conflict (owner_user_id) do update set
+           slug = coalesce(excluded.slug, companies.slug),
+           name = excluded.name,
+           industry = excluded.industry,
+           location = excluded.location,
+           size_range = excluded.size_range,
+           description = excluded.description,
+           updated_at = now()`,
+        [
+          userId,
+          companySlug || 'serwaa-retail',
+          u.company_name ?? 'Demo Company',
+          u.company_industry ?? null,
+          u.company_location ?? null,
+          u.company_size ?? null,
+          u.bio ?? null,
+        ],
+      )
+      const comp = await pool.query('select id from companies where owner_user_id = $1 limit 1', [userId])
+      const companyId = comp.rows[0]?.id
+      if (companyId && u.job_posts?.length) {
+        for (const j of u.job_posts) {
+          try {
+            await pool.query(
+              `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, tags, status, closes_at, updated_at)
+               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::text[], 'open', $11, now())`,
+              [
+                companyId,
+                j.title,
+                j.description ?? '',
+                j.location ?? null,
+                j.employment_type ?? null,
+                j.work_mode ?? null,
+                j.pay_min ?? null,
+                j.pay_max ?? null,
+                j.currency ?? 'GHS',
+                j.tags ?? null,
+                j.closes_at ?? null,
+              ],
+            )
+            totalJobPosts += 1
+          } catch (err) {
+            console.error('job_posts insert failed:', err?.message, j?.title)
+          }
+        }
+      }
+    }
+  }
+
+  console.log('\n--- Seed complete. Demo logins (password for all: Ghana2025!) ---\n')
+  console.log('| Name           | Email                              | Role    | Password   |')
+  console.log('|----------------|------------------------------------|---------|------------|')
+  for (const l of logins) {
+    console.log(`| ${l.name.padEnd(14)} | ${l.email.padEnd(34)} | ${l.role.padEnd(7)} | ${l.password} |`)
+  }
+  console.log(`\nCreated: ${totalArtisanServices} artisan services (Marketplace → Services tab), ${totalJobPosts} company job posts (Employers → /jobs).`)
+  console.log('Use these to log in at https://locallink.agency (or your local URL).')
+  console.log('Marketplace: Farmers & Florists tab = Abena\'s produce; Services tab = Kofi + Afia.')
+  console.log('Employers: open /jobs to see Serwaa Retail Ltd roles.\n')
+  process.exit(0)
+}
+
+run().catch((err) => {
+  console.error(err)
+  process.exit(1)
+})

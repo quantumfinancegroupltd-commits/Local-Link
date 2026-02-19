@@ -21,7 +21,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 rsync -az --delete \
   --exclude-from "${ROOT_DIR}/deploy/rsync-exclude.txt" \
-  -e "ssh -i ${KEY}" \
+  -e "ssh -i \"${KEY}\"" \
   "${ROOT_DIR}/" \
   "${HOST}:~/LocalLink/"
 

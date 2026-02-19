@@ -1,7 +1,16 @@
+# Domain first: Let's Encrypt for these hostnames
 locallink.agency, www.locallink.agency {
   encode zstd gzip
+  reverse_proxy 127.0.0.1:8080
+}
 
-  # Forward everything to the docker gateway (nginx) running on the host.
+# Catch-all: IP and any other host get internal cert on demand (e.g. https://140.238.93.79).
+# Browsers will show a certificate warning for the IP; user can proceed.
+https:// {
+  tls internal {
+    on_demand
+  }
+  encode zstd gzip
   reverse_proxy 127.0.0.1:8080
 }
 

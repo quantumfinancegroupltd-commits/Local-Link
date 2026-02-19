@@ -41,6 +41,7 @@ import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
 import { analyticsRouter } from './routes/analytics.js'
 import { searchRouter } from './routes/search.js'
+import { marketplaceRouter } from './routes/marketplace.js'
 import { logErrorToDb } from './services/errorLog.js'
 
 export function createApp() {
@@ -128,6 +129,7 @@ export function createApp() {
   app.use('/api/artisans', artisansRouter)
   app.use('/api/farmers', farmersRouter)
   app.use('/api/products', productsRouter)
+  app.use('/api/marketplace', marketplaceRouter)
   app.use('/api/orders', ordersRouter)
   app.use('/api/drivers', driversRouter)
   // Delivery service endpoints (status/tracking) + quote endpoint

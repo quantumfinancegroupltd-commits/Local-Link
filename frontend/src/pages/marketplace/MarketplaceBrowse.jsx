@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { ProductCard } from '../../components/marketplace/ProductCard.jsx'
+import { ServiceCard } from '../../components/marketplace/ServiceCard.jsx'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
@@ -12,12 +14,29 @@ import { ui } from '../../components/ui/tokens.js'
 import { FARMER_FLORIST_MARKETPLACE_LABEL } from '../../lib/roles.js'
 import { PRODUCT_CATEGORIES } from '../../lib/productCategories.js'
 
+const TAB_PRODUCTS = 'products'
+const TAB_SERVICES = 'services'
+
 export function MarketplaceBrowse() {
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const initialTab = tabParam === 'services' ? TAB_SERVICES : TAB_PRODUCTS
+  const [tab, setTab] = useState(initialTab)
+
+  useEffect(() => {
+    if (tabParam === 'services') setTab(TAB_SERVICES)
+    else if (tabParam === 'products') setTab(TAB_PRODUCTS)
+  }, [tabParam])
+
   const [products, setProducts] = useState([])
   const [searchProducts, setSearchProducts] = useState(null) // when q is set, results from GET /search
   const [searchLoading, setSearchLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  const [services, setServices] = useState([])
+  const [servicesLoading, setServicesLoading] = useState(false)
+  const [servicesError, setServicesError] = useState(null)
 
   const [q, setQ] = useState('')
   const [category, setCategory] = useState('all')
@@ -31,6 +50,9 @@ export function MarketplaceBrowse() {
   const [nearLat, setNearLat] = useState(null)
   const [nearLng, setNearLng] = useState(null)
   const [radiusKm, setRadiusKm] = useState('all')
+
+  const [serviceCategory, setServiceCategory] = useState('all')
+  const [serviceSort, setServiceSort] = useState('price_asc')
 
   useEffect(() => {
     let cancelled = false
@@ -47,6 +69,30 @@ export function MarketplaceBrowse() {
       }
     }
     load()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Pre-load services on mount so the Services tab shows count and data is ready when user clicks
+  useEffect(() => {
+    let cancelled = false
+    setServicesLoading(true)
+    setServicesError(null)
+    http
+      .get('/marketplace/services')
+      .then((res) => {
+        if (!cancelled) setServices(Array.isArray(res.data) ? res.data : [])
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setServices([])
+          setServicesError(err?.response?.data?.message ?? err?.message ?? 'Failed to load services')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setServicesLoading(false)
+      })
     return () => {
       cancelled = true
     }
@@ -73,6 +119,7 @@ export function MarketplaceBrowse() {
     }, 400)
     return () => clearTimeout(t)
   }, [q])
+
 
   const baseProducts = searchProducts !== null ? searchProducts : products
 
@@ -177,18 +224,142 @@ export function MarketplaceBrowse() {
     return `Within ${radiusKm} km`
   }, [canUseRadius, radiusKm])
 
+  const serviceCategories = useMemo(() => {
+    const set = new Set()
+    for (const s of services) {
+      const c = s?.category ?? ''
+      if (String(c).trim()) set.add(String(c).trim())
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [services])
+
+  const filteredServices = useMemo(() => {
+    let list = [...services]
+    if (serviceCategory !== 'all') {
+      list = list.filter((s) => String(s?.category ?? '').trim() === serviceCategory)
+    }
+    if (serviceSort === 'price_asc') list.sort((a, b) => Number(a?.price ?? 0) - Number(b?.price ?? 0))
+    else if (serviceSort === 'price_desc') list.sort((a, b) => Number(b?.price ?? 0) - Number(a?.price ?? 0))
+    else if (serviceSort === 'newest') list.sort((a, b) => new Date(b?.created_at ?? 0) - new Date(a?.created_at ?? 0))
+    return list
+  }, [services, serviceCategory, serviceSort])
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`${FARMER_FLORIST_MARKETPLACE_LABEL} Marketplace`}
-        subtitle="Produce, flowers & plants — browse by category, location, and verification."
+        title="Marketplace"
+        subtitle={
+          tab === TAB_PRODUCTS
+            ? 'Produce, flowers & plants. Click the Services tab for provider services (catering, cleaning, repairs).'
+            : 'Provider services — book catering, cleaning, repairs, and more from verified artisans.'
+        }
         actions={
-          <div className="text-sm font-semibold text-slate-700">
-            {loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`}
+          <div className="flex items-center gap-4">
+            <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+              <button
+                type="button"
+                onClick={() => setTab(TAB_PRODUCTS)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${tab === TAB_PRODUCTS ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                {FARMER_FLORIST_MARKETPLACE_LABEL}
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab(TAB_SERVICES)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium ${tab === TAB_SERVICES ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                Services
+              </button>
+            </div>
+            <div className="text-sm font-semibold text-slate-700">
+              {tab === TAB_PRODUCTS
+                ? (loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`)
+                : (servicesLoading ? 'Loading…' : `${filteredServices.length} service${filteredServices.length === 1 ? '' : 's'}`)}
+            </div>
           </div>
         }
       />
 
+      {tab === TAB_SERVICES ? (
+        <>
+          <Card>
+            <div className="grid gap-3 md:grid-cols-12 md:items-end">
+              <div className="md:col-span-4">
+                <div className={ui.label}>Category</div>
+                <Select value={serviceCategory} onChange={(e) => setServiceCategory(e.target.value)}>
+                  <option value="all">All</option>
+                  {serviceCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="md:col-span-4">
+                <div className={ui.label}>Sort</div>
+                <Select value={serviceSort} onChange={(e) => setServiceSort(e.target.value)}>
+                  <option value="price_asc">Price: low to high</option>
+                  <option value="price_desc">Price: high to low</option>
+                  <option value="newest">Newest</option>
+                </Select>
+              </div>
+              <div className="md:col-span-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => {
+                    setServiceCategory('all')
+                    setServiceSort('price_asc')
+                  }}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </Card>
+          <div>
+            {servicesLoading ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                    <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <div className="flex justify-between">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : servicesError ? (
+              <Card>
+                <div className="text-sm text-red-700">{servicesError}</div>
+              </Card>
+            ) : filteredServices.length === 0 ? (
+              <EmptyState
+                title="No services found"
+                description="Try another category or check back later. Artisans add services from their dashboard."
+                actions={
+                  <Button variant="secondary" onClick={() => setServiceCategory('all')}>
+                    Clear filters
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredServices.map((s) => (
+                  <ServiceCard key={s.id} service={s} />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      ) : (
+        <>
       <Card>
         <div className="grid gap-3 md:grid-cols-12 md:items-end">
           <div className="md:col-span-4">
@@ -369,6 +540,8 @@ export function MarketplaceBrowse() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   )
 }

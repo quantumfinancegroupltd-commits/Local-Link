@@ -135,8 +135,11 @@ authRouter.post('/login', loginRateLimit, asyncHandler(async (req, res) => {
   const parsed = LoginSchema.safeParse(req.body)
   if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
 
-  const { email, password } = parsed.data
-  const result = await pool.query('select * from users where email = $1', [email.toLowerCase()])
+  const email = String(parsed.data.email ?? '').trim().toLowerCase()
+  const password = String(parsed.data.password ?? '').trim()
+  if (!email || !password) return res.status(400).json({ message: 'Invalid input', issues: [{ message: 'Email and password are required' }] })
+
+  const result = await pool.query('select * from users where email = $1', [email])
   const user = result.rows[0]
   if (!user) return res.status(401).json({ message: 'Invalid credentials' })
   if (user.deleted_at) return res.status(403).json({ message: 'Account is deleted' })

@@ -186,6 +186,7 @@ corporateRouter.get('/jobs', asyncHandler(async (req, res) => {
             c.location as company_location
      from job_posts jp
      join companies c on c.id = jp.company_id
+     join users u on u.id = c.owner_user_id and u.deleted_at is null
      where jp.status = 'open'
        and ($2 = '' or lower(c.slug) = $2)
      order by jp.created_at desc
@@ -258,6 +259,7 @@ corporateRouter.get('/jobs/:id', asyncHandler(async (req, res) => {
             c.size_range as company_size_range
      from job_posts jp
      join companies c on c.id = jp.company_id
+     join users u on u.id = c.owner_user_id and u.deleted_at is null
      where jp.id = $1
      limit 1`,
     [req.params.id],
@@ -268,9 +270,14 @@ corporateRouter.get('/jobs/:id', asyncHandler(async (req, res) => {
   return res.json(row)
 }))
 
-// Public company page
+// Public company page (exclude companies whose owner is deleted, e.g. smoke test cleanup)
 corporateRouter.get('/companies/:slug', asyncHandler(async (req, res) => {
-  const c = await pool.query('select * from companies where slug = $1 limit 1', [req.params.slug])
+  const c = await pool.query(
+    `select c.* from companies c
+     join users u on u.id = c.owner_user_id and u.deleted_at is null
+     where c.slug = $1 limit 1`,
+    [req.params.slug],
+  )
   let company = c.rows[0] ?? null
   if (!company) return res.status(404).json({ message: 'Company not found' })
 

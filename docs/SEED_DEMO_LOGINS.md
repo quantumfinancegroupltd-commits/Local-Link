@@ -22,6 +22,10 @@ docker compose -f docker-compose.selfhost.yml run --rm api node scripts/seed-dem
 
 ---
 
+**Note:** The seed does **not** create an admin user. For full API smoke (quote/escrow/farmer), you need an admin token — create an admin via `POST /api/bootstrap/admin` (first admin only) or use an existing admin account; see README “Get admin token for full smoke”.
+
+---
+
 ## Logins (password for all: **Ghana2025!**)
 
 | Name          | Email                               | Role    | What you’ll see |

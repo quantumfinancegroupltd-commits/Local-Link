@@ -37,6 +37,7 @@ export function CompanyDashboard() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [access, setAccess] = useState(null) // { company_id, workspace_role, company_slug }
+  const [profileMeRole, setProfileMeRole] = useState(null) // role from GET /profile/me (so we never rely only on stale localStorage)
   const [myCompanies, setMyCompanies] = useState([])
   const [myCompaniesLoading, setMyCompaniesLoading] = useState(true)
   const [myCompaniesError, setMyCompaniesError] = useState(null)
@@ -331,9 +332,12 @@ export function CompanyDashboard() {
     const m = (Array.isArray(members) ? members : []).find((x) => x?.id && String(x.id) === me)
     if (m?.workspace_role) return String(m.workspace_role)
     // Company user with access but no role (e.g. owner not in company_members yet): treat as owner so they can edit profile and post jobs.
-    if (user?.role === 'company' && access?.company_id) return 'owner'
+    // Use role from auth context or from GET /profile/me (profileMeRole) so we don't rely on stale localStorage.
+    const isCompanyUser = user?.role === 'company' || profileMeRole === 'company'
+    const hasCompanyContext = access?.company_id || company?.id
+    if (isCompanyUser && hasCompanyContext) return 'owner'
     return null
-  }, [accessRole, access?.company_id, members, user?.id, user?.role])
+  }, [accessRole, access?.company_id, company?.id, members, user?.id, user?.role, profileMeRole])
   const canInviteMembers = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
   const canEditMemberRoles = myWorkspaceRole === 'owner'
   const canEditCompanyProfile = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops' || myWorkspaceRole === 'hr'
@@ -571,12 +575,15 @@ export function CompanyDashboard() {
         http.get('/profile/me').catch(() => ({ data: null })),
       ])
       setCompany(cRes.data ?? null)
+      const profileMeUser = profRes?.data?.user ?? null
+      setProfileMeRole(profileMeUser?.role ? String(profileMeUser.role) : null)
       const prof = profRes?.data?.profile
       const links = Array.isArray(prof?.links) ? prof.links : []
       setProfileLinks(links.length ? links : [{ label: 'Website', url: '' }])
       setPrivateProfile(Boolean(prof?.private_profile))
 
-      const canLoadJobs = ['owner', 'ops', 'hr'].includes(String(a.data?.workspace_role || ''))
+      const roleFromAccess = a.data?.workspace_role ? String(a.data.workspace_role) : null
+      const canLoadJobs = ['owner', 'ops', 'hr'].includes(roleFromAccess || '') || (Boolean(a.data?.company_id) && Boolean(cRes?.data))
       if (canLoadJobs) {
         const j = await http.get('/corporate/company/jobs', { params: withCompanyParams() }).catch(() => ({ data: [] }))
         setJobs(Array.isArray(j.data) ? j.data : [])
@@ -2286,6 +2293,10 @@ export function CompanyDashboard() {
       toast.warning('Offline', 'You are offline. Your draft is saved — reconnect to post.')
       return
     }
+    if (companyReady && !canUseHiring) {
+      toast.warning('Your workspace role doesn’t have permission to post jobs. Ask an owner/ops/HR member.')
+      return
+    }
     setBusy(true)
     try {
       const tags = String(jobTags || '')
@@ -3342,7 +3353,11 @@ export function CompanyDashboard() {
                     </Button>
                   </div>
                 </div>
-                {!companyReady ? (
+                {companyReady && !canUseHiring ? (
+                  <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    Your workspace role doesn’t have permission to post jobs. Ask an owner/ops/HR member.
+                  </div>
+                ) : !companyReady ? (
                   <div className="mt-2 text-sm text-slate-600">Save your company profile first.</div>
                 ) : (
                   <form onSubmit={postJob} className="mt-4 space-y-4">

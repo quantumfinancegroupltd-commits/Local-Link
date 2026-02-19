@@ -63,6 +63,14 @@ Terminology (pick based on context):
 - **Auto-resolution timers**: verify auto-confirm/auto-release behave correctly when no dispute; halt when dispute exists.
 - **Admin resolution**: resolve dispute; correct state transitions; audit log row created.
 
+### Company (Employer) — Corporate dashboard & hiring
+- **Company login**: register or log in as role `company` (e.g. seed: ama.serwaa@demo.locallink.agency / Ghana2025!).
+- **Company profile**: open `/company` (or corporate dashboard); **must not** see "Your workspace role doesn't have permission to edit the company profile". Save company profile (name, industry, size, website, location, description); save succeeds.
+- **Hiring tab**: switch to Hiring; **must not** see "doesn't have permission to post jobs". "Post a job" form is visible (not replaced by permission banner).
+- **Post job**: fill job title, description, location, type, pay; submit. Job appears in "Your jobs" list; job is visible on public `/jobs` (or employer jobs list).
+- **Applications**: from Hiring tab, open a job's applications; can view applicants and message (if implemented).
+- **Workspace roles**: if using invites/members, owner/ops/HR can edit profile and post jobs; other roles see correct restrictions.
+
 ### Admin
 - **Login + forced password change**: first login forces `/admin/set-password` then redirects to dashboard.
 - **Payout queue**: see pending payouts; mark paid/cancel; verify audit log entries appear.

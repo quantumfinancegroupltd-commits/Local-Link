@@ -41,6 +41,7 @@ BUYER_EMAIL="buyer_$(rand)@example.com"
 BUYER_RESP="$(curl -sS -X POST "$API/register" -H 'Content-Type: application/json' \
   -d "{\"name\":\"Buyer\",\"email\":\"$BUYER_EMAIL\",\"phone\":\"+233000000000\",\"password\":\"password123\",\"role\":\"buyer\"}")"
 BUYER_TOKEN="$(json_get "$BUYER_RESP" token)"
+BUYER_USER_ID="$(json_get "$BUYER_RESP" user.id)"
 if [ -z "$BUYER_TOKEN" ]; then echo "Buyer register failed: $BUYER_RESP"; exit 1; fi
 
 # Create artisan + artisan profile
@@ -48,8 +49,14 @@ ART_EMAIL="artisan_$(rand)@example.com"
 ART_RESP="$(curl -sS -X POST "$API/register" -H 'Content-Type: application/json' \
   -d "{\"name\":\"Artisan\",\"email\":\"$ART_EMAIL\",\"phone\":\"+233000000001\",\"password\":\"password123\",\"role\":\"artisan\"}")"
 ART_TOKEN="$(json_get "$ART_RESP" token)"
+ART_USER_ID="$(json_get "$ART_RESP" user.id)"
 curl -sS -X POST "$API/artisans" -H 'Content-Type: application/json' -H "Authorization: Bearer $ART_TOKEN" \
   -d '{"skills":["plumber"],"experience_years":4,"service_area":"Accra"}' >/dev/null
+
+# Full smoke: mark artisan (and later farmer) as ID-verified so quote/product steps run
+if [ "${SMOKE_FULL:-0}" = "1" ] && [ -n "${SMOKE_ADMIN_TOKEN:-}" ]; then
+  curl -sS -X PUT "$API/admin/users/$ART_USER_ID/id-verified" -H 'Content-Type: application/json' -H "Authorization: Bearer $SMOKE_ADMIN_TOKEN" -d '{"id_verified":true}' >/dev/null || true
+fi
 
 # Buyer posts job
 JOB_RESP="$(curl -sS -X POST "$API/jobs" -H 'Content-Type: application/json' -H "Authorization: Bearer $BUYER_TOKEN" \
@@ -96,6 +103,10 @@ FARM_EMAIL="farmer_$(rand)@example.com"
 FARM_RESP="$(curl -sS -X POST "$API/register" -H 'Content-Type: application/json' \
   -d "{\"name\":\"Farmer\",\"email\":\"$FARM_EMAIL\",\"phone\":\"+233000000002\",\"password\":\"password123\",\"role\":\"farmer\"}")"
 FARM_TOKEN="$(json_get "$FARM_RESP" token)"
+FARM_USER_ID="$(json_get "$FARM_RESP" user.id)"
+if [ "${SMOKE_FULL:-0}" = "1" ] && [ -n "${SMOKE_ADMIN_TOKEN:-}" ]; then
+  curl -sS -X PUT "$API/admin/users/$FARM_USER_ID/id-verified" -H 'Content-Type: application/json' -H "Authorization: Bearer $SMOKE_ADMIN_TOKEN" -d '{"id_verified":true}' >/dev/null || true
+fi
 
 PROD_ID=""
 PROD_RESP="$(curl -sS -X POST "$API/products" -H 'Content-Type: application/json' -H "Authorization: Bearer $FARM_TOKEN" \
@@ -132,6 +143,7 @@ COMP_EMAIL="company_$(rand)@example.com"
 COMP_RESP="$(curl -sS -X POST "$API/register" -H 'Content-Type: application/json' \
   -d "{\"name\":\"Company\",\"email\":\"$COMP_EMAIL\",\"phone\":\"+233000000003\",\"password\":\"password123\",\"role\":\"company\"}")"
 COMP_TOKEN="$(json_get "$COMP_RESP" token)"
+COMP_USER_ID="$(json_get "$COMP_RESP" user.id)"
 if [ -z "$COMP_TOKEN" ]; then echo "Company register failed: $COMP_RESP"; exit 1; fi
 
 COMP_PROF_RESP="$(curl -sS -X POST "$API/corporate/company/me" -H 'Content-Type: application/json' -H "Authorization: Bearer $COMP_TOKEN" \
@@ -148,5 +160,14 @@ echo "Company profile and job created: companyId=$COMP_ID corpJobId=$CORP_JOB_ID
 echo "✅ Smoke test passed."
 echo "jobId=$JOB_ID quoteId=${QUOTE_ID:-} escrowId=${ESCROW_ID:-} productId=${PROD_ID:-} orderId=${ORDER_ID:-} companyId=$COMP_ID corpJobId=$CORP_JOB_ID"
 [ -n "$SKIP_QUOTE_REASON" ] && echo "Note: $SKIP_QUOTE_REASON"
+
+# Optional: delete smoke test users (soft-delete) so production doesn't accumulate test accounts
+if [ "${SMOKE_CLEANUP:-0}" = "1" ] && [ -n "${SMOKE_ADMIN_TOKEN:-}" ]; then
+  for uid in "$BUYER_USER_ID" "$ART_USER_ID" "$FARM_USER_ID" "$COMP_USER_ID"; do
+    [ -z "$uid" ] && continue
+    curl -sS -X DELETE "$API/admin/users/$uid" -H "Authorization: Bearer $SMOKE_ADMIN_TOKEN" >/dev/null || true
+  done
+  echo "Smoke test users soft-deleted (cleanup done)."
+fi
 
 

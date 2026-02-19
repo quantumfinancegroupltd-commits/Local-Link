@@ -51,7 +51,7 @@ export function Login() {
     setError(null)
     setBusy(true)
     try {
-      const u = await login({ email, password })
+      const u = await login({ email: email.trim(), password: password.trim() })
       trackEvent('login')
       if (u?.role === 'admin' && u?.must_change_password) {
         navigate('/admin/set-password', { replace: true })
@@ -73,7 +73,7 @@ export function Login() {
         <h1 className="text-xl font-bold">Login</h1>
         <p className="mt-1 text-sm text-slate-600">Welcome back.</p>
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-4">
+        <form onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>
           {suspendedInfo ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               <div className="font-semibold">Account temporarily suspended</div>
@@ -103,8 +103,10 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               type="email"
+              inputMode="email"
               autoComplete="email"
               required
+              className="text-base min-h-[48px]"
             />
           </div>
           <div>
@@ -116,6 +118,7 @@ export function Login() {
               type="password"
               autoComplete="current-password"
               required
+              className="text-base min-h-[48px]"
             />
             <div className="mt-2 text-xs">
               <Link to="/forgot-password" className="font-semibold text-emerald-700 hover:underline">
@@ -126,7 +129,7 @@ export function Login() {
 
           {error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-          <Button disabled={busy} className="w-full">
+          <Button type="submit" disabled={busy} className="w-full min-h-[48px] text-base touch-manipulation">
             {busy ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>

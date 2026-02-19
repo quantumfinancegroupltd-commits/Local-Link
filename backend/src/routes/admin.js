@@ -1148,6 +1148,43 @@ adminRouter.post('/users/:id/reset-password', requireAuth, requireRole(['admin']
   return res.json({ ok: true, temp_password: tempPassword, must_change_password: true })
 }))
 
+// Soft-delete a user (e.g. smoke test cleanup). Same as user self-delete: sets deleted_at, anonymizes name/email.
+adminRouter.delete('/users/:id', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const uid = req.params.id
+  const existing = await pool.query('select id, email, deleted_at from users where id = $1', [uid])
+  if (!existing.rows[0]) return res.status(404).json({ message: 'User not found' })
+  if (existing.rows[0].deleted_at) return res.status(404).json({ message: 'User already deleted' })
+
+  const deletedEmail = `deleted_${uid}@deleted.local`
+  const passwordHash = await bcrypt.hash(bcrypt.genSaltSync(10) + uid, 10)
+  await pool.query(
+    `update users
+     set deleted_at = now(),
+         name = 'Deleted user',
+         email = $2,
+         phone = null,
+         profile_pic = null,
+         must_change_password = false,
+         password_hash = $3,
+         updated_at = now()
+     where id = $1 and deleted_at is null
+     returning id`,
+    [uid, deletedEmail, passwordHash],
+  )
+
+  await auditAdminAction({
+    adminUserId: req.user.sub,
+    action: 'user_soft_delete',
+    targetType: 'user',
+    targetId: uid,
+    meta: { previous_email: existing.rows[0].email },
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  }).catch(() => {})
+
+  return res.json({ ok: true })
+}))
+
 // --- Support inbox (admin) ---
 const SupportListSchema = z.object({
   status: z.enum(['open', 'pending_user', 'pending_admin', 'resolved', 'closed']).optional(),
@@ -1562,6 +1599,24 @@ adminRouter.put('/users/:id/verify', requireAuth, requireRole(['admin']), asyncH
     targetType: 'user',
     targetId: req.params.id,
     meta: { verified: true },
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  })
+  return res.json({ ok: true })
+}))
+
+// Set id_verified (Ghana Card style) for testing or admin override. Admin-only.
+const IdVerifiedSchema = z.object({ id_verified: z.boolean() })
+adminRouter.put('/users/:id/id-verified', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const parsed = IdVerifiedSchema.safeParse(req.body ?? {})
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  await pool.query('update users set id_verified = $2, updated_at = now() where id = $1', [req.params.id, parsed.data.id_verified])
+  await auditAdminAction({
+    adminUserId: req.user.sub,
+    action: 'user_set_id_verified',
+    targetType: 'user',
+    targetId: req.params.id,
+    meta: { id_verified: parsed.data.id_verified },
     ip: req.ip,
     userAgent: req.get('user-agent'),
   })

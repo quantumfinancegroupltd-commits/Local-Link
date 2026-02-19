@@ -76,8 +76,10 @@ productsRouter.post('/:id/notify-restock', requireAuth, requireRole(['buyer']), 
   return res.status(201).json({ ok: true, message: "We'll notify you when this product is back in stock." })
 }))
 
-// Public marketplace browse (only shows available listings; excludes out_of_stock)
+// Public marketplace browse (only shows available listings; excludes out_of_stock).
+// Optional ?farmer_user_id=uuid returns only that farmer's products (e.g. for profile page).
 productsRouter.get('/', asyncHandler(async (req, res) => {
+  const farmerUserId = req.query.farmer_user_id ? String(req.query.farmer_user_id).trim() : null
   const r = await pool.query(
     `select p.*,
             f.farm_location,
@@ -98,7 +100,9 @@ productsRouter.get('/', asyncHandler(async (req, res) => {
      left join verification_levels v on v.user_id = u.id
      where p.status = 'available'
        and (p.quantity is null or p.quantity > 0)
+       and ($1::uuid is null or u.id = $1)
      order by p.created_at desc`,
+    [farmerUserId || null],
   )
   const list = r.rows.map((row) => ({
     ...row,

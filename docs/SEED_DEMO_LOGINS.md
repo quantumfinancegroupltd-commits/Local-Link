@@ -43,3 +43,15 @@ docker compose -f docker-compose.selfhost.yml run --rm api node scripts/seed-dem
 - **Profiles:** Demo users have a cover photo and bio. Visit `/u/<user-id>` (e.g. from marketplace cards or search) to see full profiles and services/products.
 
 Re-running the script is **idempotent**: it removes existing demo users (by email) and re-creates them, including products, artisan services, company slug, and job posts. Run again to reset demo data and fix images.
+
+---
+
+## Product images still not showing?
+
+1. **Re-seed on the server** so products get the correct image URLs in the DB:
+   ```bash
+   cd ~/LocalLink
+   docker compose -f docker-compose.selfhost.yml run --rm api node scripts/seed-demo-users.js
+   ```
+2. **Confirm the new frontend is live**: hard refresh (Cmd+Shift+R / Ctrl+Shift+R) or open the site in an incognito window. Product images are loaded via `/api/news/image?src=...` (same-origin proxy).
+3. **Check the Network tab**: filter by `news/image` or `products`. If you see `404` on the image proxy, the API may not be receiving the request; if you see `200`, the image is loading (clear cache if you still see placeholders).

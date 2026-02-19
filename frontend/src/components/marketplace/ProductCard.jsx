@@ -49,6 +49,7 @@ export function ProductCard({ product }) {
               alt={product?.name || 'Produce'}
               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               loading="lazy"
+              referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
             />
           ) : (

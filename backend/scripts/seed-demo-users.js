@@ -107,11 +107,11 @@ const IMAGE_URLS = {
   cleaning1: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
   cleaning2: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=300&fit=crop',
   laundry1: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&h=300&fit=crop',
-  // Abena – Produce (Unsplash only for consistent loading; same CDN as rest of app)
+  // Abena – Produce (Wikimedia Commons: stable, CC, work with image proxy)
   tomatoes: 'https://images.unsplash.com/photo-1546470427-e26264b250d1?w=400&h=300&fit=crop',
-  plantain: 'https://images.unsplash.com/photo-1604329760661-e71dc83f2b26?w=400&h=300&fit=crop',
-  'garden-eggs': 'https://images.unsplash.com/photo-1566385109106-1016a5462f3e?w=400&h=300&fit=crop',
-  okro: 'https://images.unsplash.com/photo-1595855759920-86582396756b?w=400&h=300&fit=crop',
+  plantain: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Bunch_of_plantain.jpg/400px-Bunch_of_plantain.jpg',
+  'garden-eggs': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Garden_Egg%28Fresh%29.jpg/400px-Garden_Egg%28Fresh%29.jpg',
+  okro: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Gombo%2C_Okra%2C_Okro.jpg/400px-Gombo%2C_Okra%2C_Okro.jpg',
 }
 function productImage(seed) {
   if (IMAGE_URLS[seed]) return IMAGE_URLS[seed]

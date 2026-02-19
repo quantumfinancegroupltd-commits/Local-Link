@@ -34,11 +34,11 @@ export function CompanyDashboard() {
   }, [searchParams])
   const [company, setCompany] = useState(null)
   const [jobs, setJobs] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [access, setAccess] = useState(null) // { company_id, workspace_role, company_slug }
   const [myCompanies, setMyCompanies] = useState([])
-  const [myCompaniesLoading, setMyCompaniesLoading] = useState(false)
+  const [myCompaniesLoading, setMyCompaniesLoading] = useState(true)
   const [myCompaniesError, setMyCompaniesError] = useState(null)
 
   const [busy, setBusy] = useState(false)
@@ -550,9 +550,15 @@ export function CompanyDashboard() {
     debounceMs: 750,
   })
 
+  const LOAD_ALL_TIMEOUT_MS = 20000
+
   async function loadAll() {
     setLoading(true)
     setError(null)
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+      setError('Request timed out. Check your connection and try again.')
+    }, LOAD_ALL_TIMEOUT_MS)
     try {
       const a = await http.get('/corporate/company/access', { params: withCompanyParams() }).catch(() => ({ data: null }))
       setAccess(a.data ?? null)
@@ -589,6 +595,7 @@ export function CompanyDashboard() {
     } catch (e) {
       setError(e?.response?.data?.message ?? e?.message ?? 'Failed to load corporate dashboard')
     } finally {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
   }
@@ -2947,7 +2954,7 @@ export function CompanyDashboard() {
         }
       />
 
-      {loading ? (
+      {loading || (!companyIdFromUrl && myCompaniesLoading) ? (
         <Card>Loading…</Card>
       ) : error ? (
         <Card className="p-5">

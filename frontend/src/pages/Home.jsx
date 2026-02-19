@@ -167,7 +167,7 @@ export function Home() {
             <div className="ll-vert-pair ll-reveal ll-d3">
               <Link to="/jobs" className="ll-vert-card">
                 <div className="ll-vert-img" style={{ height: 120 }}>
-                  <img src="https://images.unsplash.com/photo-1573164713347-df9f1bf5f756?w=600&q=80&auto=format&fit=crop" alt="Business team" loading="lazy" />
+                  <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&q=80&auto=format&fit=crop" alt="Business team" loading="lazy" />
                   <div className="ll-vert-overlay" />
                   <span className="ll-vert-pill"><span className="ll-badge ll-badge-grey">Explore</span></span>
                 </div>

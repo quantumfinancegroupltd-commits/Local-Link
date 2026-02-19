@@ -329,8 +329,11 @@ export function CompanyDashboard() {
     const me = user?.id ? String(user.id) : ''
     if (!me) return null
     const m = (Array.isArray(members) ? members : []).find((x) => x?.id && String(x.id) === me)
-    return m?.workspace_role ? String(m.workspace_role) : null
-  }, [accessRole, members, user?.id])
+    if (m?.workspace_role) return String(m.workspace_role)
+    // Company user with access but no role (e.g. owner not in company_members yet): treat as owner so they can edit profile and post jobs.
+    if (user?.role === 'company' && access?.company_id) return 'owner'
+    return null
+  }, [accessRole, access?.company_id, members, user?.id, user?.role])
   const canInviteMembers = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
   const canEditMemberRoles = myWorkspaceRole === 'owner'
   const canEditCompanyProfile = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops' || myWorkspaceRole === 'hr'

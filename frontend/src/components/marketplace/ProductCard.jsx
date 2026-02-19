@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { imageProxySrc } from '../../lib/imageProxy.js'
 import { VerificationBadge } from '../ui/VerificationBadge.jsx'
 import { TrustBadge } from '../ui/TrustBadge.jsx'
 import { ui } from '../ui/tokens.js'
@@ -34,20 +36,27 @@ export function ProductCard({ product }) {
   const price = product?.price ?? '—'
   const verifyEntity = product?.farmer ?? product?.farmer_profile ?? product?.farmerProfile ?? product?.farmer_user ?? product?.farmerUser ?? product
   const trustScore = product?.farmer?.trust_score ?? product?.farmer_trust_score ?? null
+  const [imgError, setImgError] = useState(false)
+  const showImg = img && !imgError
 
   return (
     <Link to={`/marketplace/products/${product.id}`} className="group">
       <div className={['overflow-hidden', ui.card, ui.cardHover].join(' ')}>
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
-          {img ? (
+          {showImg ? (
             <img
-              src={img}
+              src={imageProxySrc(img) || img}
               alt={product?.name || 'Produce'}
               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               loading="lazy"
+              onError={() => setImgError(true)}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-emerald-400 via-lime-300 to-orange-300" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-400 via-lime-300 to-orange-300 p-4">
+              <span className="text-center text-sm font-semibold text-slate-800 drop-shadow-sm">
+                {product?.name || 'Produce'}
+              </span>
+            </div>
           )}
           <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
             <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">

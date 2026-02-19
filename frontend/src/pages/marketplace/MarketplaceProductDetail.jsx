@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { imageProxySrc } from '../../lib/imageProxy.js'
 import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
 import { VerificationBadge } from '../../components/ui/VerificationBadge.jsx'
 import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
@@ -219,7 +220,7 @@ export function MarketplaceProductDetail() {
                       <video src={media[0]?.url} controls className="h-full w-full object-cover" />
                     ) : (
                       <img
-                        src={media[0]?.url || img}
+                        src={imageProxySrc(media[0]?.url || img) || media[0]?.url || img}
                         alt={product?.name || 'Produce'}
                         className="h-full w-full object-cover"
                         loading="eager"
@@ -227,7 +228,7 @@ export function MarketplaceProductDetail() {
                     )
                   ) : img ? (
                     <img
-                      src={img}
+                      src={imageProxySrc(img) || img}
                       alt={product?.name || 'Produce'}
                       className="h-full w-full object-cover"
                       loading="eager"
@@ -271,7 +272,7 @@ export function MarketplaceProductDetail() {
                       {m.kind === 'video' ? (
                         <video src={m.url} controls className="h-48 w-full object-cover" />
                       ) : (
-                        <img src={m.url} alt="Produce media" className="h-48 w-full object-cover" loading="lazy" />
+                        <img src={imageProxySrc(m.url) || m.url} alt="Produce media" className="h-48 w-full object-cover" loading="lazy" />
                       )}
                     </div>
                   ))}

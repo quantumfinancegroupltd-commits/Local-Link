@@ -22,10 +22,10 @@ const authRateLimit = rateLimit({
 
 const loginRateLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 50,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { message: 'Too many login attempts, please try again later.' },
+  message: { message: 'Too many login attempts. Please wait a few minutes and try again.' },
 })
 
 const passwordResetRequestRateLimit = rateLimit({

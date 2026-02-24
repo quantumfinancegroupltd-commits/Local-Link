@@ -222,6 +222,10 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
   const topic = typeof req.query.topic === 'string' ? req.query.topic.trim() : null
   // topic is accepted for future filtering by tag/category; not yet applied (user_posts has no tags)
 
+  // Normalize to string so UUID comparison is consistent (node-pg may pass UUID objects)
+  const viewerId = userId != null ? String(userId) : null
+  if (!viewerId) return res.status(401).json({ message: 'Unauthorized' })
+
   const r = await pool.query(
     `
     with feed_base as (
@@ -247,9 +251,9 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
         c.slug as author_company_slug,
         (select count(*)::int from user_post_likes l where l.post_id = p.id) as like_count,
         (select count(*)::int from user_post_comments cc where cc.post_id = p.id and cc.deleted_at is null) as comment_count,
-        exists(select 1 from user_post_likes l where l.post_id = p.id and l.user_id = $1) as viewer_liked,
-        case when p.user_id = $1 then 25
-             when exists(select 1 from user_follows f where f.follower_id = $1 and f.following_id = p.user_id and f.status = 'accepted') then 25
+        exists(select 1 from user_post_likes l where l.post_id = p.id and l.user_id = $1::uuid) as viewer_liked,
+        case when p.user_id = $1::uuid then 25
+             when exists(select 1 from user_follows f where f.follower_id = $1::uuid and f.following_id = p.user_id and f.status = 'accepted') then 25
              else 0 end as relationship_score,
         case
           when p.created_at > now() - interval '2 hours' then 50
@@ -264,7 +268,7 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
         and (u.suspended_until is null or u.suspended_until <= now())
       left join companies c on c.owner_user_id = u.id
       where
-        (p.user_id = $1 or p.user_id in (select following_id from user_follows where follower_id = $1 and status = 'accepted'))
+        (p.user_id = $1::uuid or p.user_id in (select following_id from user_follows where follower_id = $1::uuid and status = 'accepted'))
         and ($2::timestamptz is null or (p.created_at, p.id) < ($2::timestamptz, $3::uuid))
     ),
     scored as (
@@ -279,11 +283,21 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
     order by score desc, created_at desc, id desc
     limit $4
     `,
-    [userId, cursor?.created_at ?? null, cursor?.id ?? null, limit],
+    [viewerId, cursor?.created_at ?? null, cursor?.id ?? null, limit],
   )
   const items = r.rows
   const last = items[items.length - 1]
   const next_cursor = last ? encodeFeedCursor(last.created_at, last.id) : null
+
+  if (items.length === 0 && process.env.NODE_ENV === 'production') {
+    const followCheck = await pool.query(
+      'select count(*)::int as c from user_follows where follower_id = $1::uuid and status = $2',
+      [viewerId, 'accepted'],
+    )
+    const followCount = followCheck.rows[0]?.c ?? 0
+    req.log?.info?.({ viewerId, followCount, msg: 'feed_empty' }, 'Feed returned 0 items')
+  }
+
   return res.json({ items, next_cursor })
 }))
 

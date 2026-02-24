@@ -79,7 +79,32 @@ pm2 restart locallink-api locallink-worker
 
 ## 4. Seed demo data (required for Marketplace, Employers, and Feed)
 
-**If the Marketplace "Services" tab, landing page sections, or the Feed is empty**, run the seeds **on the server** (same machine as the API, using the same `DATABASE_URL` as the API):
+**If the Marketplace "Services" tab, landing page sections, or the Feed is empty**, run the seeds **on the server** using the **same database** as the running API.
+
+### With Docker (recommended when using docker-compose.selfhost.yml)
+
+The API container must connect to the `db` service. Run the feed seed with that URL explicitly so it writes to the same DB the API reads from:
+
+```bash
+cd ~/LocalLink
+docker compose -f docker-compose.selfhost.yml run --rm \
+  -e DATABASE_URL=postgresql://locallink:locallink@db:5432/locallink \
+  api node scripts/seed-demo-feed.js
+```
+
+(If you need demo users/products first, run `seed-demo-users.js` the same way, or ensure it was run previously.)
+
+**If the feed is still empty after seeding:**
+
+1. **Same DB check** — The running API must use the same database. On the server:
+   ```bash
+   docker compose -f docker-compose.selfhost.yml exec api printenv DATABASE_URL
+   ```
+   It should contain `@db:5432`. If it shows `localhost` or another host, the API is using a different DB than the seed. Either remove or change `DATABASE_URL` in the server’s `.env` so the API uses the default `postgresql://locallink:locallink@db:5432/locallink`, or run the seed with the same URL the API uses.
+
+2. **New session** — Log out on the site, then log in again as a demo user (e.g. `kwabena.mensah@demo.locallink.agency` / `Ghana2025!`) and open the feed. Old sessions can point at a previous user id.
+
+### Without Docker (npm + pm2)
 
 ```bash
 cd ~/LocalLink/backend
@@ -89,7 +114,7 @@ node scripts/seed-demo-feed.js
 ```
 
 - **seed-demo-users.js** — Demo users (buyer, artisan, farmer, driver, company), products, services, job posts.
-- **seed-demo-feed.js** — Feed posts from demo users (driver, farmer, artisan, company) and follows so the feed is populated. Includes one **sponsored job post** (Ama Serwaa – carpenters) and one **boosted service post** (Kwame – plumbing).
+- **seed-demo-feed.js** — Feed posts from demo users and follows so the feed is populated. Includes one **sponsored job post** (Ama Serwaa – carpenters) and one **boosted service post** (Kwame – plumbing).
 
 Password for all demo logins: **Ghana2025!**
 

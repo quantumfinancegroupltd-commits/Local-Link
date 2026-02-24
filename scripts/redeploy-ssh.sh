@@ -19,8 +19,9 @@ fi
 chmod 400 "$KEY" 2>/dev/null || true
 
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
-# Rebuild web (frontend) without cache so the site actually updates; then api, worker, migrate
-if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd $REPO_DIR && git fetch origin && git checkout main && git pull origin main && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"; then
+# Reset server repo to match origin/main (discard local/untracked changes), then rebuild
+CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"
+if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; then
   echo ""
   echo "Failed. The repo may not be at ~/$REPO_DIR on the server."
   echo "To find the project on the server, run:"

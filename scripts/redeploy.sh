@@ -8,9 +8,10 @@ cd "$(dirname "$0")/.."
 echo "Fetching latest from origin..."
 git fetch origin
 
-echo "Checking out main and pulling..."
+echo "Resetting to origin/main (discarding local changes)..."
 git checkout main
-git pull origin main
+git reset --hard origin/main
+git clean -fd
 
 echo "Rebuilding and restarting containers..."
 docker compose -f docker-compose.selfhost.yml up -d --build

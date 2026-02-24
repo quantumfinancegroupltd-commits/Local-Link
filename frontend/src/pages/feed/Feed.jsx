@@ -107,6 +107,8 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
       </div>
       <form onSubmit={submit} className="mt-3 space-y-3">
         <textarea
+          id="create-post-text"
+          name="postText"
           ref={textRef}
           className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           rows={3}
@@ -135,6 +137,8 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
             Video
           </Button>
           <input
+            id="create-post-media"
+            name="postMedia"
             ref={fileInputRef}
             type="file"
             accept="image/*,video/*"

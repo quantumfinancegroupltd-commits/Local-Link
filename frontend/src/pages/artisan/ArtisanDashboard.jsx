@@ -11,6 +11,7 @@ import { StatusPill } from '../../components/ui/StatusPill.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { EarningsGoalWidget } from '../../components/artisan/EarningsGoalWidget.jsx'
 import { ProfileCompletionWidget } from '../../components/artisan/ProfileCompletionWidget.jsx'
+import { ProviderActivationChecklist } from '../../components/provider/ProviderActivationChecklist.jsx'
 
 export function ArtisanDashboard() {
   const toast = useToast()
@@ -42,6 +43,7 @@ export function ArtisanDashboard() {
   const [instantBookEnabled, setInstantBookEnabled] = useState(false)
   const [instantBookAmount, setInstantBookAmount] = useState('')
   const [instantBookBusy, setInstantBookBusy] = useState(false)
+  const [servicesCount, setServicesCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -49,12 +51,14 @@ export function ArtisanDashboard() {
       setLoading(true)
       setError(null)
       try {
-        const [jobsRes, profileRes] = await Promise.all([
+        const [jobsRes, profileRes, servicesRes] = await Promise.all([
           http.get('/jobs/mine', { params: { open_limit: 60 } }),
           http.get('/artisans/me').catch(() => ({ data: null })),
+          http.get('/artisans/me/services').catch(() => ({ data: [] })),
         ])
         if (!cancelled) setJobs(Array.isArray(jobsRes.data?.items) ? jobsRes.data.items : [])
         if (!cancelled) setJobCounts(jobsRes.data?.counts && typeof jobsRes.data.counts === 'object' ? jobsRes.data.counts : {})
+        if (!cancelled) setServicesCount(Array.isArray(servicesRes.data) ? servicesRes.data.length : 0)
         if (!cancelled) {
           const p = profileRes.data ?? null
           setArtisanProfile(p)
@@ -477,6 +481,14 @@ export function ArtisanDashboard() {
           }
         />
       )}
+
+      <ProviderActivationChecklist
+        role="artisan"
+        user={user}
+        profile={artisanProfile}
+        servicesCount={servicesCount}
+        quotesCount={Number(jobCounts?.quoted ?? 0) + Number(jobCounts?.booked ?? 0) + Number(jobCounts?.in_progress ?? 0) + Number(jobCounts?.completed ?? 0) + Number(jobCounts?.paid ?? 0)}
+      />
 
       {artisanProfile ? <ProfileCompletionWidget artisanProfile={artisanProfile} /> : null}
 

@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
 import { env } from '../config.js'
 import { sendEmail } from '../services/mailer.js'
+import { notify } from '../services/notifications.js'
 
 export const authRouter = Router()
 
@@ -115,6 +116,16 @@ authRouter.post('/register', authRateLimit, asyncHandler(async (req, res) => {
     } else if (role === 'company') {
       // Company profile is created during onboarding (Corporate dashboard).
     }
+
+    // Welcome notification so new users see the bell and /notifications page
+    notify({
+      userId: user.id,
+      type: 'welcome',
+      title: 'Welcome to LocalLink',
+      body: 'Complete your profile and explore services, marketplace, or jobs.',
+      meta: { url: '/onboarding' },
+      dedupeKey: `welcome:${user.id}`,
+    }).catch(() => {})
 
     const token = signToken({ sub: user.id, role: user.role })
     return res.status(201).json({ token, user })

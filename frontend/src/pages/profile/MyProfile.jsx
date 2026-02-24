@@ -14,6 +14,7 @@ import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { getRoleLabel, getStoredFarmerVertical, getFarmerVerticalLabel } from '../../lib/roles.js'
 import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
+import { ActivityTimeline } from '../../components/profile/ActivityTimeline.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
 import { ExperienceBadgesModal } from '../../components/profile/ExperienceBadgesModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
@@ -985,11 +986,24 @@ export function MyProfile() {
 
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(null)
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const tabFromUrl = (searchParams.get('tab') || '').trim().toLowerCase()
   const defaultTab = user?.role === 'farmer' ? 'settings' : 'posts' // farmers land on Edit profile so they see My produce
-  const initialTab = ['posts', 'about', 'resume', 'settings'].includes(tabFromUrl) ? tabFromUrl : defaultTab
-  const [tab, setTab] = useState(initialTab) // posts | about | settings
+  const initialTab = ['posts', 'about', 'resume', 'activity', 'settings'].includes(tabFromUrl) ? tabFromUrl : defaultTab
+  const [tab, setTab] = useState(initialTab) // posts | about | resume | activity | settings
+
+  // Keep URL in sync with tab so refresh and bookmarks work
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (tab) next.set('tab', tab)
+        else next.delete('tab')
+        return next
+      },
+      { replace: true },
+    )
+  }, [tab, setSearchParams])
 
   // Once we know user is a farmer and URL has no tab, show Settings so they see My produce
   useEffect(() => {
@@ -1592,6 +1606,9 @@ export function MyProfile() {
               <Button variant="secondary" type="button" onClick={() => setTab('resume')}>
                 Resume
               </Button>
+              <Button variant="secondary" type="button" onClick={() => setTab('activity')}>
+                Activity
+              </Button>
               <Button variant="secondary" type="button" onClick={() => setTab('settings')}>
                 Edit profile
               </Button>
@@ -1853,6 +1870,10 @@ export function MyProfile() {
                 }}
               />
             )
+          ) : tab === 'activity' ? (
+            <div className="max-w-2xl">
+              <ActivityTimeline />
+            </div>
           ) : tab === 'posts' ? (
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="space-y-4 lg:col-span-1">

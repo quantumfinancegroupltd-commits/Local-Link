@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { pool } from '../db/pool.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
+import { saveSubscription, removeSubscription } from '../services/push.js'
 
 export const notificationsRouter = Router()
 
@@ -69,6 +70,42 @@ notificationsRouter.post(
     const userId = req.user.sub
     const r = await pool.query(`update notifications set read_at = now() where user_id = $1 and read_at is null`, [userId])
     return res.json({ ok: true, updated: r.rowCount })
+  }),
+)
+
+// VAPID public key for browser PushManager.subscribe()
+notificationsRouter.get('/vapid-public-key', (req, res) => {
+  const key = process.env.VAPID_PUBLIC_KEY?.trim()
+  if (!key) return res.status(503).json({ message: 'Push notifications not configured' })
+  return res.json({ publicKey: key })
+})
+
+const PushSubscribeSchema = z.object({
+  subscription: z.object({
+    endpoint: z.string(),
+    keys: z.object({ p256dh: z.string(), auth: z.string() }),
+  }),
+})
+
+notificationsRouter.post(
+  '/push-subscribe',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const parsed = PushSubscribeSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ message: 'Invalid subscription', issues: parsed.error.issues })
+    await saveSubscription(req.user.sub, parsed.data.subscription)
+    return res.json({ ok: true })
+  }),
+)
+
+notificationsRouter.delete(
+  '/push-subscribe',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const endpoint = req.body?.endpoint ?? req.query?.endpoint
+    if (!endpoint || typeof endpoint !== 'string') return res.status(400).json({ message: 'endpoint required' })
+    await removeSubscription(req.user.sub, endpoint)
+    return res.json({ ok: true })
   }),
 )
 

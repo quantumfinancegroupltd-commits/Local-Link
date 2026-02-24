@@ -8,6 +8,8 @@ import { TrustBadge } from '../../components/ui/TrustBadge.jsx'
 import { WhatHappensIfModal } from '../../components/trust/WhatHappensIfModal.jsx'
 import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { useAuth } from '../../auth/useAuth.js'
+import { useToast } from '../../components/ui/Toast.jsx'
+import { useNavigate } from 'react-router-dom'
 import { trackEvent } from '../../lib/useAnalytics.js'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { StickyActionBar } from '../../components/ui/StickyActionBar.jsx'
@@ -31,7 +33,10 @@ function etaRangeLabel(minutes) {
 export function MarketplaceProductDetail() {
   const { id } = useParams()
   const { isAuthed, user } = useAuth()
+  const navigate = useNavigate()
+  const toast = useToast()
   const canOrder = isAuthed && user?.role === 'buyer'
+  const isOwner = isAuthed && user?.role === 'farmer' && product?.farmer?.id === user?.id
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -54,6 +59,7 @@ export function MarketplaceProductDetail() {
   const [whatIfOpen, setWhatIfOpen] = useState(false)
   const [notifyRestockBusy, setNotifyRestockBusy] = useState(false)
   const [notifyRestockOk, setNotifyRestockOk] = useState(false)
+  const [shareToFeedBusy, setShareToFeedBusy] = useState(false)
   const formRef = useRef(null)
 
   const outOfStock = useMemo(() => {
@@ -247,7 +253,35 @@ export function MarketplaceProductDetail() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h1 className="text-2xl font-bold">{product?.name || 'Product'}</h1>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h1 className="text-2xl font-bold">{product?.name || 'Product'}</h1>
+                    {isOwner && id ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={shareToFeedBusy}
+                        onClick={async () => {
+                          setShareToFeedBusy(true)
+                          try {
+                            await http.post('/posts', {
+                              body: '',
+                              type: 'produce',
+                              related_type: 'product',
+                              related_id: id,
+                            })
+                            toast.success('Shared to feed')
+                            navigate('/feed')
+                          } catch (e) {
+                            toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to share')
+                          } finally {
+                            setShareToFeedBusy(false)
+                          }
+                        }}
+                      >
+                        {shareToFeedBusy ? 'Sharing…' : 'Share to feed'}
+                      </Button>
+                    ) : null}
+                  </div>
                   <div className="mt-2 text-sm text-slate-600">
                     {outOfStock ? (
                       <span className="font-semibold text-amber-700">Out of stock</span>

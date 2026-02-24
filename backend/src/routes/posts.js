@@ -143,9 +143,16 @@ const MediaSchema = z.object({
   size: z.number().optional(),
 })
 
+const PostType = z.enum(['update', 'produce', 'job', 'service'])
+const RelatedType = z.enum(['product', 'job', 'artisan_service'])
+
 const CreatePostSchema = z.object({
   body: z.string().max(5000).optional().nullable(),
   media: z.array(MediaSchema).optional().nullable(),
+  type: PostType.optional().default('update'),
+  related_type: RelatedType.optional().nullable(),
+  related_id: z.string().uuid().optional().nullable(),
+  sponsored: z.boolean().optional().default(false),
 })
 
 postsRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
@@ -154,6 +161,11 @@ postsRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
     `
     select
       p.*,
+      coalesce(
+        (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
+        (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
+        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+      ) as related,
       coalesce(c.name, u.name) as author_name,
       coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
       u.role as author_role,
@@ -181,40 +193,96 @@ postsRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
   return res.json(r.rows)
 }))
 
-// Home feed for the authenticated user: posts from people you follow + your own posts.
+// Cursor encoding for feed pagination: "created_at_iso_id" so we can do WHERE (created_at, id) < (cursor_ts, cursor_id)
+function encodeFeedCursor(createdAt, id) {
+  if (!createdAt || !id) return null
+  const ts = typeof createdAt === 'string' ? createdAt : new Date(createdAt).toISOString()
+  return Buffer.from(`${ts}\t${id}`, 'utf8').toString('base64url')
+}
+function decodeFeedCursor(cursor) {
+  if (!cursor || typeof cursor !== 'string') return null
+  try {
+    const s = Buffer.from(cursor, 'base64url').toString('utf8')
+    const [ts, id] = s.split('\t')
+    if (!ts || !id) return null
+    const d = new Date(ts)
+    if (!Number.isFinite(d.getTime())) return null
+    return { created_at: ts, id }
+  } catch {
+    return null
+  }
+}
+
+// Home feed: posts from people you follow + your own; ranked by recency + engagement + relationship; cursor pagination.
 postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
   const userId = req.user.sub
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20))
+  const cursor = decodeFeedCursor(req.query.cursor)
+  const topic = typeof req.query.topic === 'string' ? req.query.topic.trim() : null
+  // topic is accepted for future filtering by tag/category; not yet applied (user_posts has no tags)
+
   const r = await pool.query(
     `
-    select
-      p.*,
-      coalesce(c.name, u.name) as author_name,
-      coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
-      u.role as author_role,
-      c.slug as author_company_slug,
-      (
-        select count(*)::int from user_post_likes l where l.post_id = p.id
-      ) as like_count,
-      (
-        select count(*)::int from user_post_comments c where c.post_id = p.id and c.deleted_at is null
-      ) as comment_count,
-      exists(
-        select 1 from user_post_likes l where l.post_id = p.id and l.user_id = $1
-      ) as viewer_liked
-    from user_posts p
-    join users u on u.id = p.user_id
-      and u.deleted_at is null
-      and (u.suspended_until is null or u.suspended_until <= now())
-    left join companies c on c.owner_user_id = u.id
-    where
-      p.user_id = $1
-      or p.user_id in (select following_id from user_follows where follower_id = $1 and status = 'accepted')
-    order by p.created_at desc
-    limit 100
+    with feed_base as (
+      select
+        p.id,
+        p.user_id,
+        p.body,
+        p.media,
+        p.created_at,
+        coalesce(p.type, 'update') as type,
+        p.related_type,
+        p.related_id,
+        coalesce(p.sponsored, false) as sponsored,
+        coalesce(
+          (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
+          (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
+          (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+        ) as related,
+        coalesce(c.name, u.name) as author_name,
+        coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
+        u.role as author_role,
+        c.slug as author_company_slug,
+        (select count(*)::int from user_post_likes l where l.post_id = p.id) as like_count,
+        (select count(*)::int from user_post_comments cc where cc.post_id = p.id and cc.deleted_at is null) as comment_count,
+        exists(select 1 from user_post_likes l where l.post_id = p.id and l.user_id = $1) as viewer_liked,
+        case when p.user_id = $1 then 25
+             when exists(select 1 from user_follows f where f.follower_id = $1 and f.following_id = p.user_id and f.status = 'accepted') then 25
+             else 0 end as relationship_score,
+        case
+          when p.created_at > now() - interval '2 hours' then 50
+          when p.created_at > now() - interval '6 hours' then 25
+          when p.created_at > now() - interval '24 hours' then 10
+          else 0
+        end as recency_score,
+        case when coalesce(p.sponsored, false) then 100 else 0 end as sponsored_score
+      from user_posts p
+      join users u on u.id = p.user_id
+        and u.deleted_at is null
+        and (u.suspended_until is null or u.suspended_until <= now())
+      left join companies c on c.owner_user_id = u.id
+      where
+        (p.user_id = $1 or p.user_id in (select following_id from user_follows where follower_id = $1 and status = 'accepted'))
+        and ($2::timestamptz is null or (p.created_at, p.id) < ($2::timestamptz, $3::uuid))
+    ),
+    scored as (
+      select *,
+        (recency_score + (like_count * 2) + (comment_count * 3) + relationship_score + sponsored_score) as score
+      from feed_base
+    )
+    select id, user_id, body, media, created_at, type, related_type, related_id, sponsored, related,
+           author_name, author_profile_pic, author_role, author_company_slug,
+           like_count, comment_count, viewer_liked
+    from scored
+    order by score desc, created_at desc, id desc
+    limit $4
     `,
-    [userId],
+    [userId, cursor?.created_at ?? null, cursor?.id ?? null, limit],
   )
-  return res.json(r.rows)
+  const items = r.rows
+  const last = items[items.length - 1]
+  const next_cursor = last ? encodeFeedCursor(last.created_at, last.id) : null
+  return res.json({ items, next_cursor })
 }))
 
 // Public posts for a given user (read-only). If authenticated, includes viewer_liked.
@@ -248,6 +316,11 @@ postsRouter.get('/user/:userId', optionalAuth, asyncHandler(async (req, res) => 
     `
     select
       p.*,
+      coalesce(
+        (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
+        (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
+        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+      ) as related,
       coalesce(c.name, u.name) as author_name,
       coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
       u.role as author_role,
@@ -281,18 +354,76 @@ postsRouter.post('/', requireAuth, asyncHandler(async (req, res) => {
 
   const body = (parsed.data.body ?? '').trim()
   const media = parsed.data.media ?? null
-  if (!body && (!Array.isArray(media) || media.length === 0)) {
+  const type = parsed.data.type ?? 'update'
+  const relatedType = parsed.data.related_type ?? null
+  const relatedId = parsed.data.related_id ?? null
+  const sponsored = Boolean(parsed.data.sponsored)
+
+  if (!body && (!Array.isArray(media) || media.length === 0) && type === 'update') {
     return res.status(400).json({ message: 'Post must have text or media' })
+  }
+  if ((type === 'produce' || type === 'job' || type === 'service') && (!relatedType || !relatedId)) {
+    return res.status(400).json({ message: 'Linked posts require related_type and related_id' })
+  }
+
+  if (relatedId && relatedType) {
+    if (relatedType === 'product') {
+      const own = await pool.query(
+        'select 1 from products p join farmers f on f.id = p.farmer_id where p.id = $1 and f.user_id = $2',
+        [relatedId, req.user.sub],
+      )
+      if (!own.rows[0]) return res.status(403).json({ message: 'You can only share your own products' })
+    } else if (relatedType === 'job') {
+      const job = await pool.query('select buyer_id from jobs where id = $1 and deleted_at is null', [relatedId])
+      if (!job.rows[0] || job.rows[0].buyer_id !== req.user.sub) {
+        return res.status(403).json({ message: 'You can only share jobs you posted' })
+      }
+    } else if (relatedType === 'artisan_service') {
+      const svc = await pool.query(
+        'select 1 from artisan_services where id = $1 and artisan_user_id = $2',
+        [relatedId, req.user.sub],
+      )
+      if (!svc.rows[0]) return res.status(403).json({ message: 'You can only share your own services' })
+    }
   }
 
   const mediaJson = media == null ? null : JSON.stringify(media)
   const r = await pool.query(
-    `insert into user_posts (user_id, body, media)
-     values ($1,$2,$3::jsonb)
+    `insert into user_posts (user_id, body, media, type, related_type, related_id, sponsored)
+     values ($1,$2,$3::jsonb,$4,$5,$6::uuid,$7)
      returning *`,
-    [req.user.sub, body || null, mediaJson],
+    [req.user.sub, body || null, mediaJson, type, relatedType, relatedId, sponsored],
   )
   return res.status(201).json(r.rows[0])
+}))
+
+const PatchPostSchema = z.object({ sponsored: z.boolean().optional() })
+
+postsRouter.patch('/:id', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = PatchPostSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const updates = parsed.data
+  if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'No updates provided' })
+
+  const pRes = await pool.query('select id, user_id from user_posts where id = $1', [req.params.id])
+  const post = pRes.rows[0]
+  if (!post) return res.status(404).json({ message: 'Post not found' })
+  if (post.user_id !== req.user.sub) return res.status(403).json({ message: 'Only the author can update this post' })
+
+  const setClauses = []
+  const values = []
+  let i = 1
+  if (typeof updates.sponsored === 'boolean') {
+    setClauses.push(`sponsored = $${i++}`)
+    values.push(updates.sponsored)
+  }
+  if (setClauses.length === 0) return res.status(400).json({ message: 'No updates provided' })
+  values.push(req.params.id)
+  const r = await pool.query(
+    `update user_posts set ${setClauses.join(', ')} where id = $${i} returning *`,
+    values,
+  )
+  return res.json(r.rows[0])
 }))
 
 postsRouter.delete('/:id', requireAuth, asyncHandler(async (req, res) => {

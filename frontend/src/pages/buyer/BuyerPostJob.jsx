@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
+import { getFirstSuccessTemplate } from '../../lib/firstSuccessTemplates.js'
 import { JOB_CATEGORIES_TIER1 } from '../../lib/jobCategories.js'
 import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label, Select, Textarea } from '../../components/ui/FormControls.jsx'
@@ -43,6 +44,7 @@ export function BuyerPostJob() {
   const [saveTemplateName, setSaveTemplateName] = useState('')
   const [saveTemplateBusy, setSaveTemplateBusy] = useState(false)
   const [postToSavedOnly, setPostToSavedOnly] = useState(false)
+  const templateAppliedRef = useRef(false)
 
   const draftKey = 'draft:buyer:post_job'
   const draftData = useMemo(
@@ -279,6 +281,19 @@ export function BuyerPostJob() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.get('artisan'), params.get('title')])
+
+  // Pre-fill from first-success quick template (?template=cleaning etc.)
+  useEffect(() => {
+    if (params.get('rebook') || params.get('artisan')) return
+    const templateId = params.get('template')
+    const t = getFirstSuccessTemplate(templateId)
+    if (!t || templateAppliedRef.current) return
+    templateAppliedRef.current = true
+    setCategory(t.category || '')
+    setTitle(t.title || '')
+    setDescription(t.description || '')
+    toast.success('Form filled from quick template. Add location and post when ready.')
+  }, [params.get('template'), params.get('rebook'), params.get('artisan'), toast])
 
   async function onSubmit(e) {
     e.preventDefault()

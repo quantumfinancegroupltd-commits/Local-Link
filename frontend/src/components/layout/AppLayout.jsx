@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
 import { http } from '../../api/http.js'
 import { Button } from '../ui/FormControls.jsx'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
 import { useAnalytics } from '../../lib/useAnalytics.js'
+import { CookieConsentBanner } from '../CookieConsentBanner.jsx'
+import { AssistantFab } from '../assistant/AssistantFab.jsx'
 
-function NavItem({ to, children }) {
+function NavItem({ to, children, isActive: isActiveFn }) {
   return (
     <NavLink
       to={to}
-      className={({ isActive }) =>
-        [
+      className={({ isActive, location }) => {
+        const active = isActiveFn ? isActiveFn({ isActive, location }) : isActive
+        return [
           'rounded-lg px-3 py-2 text-sm font-medium',
-          isActive ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100',
+          active ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100',
         ].join(' ')
-      }
+      }}
+      isActive={typeof isActiveFn === 'function' ? isActiveFn : undefined}
     >
       {children}
     </NavLink>
@@ -57,13 +61,22 @@ function Avatar({ src, name, size = 36 }) {
 }
 
 export function AppLayout() {
+  const navigate = useNavigate()
   const { isAuthed, user, logout } = useAuth()
   useAnalytics()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
   const { online } = useOnlineStatus()
+
+  function handleSearchSubmit(e) {
+    e.preventDefault()
+    const q = String(searchQuery ?? '').trim()
+    if (q) navigate(`/discover?q=${encodeURIComponent(q)}`)
+    else navigate('/discover')
+  }
 
   const commonLinks = useMemo(() => [{ to: '/feed', label: 'Feed' }, { to: '/people', label: 'People' }, { to: '/news', label: 'News' }], [])
   const navLinks = useMemo(() => {
@@ -86,13 +99,20 @@ export function AppLayout() {
   }, [isAuthed, user?.role])
 
   const servicesLinks = useMemo(() => {
-    const providersTo = isAuthed && user?.role === 'buyer' ? '/buyer/providers' : '/providers'
+    const servicesActive = (ctx) => {
+      const loc = ctx?.location
+      return loc ? loc.pathname === '/marketplace' && String(loc.search || '').includes('tab=services') : false
+    }
+    const marketplaceActive = (ctx) => {
+      const loc = ctx?.location
+      return loc ? loc.pathname === '/marketplace' && !String(loc.search || '').includes('tab=services') : false
+    }
     return [
-      { to: providersTo, label: 'Providers' },
-      { to: '/marketplace', label: 'Marketplace' },
+      { to: '/marketplace?tab=services', label: 'Services', isActive: servicesActive },
+      { to: '/marketplace', label: 'Marketplace', isActive: marketplaceActive },
       { to: '/jobs', label: 'Employers' },
     ]
-  }, [isAuthed, user?.role])
+  }, [])
 
   const desktopLinks = useMemo(() => {
     if (!isAuthed) return []
@@ -155,11 +175,22 @@ export function AppLayout() {
             </div>
           </Link>
 
+          <form onSubmit={handleSearchSubmit} className="hidden min-w-0 max-w-xs flex-1 md:block lg:max-w-sm">
+            <input
+              type="search"
+              placeholder="Search services, jobs or produce…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              aria-label="Search"
+            />
+          </form>
+
           <nav className="hidden flex-wrap items-center justify-end gap-2 md:flex">
             {!isAuthed ? (
               <>
                 {servicesLinks.map((l) => (
-                  <NavItem key={l.to} to={l.to}>
+                  <NavItem key={l.to} to={l.to} isActive={l.isActive}>
                     {l.label}
                   </NavItem>
                 ))}
@@ -195,7 +226,8 @@ export function AppLayout() {
                           <NavLink
                             key={l.to}
                             to={l.to}
-                            className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                            isActive={l.isActive}
+                            className={({ isActive }) => `block px-4 py-3 text-sm font-medium ${isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-800 hover:bg-slate-50'}`}
                             onClick={() => setServicesOpen(false)}
                           >
                             {l.label}
@@ -399,9 +431,14 @@ export function AppLayout() {
               {!isAuthed ? (
                 <div className="space-y-2">
                   <div className="space-y-2">
-                    <Link to="/providers" onClick={() => setMobileOpen(false)} className="block">
+                    <Link to="/discover" onClick={() => setMobileOpen(false)} className="block">
                       <Button className="w-full" variant="secondary">
-                        Browse providers
+                        Search
+                      </Button>
+                    </Link>
+                    <Link to="/marketplace?tab=services" onClick={() => setMobileOpen(false)} className="block">
+                      <Button className="w-full" variant="secondary">
+                        Browse services
                       </Button>
                     </Link>
                     <Link to="/marketplace" onClick={() => setMobileOpen(false)} className="block">
@@ -442,6 +479,13 @@ export function AppLayout() {
                 </div>
               ) : (
                 <div className="space-y-1">
+                  <Link
+                    to="/discover"
+                    onClick={() => setMobileOpen(false)}
+                    className="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Search
+                  </Link>
                   {/* Primary first (e.g. Today) */}
                   {navLinks[0] ? (
                     <NavLink
@@ -464,6 +508,7 @@ export function AppLayout() {
                     <NavLink
                       key={l.to}
                       to={l.to}
+                      isActive={l.isActive}
                       onClick={() => setMobileOpen(false)}
                       className={({ isActive }) =>
                         [
@@ -599,17 +644,10 @@ export function AppLayout() {
               </div>
             </div>
           </div>
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-            <div>LocalLink MVP — Phase 1</div>
-            <div>
-              Build:{' '}
-              {String(globalThis.__LOCAL_LINK_BUILD_ID__ || '').trim()
-                ? String(globalThis.__LOCAL_LINK_BUILD_ID__).slice(0, 12)
-                : String(globalThis.__LOCAL_LINK_BUILD_TIME__ || '').replace('T', ' ').replace('Z', ' UTC')}
-            </div>
-          </div>
         </div>
       </footer>
+      <AssistantFab />
+      <CookieConsentBanner />
     </div>
   )
 }

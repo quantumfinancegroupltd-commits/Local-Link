@@ -1,14 +1,23 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import {
+  getAnalyticsConsent,
+  getAnalyticsSessionId,
+  setAnalyticsSessionId,
+} from './cookies.js'
 
-const SESSION_KEY = 'analytics_session_id'
+const SESSION_STORAGE_KEY = 'analytics_session_id'
 
 function getOrCreateSessionId() {
+  // Prefer cookie (set after consent) for persistent session across visits
+  const fromCookie = getAnalyticsSessionId()
+  if (fromCookie) return fromCookie
   try {
-    let id = sessionStorage.getItem(SESSION_KEY)
+    let id = sessionStorage.getItem(SESSION_STORAGE_KEY)
     if (!id) {
       id = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
-      sessionStorage.setItem(SESSION_KEY, id)
+      sessionStorage.setItem(SESSION_STORAGE_KEY, id)
+      if (getAnalyticsConsent()) setAnalyticsSessionId(id)
     }
     return id
   } catch {
@@ -57,8 +66,9 @@ function trackPageView(path, title, referrer, sessionId, utm = {}) {
   sendTrack(payload)
 }
 
-/** Call from anywhere to track a conversion event (signup, login, job_posted, order_placed). */
+/** Call from anywhere to track a conversion event (signup, login, job_posted, order_placed). Only sent when analytics consent is given. */
 export function trackEvent(eventName) {
+  if (typeof window !== 'undefined' && getAnalyticsConsent() !== true) return
   const sessionId = getOrCreateSessionId()
   sendTrack({
     event: eventName,
@@ -71,14 +81,17 @@ export function trackEvent(eventName) {
 
 export function useAnalytics() {
   const location = useLocation()
-  const sessionIdRef = useRef(getOrCreateSessionId())
   const prevPathRef = useRef(null)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const consent = getAnalyticsConsent()
+    if (consent !== true) return
     const path = location.pathname || '/'
     if (prevPathRef.current === path) return
     prevPathRef.current = path
+    const sessionId = getOrCreateSessionId()
     const utm = getUtmFromSearch(location.search || '')
-    trackPageView(path, document?.title, document?.referrer, sessionIdRef.current, utm)
+    trackPageView(path, document?.title, document?.referrer, sessionId, utm)
   }, [location.pathname, location.search, location.key])
 }

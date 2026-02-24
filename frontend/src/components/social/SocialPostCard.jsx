@@ -5,6 +5,55 @@ import { http } from '../../api/http.js'
 import { Button, Card, Input } from '../ui/FormControls.jsx'
 import { useToast } from '../ui/Toast.jsx'
 
+function LinkedPostBlock({ type, related }) {
+  const id = related?.id
+  if (!id) return null
+  if (type === 'produce') {
+    const name = related?.name ?? 'Product'
+    const price = related?.price != null ? `GH₵ ${Number(related.price).toLocaleString()}` : null
+    const imageUrl = related?.image_url
+    const to = `/marketplace/products/${encodeURIComponent(id)}`
+    return (
+      <Link to={to} className="mt-3 flex gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80 p-3 hover:bg-slate-100/80">
+        {imageUrl ? <img src={imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover" /> : <div className="h-20 w-20 shrink-0 rounded-xl bg-slate-200" />}
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-slate-900">{name}</div>
+          {related?.category ? <div className="text-xs text-slate-600">{related.category}</div> : null}
+          {price ? <div className="mt-0.5 text-sm font-medium text-emerald-700">{price}</div> : null}
+          <span className="mt-2 inline-block rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">Buy</span>
+        </div>
+      </Link>
+    )
+  }
+  if (type === 'job') {
+    const title = related?.title ?? 'Job'
+    const budget = related?.budget != null ? `GH₵ ${Number(related.budget).toLocaleString()}` : null
+    const to = `/jobs/${encodeURIComponent(id)}`
+    return (
+      <Link to={to} className="mt-3 block rounded-2xl border border-slate-200 bg-amber-50/80 p-3 hover:bg-amber-100/80">
+        <div className="font-semibold text-slate-900">{title}</div>
+        {related?.category ? <div className="text-xs text-slate-600">{related.category}</div> : null}
+        {budget ? <div className="mt-0.5 text-sm font-medium text-amber-800">{budget}</div> : null}
+        <span className="mt-2 inline-block rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white">View job</span>
+      </Link>
+    )
+  }
+  if (type === 'service') {
+    const title = related?.title ?? 'Service'
+    const price = related?.price != null ? `GH₵ ${Number(related.price).toLocaleString()}` : null
+    const to = `/buyer/jobs/new?service=${encodeURIComponent(id)}`
+    return (
+      <Link to={to} className="mt-3 block rounded-2xl border border-slate-200 bg-blue-50/80 p-3 hover:bg-blue-100/80">
+        <div className="font-semibold text-slate-900">{title}</div>
+        {related?.category ? <div className="text-xs text-slate-600">{related.category}</div> : null}
+        {price ? <div className="mt-0.5 text-sm font-medium text-blue-800">{price}</div> : null}
+        <span className="mt-2 inline-block rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white">Book</span>
+      </Link>
+    )
+  }
+  return null
+}
+
 export function SocialPostCard({ post, viewerId, onRefresh }) {
   const toast = useToast()
   const COMMENTS_PAGE_SIZE = 100
@@ -30,6 +79,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
   const [expandedThreads, setExpandedThreads] = useState(() => new Set())
   const [busyReportId, setBusyReportId] = useState(null)
   const [likersOpen, setLikersOpen] = useState(false)
+  const [busyBoost, setBusyBoost] = useState(false)
 
   const media = Array.isArray(post?.media) ? post.media : []
   const authorId = post?.user_id ?? null
@@ -39,6 +89,8 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
       : `/u/${encodeURIComponent(authorId)}`
     : null
   const canDelete = viewerId && authorId && String(viewerId) === String(authorId)
+  const canBoost = canDelete && post?.type && ['job', 'service'].includes(post.type)
+  const isSponsored = Boolean(post?.sponsored)
 
   function openLikers() {
     if (Number(post?.like_count ?? 0) < 1) return
@@ -458,6 +510,20 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
     }
   }
 
+  async function toggleBoost() {
+    if (!canBoost) return
+    setBusyBoost(true)
+    try {
+      await http.patch(`/posts/${post.id}`, { sponsored: !isSponsored })
+      toast.success(isSponsored ? 'Post unboosted.' : 'Post boosted — it will appear higher in the feed.')
+      await onRefresh?.()
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to update')
+    } finally {
+      setBusyBoost(false)
+    }
+  }
+
   return (
     <Card>
       <div className="flex items-start justify-between gap-3">
@@ -470,24 +536,46 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
             <img src={post?.author_profile_pic || '/locallink-logo.png'} alt="avatar" className="h-10 w-10 rounded-2xl border object-cover" />
           )}
           <div>
-            {authorTo ? (
-              <Link to={authorTo} className="text-sm font-semibold text-slate-900 hover:underline">
-                {post?.author_name || 'User'}
-              </Link>
-            ) : (
-              <div className="text-sm font-semibold text-slate-900">{post?.author_name || 'User'}</div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {authorTo ? (
+                <Link to={authorTo} className="text-sm font-semibold text-slate-900 hover:underline">
+                  {post?.author_name || 'User'}
+                </Link>
+              ) : (
+                <span className="text-sm font-semibold text-slate-900">{post?.author_name || 'User'}</span>
+              )}
+              {isSponsored ? (
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Sponsored</span>
+              ) : null}
+            </div>
             <div className="text-xs text-slate-500">{post?.created_at ? new Date(post.created_at).toLocaleString() : ''}</div>
           </div>
         </div>
-        {canDelete ? (
-          <Button variant="secondary" disabled={busyDelete} onClick={del} title="Delete post">
-            {busyDelete ? 'Deleting…' : 'Delete'}
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {canBoost ? (
+            <Button
+              variant="secondary"
+              disabled={busyBoost}
+              onClick={toggleBoost}
+              title={isSponsored ? 'Remove boost' : 'Boost this post so it appears higher in the feed'}
+            >
+              {busyBoost ? '…' : isSponsored ? 'Unboost' : 'Boost'}
+            </Button>
+          ) : null}
+          {canDelete ? (
+            <Button variant="secondary" disabled={busyDelete} onClick={del} title="Delete post">
+              {busyDelete ? 'Deleting…' : 'Delete'}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {post?.body ? <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">{post.body}</div> : null}
+
+      {/* Marketplace linked post: produce / job / service with CTA */}
+      {post?.type && post.type !== 'update' && post?.related?.id ? (
+        <LinkedPostBlock type={post.type} related={post.related} />
+      ) : null}
 
       {media.length ? (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">

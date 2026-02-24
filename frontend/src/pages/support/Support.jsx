@@ -6,6 +6,7 @@ import { Button, Card, Input, Label, Select } from '../../components/ui/FormCont
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { clearDraft, useDraftAutosave } from '../../lib/drafts.js'
+import { openAssistant } from '../../components/assistant/AssistantFab.jsx'
 
 function renderAttachments(attachments) {
   const list = Array.isArray(attachments) ? attachments.filter(Boolean) : []
@@ -162,6 +163,25 @@ export function Support() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-1">
+          <Card>
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Ask YAO</div>
+                <div className="text-xs text-slate-500">Escrow, jobs, verification, disputes</div>
+              </div>
+            </div>
+            <p className="mt-2 text-sm text-slate-600">
+              Get instant answers about how the platform works. For account-specific issues, open a support ticket.
+            </p>
+            <Button type="button" className="mt-3 w-full" onClick={openAssistant}>
+              Chat with YAO
+            </Button>
+          </Card>
           <Card>
             <div className="flex items-center justify-between gap-2">
               <div className="text-sm font-semibold">Create ticket</div>

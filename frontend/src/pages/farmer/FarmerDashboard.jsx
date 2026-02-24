@@ -7,6 +7,7 @@ import { FARMER_VERTICAL_KEY, getFarmerVerticalLabel, getStoredFarmerVertical } 
 import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
+import { ProviderActivationChecklist } from '../../components/provider/ProviderActivationChecklist.jsx'
 
 export function FarmerDashboard() {
   const { user } = useAuth()
@@ -168,6 +169,13 @@ export function FarmerDashboard() {
       ) : null}
 
       <VerifyAccountBanner />
+
+      <ProviderActivationChecklist
+        role="farmer"
+        user={user}
+        profile={farmerProfile}
+        productsCount={products.length}
+      />
 
       {!hasFarmLocation ? (
         <NextStepBanner

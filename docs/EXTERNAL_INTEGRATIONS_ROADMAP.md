@@ -63,8 +63,13 @@
 
 ---
 
-### 1.3 Transactional Messaging (SMS/Email/WhatsApp)
-**Why**: Users need notifications for job quotes, order confirmations, delivery updates, disputes. Without this, users won't know when things happen.
+### 1.3 Web Push (browser notifications) — implemented
+**Status**: Done. Users can enable push on the Notifications page; when new in-app notifications are created, a browser push is sent (best-effort). Requires `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in backend env (generate with `npx web-push generate-vapid-keys`). Service worker: `frontend/public/sw.js`; subscribe API: `POST /api/notifications/push-subscribe`.
+
+---
+
+### 1.4 Transactional Messaging (SMS/Email/WhatsApp)
+**Why**: Users need notifications for job quotes, order confirmations, delivery updates, disputes. Web push covers browser users; SMS/email reach users who are offline or prefer those channels.
 
 **Options**:
 - **Termii** (Ghana-focused, SMS + WhatsApp)

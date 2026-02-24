@@ -124,6 +124,24 @@ export function JobDetail() {
         }
       />
 
+      {(job.image_url || true) && (
+        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-100">
+          {job.image_url ? (
+            <img
+              src={job.image_url.startsWith('/') ? `${typeof window !== 'undefined' ? window.location.origin : ''}${job.image_url}` : job.image_url}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <img
+              src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=400&fit=crop"
+              alt=""
+              className="h-full w-full object-cover opacity-80"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        </div>
+      )}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">

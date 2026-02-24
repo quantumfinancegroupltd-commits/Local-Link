@@ -767,7 +767,12 @@ adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), async
       todayViews,
       bounceResult,
       utmBreakdown,
+      utmMediumBreakdown,
+      utmCampaignBreakdown,
+      viewsByHour,
       deviceBreakdown,
+      countriesBreakdown,
+      newReturning,
       funnel,
     ] = await Promise.all([
       pool.query(
@@ -837,12 +842,55 @@ adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), async
         args,
       ).catch(() => ({ rows: [] })),
       pool.query(
+        `select coalesce(utm_medium, '(none)') as medium, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by utm_medium order by views desc limit 15`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `select coalesce(utm_campaign, '(none)') as campaign, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by utm_campaign order by views desc limit 15`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `select extract(hour from created_at at time zone 'UTC')::int as hour, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by 1 order by 1`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
         `select coalesce(device_type, 'unknown') as device, count(*)::int as views
          from analytics_events
          where event_type = 'page_view' and created_at >= $1 ${pathFilter}
          group by device_type order by views desc limit 10`,
         args,
       ).catch(() => ({ rows: [] })),
+      pool.query(
+        `select coalesce(country, '(unknown)') as country, count(*)::int as views
+         from analytics_events
+         where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         group by country order by views desc limit 20`,
+        args,
+      ).catch(() => ({ rows: [] })),
+      pool.query(
+        `with first_visit as (
+           select session_id, min(created_at) as first_at from analytics_events group by session_id
+         ),
+         sessions_in_window as (
+           select distinct session_id from analytics_events
+           where event_type = 'page_view' and created_at >= $1 ${pathFilter}
+         )
+         select
+           count(*) filter (where fv.first_at >= $1)::int as new_sessions,
+           count(*) filter (where fv.first_at < $1)::int as returning_sessions
+         from sessions_in_window s
+         join first_visit fv on fv.session_id = s.session_id`,
+        args,
+      ).catch(() => ({ rows: [{ new_sessions: 0, returning_sessions: 0 }] })),
       pool.query(
         `select event_type, count(*)::int as cnt from analytics_events
          where event_type in ('page_view', 'signup', 'login', 'job_posted', 'order_placed') and created_at >= $1 ${pathFilter}
@@ -862,6 +910,20 @@ adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), async
       return acc
     }, {})
 
+    // Build 24-hour array for peak hours (fill missing hours with 0)
+    const hourMap = {}
+    for (let h = 0; h < 24; h++) hourMap[h] = { hour: h, views: 0 }
+    ;(viewsByHour.rows || []).forEach((r) => {
+      const h = Number(r?.hour)
+      if (h >= 0 && h < 24) hourMap[h].views = Number(r?.views ?? 0)
+    })
+    const page_views_by_hour = Object.keys(hourMap)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((h) => ({ hour: h, views: hourMap[h].views }))
+
+    const newReturningRow = newReturning.rows?.[0] ?? { new_sessions: 0, returning_sessions: 0 }
+
     return res.json({
       page_views_over_time: pageViewsTs.rows,
       top_pages: topPages.rows,
@@ -872,7 +934,13 @@ adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), async
       bounce_sessions: bounceSessions,
       bounce_rate_pct: bounceRate,
       utm: (utmBreakdown.rows || []).filter((r) => r.source !== '(none)'),
+      utm_medium: (utmMediumBreakdown.rows || []).filter((r) => r.medium !== '(none)'),
+      utm_campaign: (utmCampaignBreakdown.rows || []).filter((r) => r.campaign !== '(none)'),
+      page_views_by_hour,
       devices: deviceBreakdown.rows || [],
+      countries: (countriesBreakdown.rows || []).filter((r) => r.country !== '(unknown)'),
+      new_sessions: Number(newReturningRow.new_sessions) || 0,
+      returning_sessions: Number(newReturningRow.returning_sessions) || 0,
       funnel: {
         page_views: funnelMap.page_view ?? 0,
         signup: funnelMap.signup ?? 0,
@@ -893,7 +961,13 @@ adminRouter.get('/analytics/traffic', requireAuth, requireRole(['admin']), async
         bounce_sessions: 0,
         bounce_rate_pct: 0,
         utm: [],
+        utm_medium: [],
+        utm_campaign: [],
+        page_views_by_hour: [],
         devices: [],
+        countries: [],
+        new_sessions: 0,
+        returning_sessions: 0,
         funnel: { page_views: 0, signup: 0, login: 0, job_posted: 0, order_placed: 0 },
         message: 'Analytics table not ready. Run migrations.',
       })

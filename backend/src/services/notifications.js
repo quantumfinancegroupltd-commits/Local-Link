@@ -1,4 +1,5 @@
 import { pool } from '../db/pool.js'
+import { sendPushToUser } from './push.js'
 
 export async function notify({ userId, type, title, body, meta, dedupeKey }) {
   if (!userId) return null
@@ -26,7 +27,13 @@ export async function notify({ userId, type, title, body, meta, dedupeKey }) {
      returning *`,
     [userId, t, String(title || '').slice(0, 200), body ?? null, meta ?? null, key],
   )
-  return r.rows[0]
+  const row = r.rows[0]
+  // Web push: best-effort; do not block or throw
+  if (row) {
+    const url = meta?.url ?? '/notifications'
+    sendPushToUser(userId, { title: row.title, body: row.body ?? '', url }).catch(() => {})
+  }
+  return row
 }
 
 

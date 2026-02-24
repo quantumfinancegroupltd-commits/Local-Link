@@ -4,6 +4,7 @@ import { http } from '../api/http.js'
 import { Button, Card } from '../components/ui/FormControls.jsx'
 import { PageHeader } from '../components/ui/PageHeader.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
+import { enablePushNotifications, isPushSupported } from '../lib/push.js'
 
 function timeAgo(ts) {
   if (!ts) return ''
@@ -25,6 +26,7 @@ export function Notifications() {
   const [items, setItems] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [busyAll, setBusyAll] = useState(false)
+  const [pushStatus, setPushStatus] = useState(null) // null | 'enabling' | 'enabled' | { error }
 
   async function load() {
     setLoading(true)
@@ -72,6 +74,15 @@ export function Notifications() {
     if (url) navigate(url)
   }
 
+  async function onEnablePush() {
+    setPushStatus('enabling')
+    const result = await enablePushNotifications()
+    if (result.ok) setPushStatus('enabled')
+    else setPushStatus({ error: result.error })
+  }
+
+  const pushSupported = isPushSupported()
+
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <PageHeader
@@ -91,6 +102,35 @@ export function Notifications() {
           </>
         }
       />
+
+      {pushSupported && (
+        <Card className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="font-medium text-slate-900">Browser push notifications</div>
+            <div className="text-sm text-slate-600">
+              Get notified when you’re not on the site — new messages, orders, or job updates.
+            </div>
+          </div>
+          <div className="shrink-0">
+            {pushStatus === 'enabled' ? (
+              <span className="text-sm font-medium text-emerald-600">Push enabled</span>
+            ) : pushStatus?.error ? (
+              <div className="flex flex-col gap-1">
+                <Button variant="secondary" onClick={onEnablePush}>Try again</Button>
+                <span className="text-xs text-red-600">{pushStatus.error}</span>
+              </div>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={onEnablePush}
+                disabled={pushStatus === 'enabling'}
+              >
+                {pushStatus === 'enabling' ? 'Enabling…' : 'Enable push notifications'}
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
 
       {loading ? (
         <Card>Loading…</Card>

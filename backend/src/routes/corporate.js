@@ -927,6 +927,7 @@ const CreateJobSchema = z.object({
   benefits: z.array(z.string().max(80)).max(30).optional().nullable(),
   tags: z.array(z.string().max(40)).max(20).optional().nullable(),
   closes_at: z.string().datetime().optional().nullable(),
+  image_url: z.string().max(2000).optional().nullable(),
 })
 
 corporateRouter.get('/company/jobs', requireAuth, asyncHandler(async (req, res) => {
@@ -953,8 +954,8 @@ corporateRouter.post('/company/jobs', requireAuth, asyncHandler(async (req, res)
 
   try {
     const r = await pool.query(
-      `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, schedule_text, benefits, tags, status, closes_at, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::text[],$14::text[],'open',$15,now())
+      `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, schedule_text, benefits, tags, status, closes_at, image_url, updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::text[],$14::text[],'open',$15,$16,now())
        returning *`,
       [
         companyId,
@@ -972,6 +973,7 @@ corporateRouter.post('/company/jobs', requireAuth, asyncHandler(async (req, res)
         parsed.data.benefits ?? null,
         parsed.data.tags ?? null,
         parsed.data.closes_at ?? null,
+        parsed.data.image_url ?? null,
       ],
     )
     const row = r.rows[0]

@@ -70,6 +70,7 @@ const News = lazy(() => import('./pages/news/News.jsx').then((m) => ({ default: 
 const NewsPost = lazy(() => import('./pages/news/NewsPost.jsx').then((m) => ({ default: m.NewsPost })))
 const Feed = lazy(() => import('./pages/feed/Feed.jsx').then((m) => ({ default: m.Feed })))
 const People = lazy(() => import('./pages/people/People.jsx').then((m) => ({ default: m.People })))
+const Discover = lazy(() => import('./pages/discover/Discover.jsx').then((m) => ({ default: m.Discover })))
 const OnboardingAdverts = lazy(() => import('./pages/onboarding/OnboardingAdverts.jsx').then((m) => ({ default: m.OnboardingAdverts })))
 const IdVerification = lazy(() => import('./pages/verification/IdVerification.jsx').then((m) => ({ default: m.IdVerification })))
 const CorporateLanding = lazy(() => import('./pages/corporate/CorporateLanding.jsx').then((m) => ({ default: m.CorporateLanding })))
@@ -169,6 +170,7 @@ export default function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsPost />} />
+            <Route path="/discover" element={<Discover />} />
             <Route
               path="/feed"
               element={

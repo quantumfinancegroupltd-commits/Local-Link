@@ -53,6 +53,54 @@ async function main() {
     console.log('✓ /api/escrow/disputes unauthed → 401')
   }
 
+  // 5. Public marketplace services (discovery)
+  const marketplaceServices = await fetchJSON(`${API_BASE}/api/marketplace/services`)
+  if (!marketplaceServices.ok) {
+    failures.push({ name: 'marketplace/services', status: marketplaceServices.status, text: marketplaceServices.text })
+  } else {
+    const list = Array.isArray(marketplaceServices.json) ? marketplaceServices.json : []
+    console.log('✓ /api/marketplace/services', list.length, 'services')
+  }
+
+  // 6. Public artisans list (providers)
+  const artisansList = await fetchJSON(`${API_BASE}/api/artisans`)
+  if (!artisansList.ok) {
+    failures.push({ name: 'artisans', status: artisansList.status, text: artisansList.text })
+  } else {
+    const list = Array.isArray(artisansList.json) ? artisansList.json : []
+    console.log('✓ /api/artisans', list.length, 'artisans')
+  }
+
+  // 7. Demo login + profile + timeline (optional; set DEMO_EMAIL + DEMO_PASSWORD or use defaults)
+  const demoEmail = process.env.DEMO_EMAIL || 'akua.mensah@demo.locallink.agency'
+  const demoPassword = process.env.DEMO_PASSWORD || 'Ghana2025!'
+  const loginRes = await fetchJSON(`${API_BASE}/api/login`, {
+    method: 'POST',
+    body: JSON.stringify({ email: demoEmail, password: demoPassword }),
+  })
+  if (!loginRes.ok || !loginRes.json?.token) {
+    console.log('⊘ demo login skipped or failed (no token) – ensure demo user exists')
+  } else {
+    console.log('✓ /api/login (demo)', loginRes.json.user?.role || '')
+    const token = loginRes.json.token
+    const auth = { Authorization: `Bearer ${token}` }
+
+    const profileRes = await fetchJSON(`${API_BASE}/api/profile/me`, { headers: auth })
+    if (!profileRes.ok) {
+      failures.push({ name: 'profile/me', status: profileRes.status, text: profileRes.text })
+    } else {
+      console.log('✓ /api/profile/me')
+    }
+
+    const timelineRes = await fetchJSON(`${API_BASE}/api/timeline?limit=10`, { headers: auth })
+    if (!timelineRes.ok) {
+      failures.push({ name: 'timeline', status: timelineRes.status, text: timelineRes.text })
+    } else {
+      const events = timelineRes.json?.events ?? []
+      console.log('✓ /api/timeline', events.length, 'events')
+    }
+  }
+
   if (failures.length) {
     console.error('\nFailures:', JSON.stringify(failures, null, 2))
     process.exit(1)

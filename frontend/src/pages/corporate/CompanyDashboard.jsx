@@ -72,6 +72,9 @@ export function CompanyDashboard() {
   const [jobBenefits, setJobBenefits] = useState('')
   const [jobTags, setJobTags] = useState('')
   const [jobDesc, setJobDesc] = useState('')
+  const [jobImageFile, setJobImageFile] = useState(null)
+  const jobImagePreviewUrl = useMemo(() => (jobImageFile ? URL.createObjectURL(jobImageFile) : null), [jobImageFile])
+  useEffect(() => () => { if (jobImagePreviewUrl) URL.revokeObjectURL(jobImagePreviewUrl) }, [jobImagePreviewUrl])
 
   const [selectedJobId, setSelectedJobId] = useState(null)
   const [applications, setApplications] = useState([])
@@ -2299,6 +2302,12 @@ export function CompanyDashboard() {
     }
     setBusy(true)
     try {
+      let imageUrl = null
+      if (jobImageFile) {
+        const uploaded = await uploadMediaFiles([jobImageFile])
+        const first = uploaded?.[0]
+        imageUrl = (typeof first === 'string' ? first : first?.url) ?? null
+      }
       const tags = String(jobTags || '')
         .split(',')
         .map((s) => s.trim())
@@ -2322,6 +2331,7 @@ export function CompanyDashboard() {
             .filter(Boolean)
             .slice(0, 30),
           tags: tags.length ? tags : null,
+          image_url: imageUrl,
         },
         { params: withCompanyParams() },
       )
@@ -2338,6 +2348,7 @@ export function CompanyDashboard() {
       setJobBenefits('')
       setJobTags('')
       setJobDesc('')
+      setJobImageFile(null)
       jobDraft.clear()
     } catch (e2) {
       toast.error(e2?.response?.data?.message ?? e2?.message ?? 'Failed to post job')
@@ -3437,6 +3448,31 @@ export function CompanyDashboard() {
                       <div className="md:col-span-2">
                         <Label>Tags (comma separated)</Label>
                         <Input value={jobTags} onChange={(e) => setJobTags(e.target.value)} placeholder="warehouse, forklift, electrician…" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Job image (optional)</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setJobImageFile(e.target.files?.[0] ?? null)}
+                          className="text-sm"
+                        />
+                        {jobImageFile && jobImagePreviewUrl && (
+                          <div className="mt-2 flex items-center gap-3">
+                            <img
+                              src={jobImagePreviewUrl}
+                              alt="Preview"
+                              className="h-24 w-32 rounded-xl border border-slate-200 object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setJobImageFile(null)}
+                              className="text-sm text-slate-600 underline hover:text-slate-900"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div>

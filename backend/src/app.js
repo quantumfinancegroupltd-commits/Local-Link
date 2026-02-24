@@ -33,6 +33,7 @@ import { reviewsRouter } from './routes/reviews.js'
 import { farmersRouter } from './routes/farmers.js'
 import { verificationRouter } from './routes/verification.js'
 import { profileRouter } from './routes/profile.js'
+import { timelineRouter } from './routes/timeline.js'
 import { postsRouter } from './routes/posts.js'
 import { matchRouter } from './routes/match.js'
 import { deliveryQuoteRouter } from './routes/deliveryQuote.js'
@@ -46,8 +47,10 @@ import { newsRouter } from './routes/news.js'
 import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
 import { analyticsRouter } from './routes/analytics.js'
+import { assistantRouter } from './routes/assistant.js'
 import { searchRouter } from './routes/search.js'
 import { marketplaceRouter } from './routes/marketplace.js'
+import { statsRouter } from './routes/stats.js'
 import { logErrorToDb } from './services/errorLog.js'
 
 export function createApp() {
@@ -159,13 +162,16 @@ export function createApp() {
   app.use('/api/trust', trustRouter)
   app.use('/api/reviews', reviewsRouter)
   app.use('/api/profile', profileRouter)
+  app.use('/api/timeline', timelineRouter)
   app.use('/api/posts', postsRouter)
   app.use('/api/follows', followsRouter)
   app.use('/api/endorsements', endorsementsRouter)
   app.use('/api/analytics', analyticsRouter)
+  app.use('/api/assistant', assistantRouter)
   app.use('/api/news', newsRouter)
   app.use('/api/match', matchRouter)
   app.use('/api/search', searchRouter)
+  app.use('/api/stats', statsRouter)
   app.use('/api/verification', verificationRouter)
   app.use('/api/id-verification', idVerificationRouter)
   app.use('/api/corporate', corporateRouter)

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { http } from '../../api/http.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
+import { ActivityTimeline } from '../../components/profile/ActivityTimeline.jsx'
 import { Tabs } from '../../components/ui/Tabs.jsx'
 import { useAuth } from '../../auth/useAuth.js'
 import { useToast } from '../../components/ui/Toast.jsx'
@@ -94,6 +95,78 @@ function AnalyticsLineChart({ series, height = 220 }) {
         )
       })}
     </svg>
+  )
+}
+
+/** 24-hour peak hours chart (vertical bars by hour UTC) */
+function PeakHoursChart({ series }) {
+  const rows = Array.isArray(series) ? series : []
+  if (rows.length === 0) return null
+  const max = Math.max(1, ...rows.map((r) => Number(r?.views ?? 0)))
+  const w = 640
+  const h = 160
+  const pad = { left: 28, right: 28, top: 12, bottom: 28 }
+  const chartW = w - pad.left - pad.right
+  const chartH = h - pad.top - pad.bottom
+  const barW = Math.max(2, (chartW / 24) * 0.7)
+  const gap = Math.max(1, (chartW / 24) * 0.3)
+  return (
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} className="max-w-full overflow-visible" role="img" aria-label="Page views by hour">
+      {rows.map((r, i) => {
+        const val = Number(r?.views ?? 0)
+        const barH = max > 0 ? (val / max) * chartH : 0
+        const x = pad.left + i * (barW + gap)
+        const y = pad.top + chartH - barH
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width={barW} height={barH} rx={2} fill="#0f766e" opacity={0.85} />
+            {[0, 6, 12, 18].includes(i) ? (
+              <text x={x + barW / 2} y={h - 6} textAnchor="middle" className="fill-slate-500 text-[10px]">
+                {i}h
+              </text>
+            ) : null}
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+/** Funnel steps as horizontal bars (width = % of page_views) */
+function FunnelChart({ funnel }) {
+  const pv = Number(funnel?.page_views ?? 0) || 1
+  const steps = [
+    { label: 'Page views', value: funnel?.page_views ?? 0, color: '#0f766e' },
+    { label: 'Signups', value: funnel?.signup ?? 0, color: '#0369a1' },
+    { label: 'Logins', value: funnel?.login ?? 0, color: '#7c3aed' },
+    { label: 'Jobs posted', value: funnel?.job_posted ?? 0, color: '#b45309' },
+    { label: 'Orders placed', value: funnel?.order_placed ?? 0, color: '#15803d' },
+  ]
+  const maxVal = Math.max(...steps.map((s) => s.value), 1)
+  return (
+    <div className="mt-3 space-y-2">
+      {steps.map((s) => {
+        const pct = maxVal > 0 ? (s.value / maxVal) * 100 : 0
+        const pctOfPv = pv > 0 ? ((s.value / pv) * 100).toFixed(1) : '0'
+        return (
+          <div key={s.label}>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-600">{s.label}</span>
+              <span className="font-semibold text-slate-900">
+                {Number(s.value).toLocaleString()}
+                {s.label !== 'Page views' ? ` (${pctOfPv}% of views)` : ''}
+              </span>
+            </div>
+            <div className="mt-0.5 h-5 w-full overflow-hidden rounded bg-slate-100">
+              <div
+                className="h-full rounded transition-all"
+                style={{ width: `${pct}%`, backgroundColor: s.color, minWidth: s.value > 0 ? 4 : 0 }}
+              />
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -1805,19 +1878,43 @@ export function AdminDashboard() {
                   </div>
                   <div className="text-xs text-slate-500">with account</div>
                 </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">New sessions</div>
+                  <div className="mt-1 text-2xl font-bold text-emerald-700">
+                    {Number(analytics?.new_sessions ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">first-time in period</div>
+                </Card>
+                <Card>
+                  <div className="text-xs text-slate-600">Returning sessions</div>
+                  <div className="mt-1 text-2xl font-bold text-sky-700">
+                    {Number(analytics?.returning_sessions ?? 0).toLocaleString()}
+                  </div>
+                  <div className="text-xs text-slate-500">seen before</div>
+                </Card>
               </div>
 
               {Array.isArray(analytics?.page_views_over_time) && analytics.page_views_over_time.length > 0 ? (
                 <Card>
                   <div className="text-sm font-semibold">Page views over time</div>
-                  <p className="mt-1 text-xs text-slate-500">Daily trend with grid and date labels</p>
+                  <p className="mt-1 text-xs text-slate-500">Daily trend (last {analytics?.days ?? 30} days)</p>
                   <div className="mt-3 min-h-[220px]">
                     <AnalyticsLineChart series={analytics.page_views_over_time} />
                   </div>
                 </Card>
               ) : null}
 
-              <div className="grid gap-4 lg:grid-cols-2">
+              {Array.isArray(analytics?.page_views_by_hour) && analytics.page_views_by_hour.length > 0 ? (
+                <Card>
+                  <div className="text-sm font-semibold">Peak hours (UTC)</div>
+                  <p className="mt-1 text-xs text-slate-500">Page views by hour of day — when visitors are most active</p>
+                  <div className="mt-3 min-h-[160px]">
+                    <PeakHoursChart series={analytics.page_views_by_hour} />
+                  </div>
+                </Card>
+              ) : null}
+
+              <div className="grid gap-4 lg:grid-cols-3">
                 <Card>
                   <div className="text-sm font-semibold">Top pages</div>
                   {Array.isArray(analytics?.top_pages) && analytics.top_pages.length > 0 ? (
@@ -1892,11 +1989,48 @@ export function AdminDashboard() {
                     <div className="mt-3 text-sm text-slate-600">No referrer data yet.</div>
                   )}
                 </Card>
+                <Card>
+                  <div className="text-sm font-semibold">Countries</div>
+                  <p className="mt-1 text-xs text-slate-500">By IP (geoip). Last {analytics?.days ?? 30} days.</p>
+                  {Array.isArray(analytics?.countries) && analytics.countries.length > 0 ? (
+                    <>
+                      <div className="mt-3 min-h-[140px]">
+                        <AnalyticsBarChart
+                          data={analytics.countries.map((r) => ({ label: r.country ?? '—', views: r.views ?? 0 }))}
+                          labelKey="label"
+                          valueKey="views"
+                          maxBars={8}
+                          color="#7c3aed"
+                        />
+                      </div>
+                      <div className="mt-3 overflow-x-auto border-t border-slate-100 pt-3">
+                        <table className="w-full text-sm">
+                          <thead className="text-left text-xs text-slate-500">
+                            <tr>
+                              <th className="py-2 pr-3">Country</th>
+                              <th className="py-2 pr-3 text-right">Views</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {analytics.countries.slice(0, 12).map((r) => (
+                              <tr key={r.country}>
+                                <td className="py-2 pr-3 font-medium text-slate-900">{r.country ?? '—'}</td>
+                                <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-3 text-sm text-slate-600">No country data yet. Requires IP on track.</div>
+                  )}
+                </Card>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 <Card>
-                  <div className="text-sm font-semibold">UTM sources</div>
+                  <div className="text-sm font-semibold">UTM source</div>
                   <div className="mt-3 overflow-x-auto">
                     {Array.isArray(analytics?.utm) && analytics.utm.length > 0 ? (
                       <table className="w-full text-sm">
@@ -1909,14 +2043,64 @@ export function AdminDashboard() {
                         <tbody className="divide-y">
                           {analytics.utm.map((r) => (
                             <tr key={r.source}>
-                              <td className="py-2 pr-3 font-medium text-slate-900">{r.source ?? '—'}</td>
+                              <td className="py-2 pr-3 font-medium text-slate-900 truncate max-w-[100px]" title={r.source}>{r.source ?? '—'}</td>
                               <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     ) : (
-                      <div className="text-sm text-slate-600">No UTM data yet.</div>
+                      <div className="text-sm text-slate-600">No UTM source yet.</div>
+                    )}
+                  </div>
+                </Card>
+                <Card>
+                  <div className="text-sm font-semibold">UTM medium</div>
+                  <div className="mt-3 overflow-x-auto">
+                    {Array.isArray(analytics?.utm_medium) && analytics.utm_medium.length > 0 ? (
+                      <table className="w-full text-sm">
+                        <thead className="text-left text-xs text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3">Medium</th>
+                            <th className="py-2 pr-3 text-right">Views</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {analytics.utm_medium.map((r) => (
+                            <tr key={r.medium}>
+                              <td className="py-2 pr-3 font-medium text-slate-900 truncate max-w-[100px]" title={r.medium}>{r.medium ?? '—'}</td>
+                              <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-sm text-slate-600">No UTM medium yet.</div>
+                    )}
+                  </div>
+                </Card>
+                <Card>
+                  <div className="text-sm font-semibold">UTM campaign</div>
+                  <div className="mt-3 overflow-x-auto">
+                    {Array.isArray(analytics?.utm_campaign) && analytics.utm_campaign.length > 0 ? (
+                      <table className="w-full text-sm">
+                        <thead className="text-left text-xs text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3">Campaign</th>
+                            <th className="py-2 pr-3 text-right">Views</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {analytics.utm_campaign.map((r) => (
+                            <tr key={r.campaign}>
+                              <td className="py-2 pr-3 font-medium text-slate-900 truncate max-w-[100px]" title={r.campaign}>{r.campaign ?? '—'}</td>
+                              <td className="py-2 pr-3 text-right font-semibold text-slate-900">{Number(r.views ?? 0).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="text-sm text-slate-600">No UTM campaign yet.</div>
                     )}
                   </div>
                 </Card>
@@ -1957,29 +2141,9 @@ export function AdminDashboard() {
                   )}
                 </Card>
                 <Card>
-                  <div className="text-sm font-semibold">Funnel</div>
-                  <div className="mt-3 space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Page views</span>
-                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.page_views ?? 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Signups</span>
-                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.signup ?? 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Logins</span>
-                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.login ?? 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Jobs posted</span>
-                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.job_posted ?? 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Orders placed</span>
-                      <span className="font-semibold text-slate-900">{Number(analytics?.funnel?.order_placed ?? 0).toLocaleString()}</span>
-                    </div>
-                  </div>
+                  <div className="text-sm font-semibold">Conversion funnel</div>
+                  <p className="mt-1 text-xs text-slate-500">From traffic to signups, logins, jobs & orders</p>
+                  <FunnelChart funnel={analytics?.funnel} />
                 </Card>
               </div>
             </>
@@ -3805,6 +3969,11 @@ export function AdminDashboard() {
                       We do <span className="font-semibold">not</span> show stored passwords. Use “Reset password” instead.
                     </div>
                   )}
+                </div>
+
+                <div className="mt-4 md:col-span-2">
+                  <div className="text-sm font-semibold text-slate-900 mb-2">Activity timeline</div>
+                  <ActivityTimeline userId={selectedUser.user.id} />
                 </div>
               </div>
             ) : (

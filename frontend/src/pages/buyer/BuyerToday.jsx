@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { FIRST_SUCCESS_TEMPLATES } from '../../lib/firstSuccessTemplates.js'
 import { Button, Card } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { UseCaseTile } from '../../components/home/UseCaseTile.jsx'
 import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
+import { SocialProofWidget } from '../../components/ui/SocialProofWidget.jsx'
 import { SpendSummaryWidget } from '../../components/buyer/SpendSummaryWidget.jsx'
 import { JobSuggestionsWidget } from '../../components/buyer/JobSuggestionsWidget.jsx'
 
@@ -41,7 +43,11 @@ export function BuyerToday() {
         }
       />
 
+      <SocialProofWidget variant="inline" className="mt-1" />
+
       <SpendSummaryWidget />
+
+      <NeedHelpToday counts={counts} />
 
       <JobSuggestionsWidget />
 
@@ -103,6 +109,34 @@ export function BuyerToday() {
         </Card>
       )}
     </div>
+  )
+}
+
+function NeedHelpToday({ counts }) {
+  const jobs = Number.isFinite(Number(counts?.jobs)) ? Number(counts.jobs) : null
+  const orders = Number.isFinite(Number(counts?.orders)) ? Number(counts.orders) : null
+  const ready = jobs != null && orders != null
+  const isFirstTime = ready && jobs === 0 && orders === 0
+  if (!ready || !isFirstTime) return null
+
+  return (
+    <Card className="overflow-hidden border-emerald-200 bg-gradient-to-br from-emerald-50 to-white">
+      <div className="p-5">
+        <h2 className="text-lg font-bold text-slate-900">Need help today?</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Post a job in one tap — artisans will send quotes. Add your location and you’re done.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {FIRST_SUCCESS_TEMPLATES.map((t) => (
+            <Link key={t.id} to={`/buyer/jobs/new?template=${encodeURIComponent(t.id)}`}>
+              <Button variant="secondary" className="shadow-sm">
+                {t.label}
+              </Button>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </Card>
   )
 }
 

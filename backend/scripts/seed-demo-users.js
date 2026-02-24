@@ -90,14 +90,62 @@ const USERS = [
     company_location: 'Accra',
     company_size: '11-50',
     job_posts: [
-      { title: 'Store Associate (Accra)', description: 'Full-time store associate for our Accra branch. Cash handling, stock, customer service. Reliable and presentable.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1200, pay_max: 1500, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'customer service'] },
-      { title: 'Warehouse Packer (Tema)', description: 'Packing and dispatching orders. Morning shifts, 5 days/week. Start ASAP.', location: 'Tema', employment_type: 'part_time', work_mode: 'onsite', pay_min: 15, pay_max: 18, currency: 'GHS', pay_period: 'hour', job_term: 'contract', tags: ['warehouse', 'logistics'] },
-      { title: 'Supervisor – Retail Operations', description: 'Supervise daily operations at one of our Accra stores. 2+ years retail experience. Good with people and systems.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1800, pay_max: 2200, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'supervisor'] },
+      { title: 'Store Associate (Accra)', description: 'Full-time store associate for our Accra branch. Cash handling, stock, customer service. Reliable and presentable.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1200, pay_max: 1500, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'customer service'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
+      { title: 'Warehouse Packer (Tema)', description: 'Packing and dispatching orders. Morning shifts, 5 days/week. Start ASAP.', location: 'Tema', employment_type: 'part_time', work_mode: 'onsite', pay_min: 15, pay_max: 18, currency: 'GHS', pay_period: 'hour', job_term: 'contract', tags: ['warehouse', 'logistics'], image_url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70' },
+      { title: 'Supervisor – Retail Operations', description: 'Supervise daily operations at one of our Accra stores. 2+ years retail experience. Good with people and systems.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1800, pay_max: 2200, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'supervisor'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
+    ],
+  },
+  {
+    name: 'Kwame Owusu',
+    email: 'kwame.owusu@demo.locallink.agency',
+    phone: '+233 24 111 2233',
+    role: 'artisan',
+    bio: 'Licensed plumber in Accra and Tema. Leaks, blockages, new installations, and bathroom repairs. Over 10 years experience. Fair pricing, same-day callouts.',
+    service_area: 'Accra, Tema, East Legon, Spintex',
+    skills: ['Plumbing', 'Pipe fitting', 'Drainage'],
+    job_categories: ['Skilled Labour'],
+    experience_years: 10,
+    services: [
+      { title: 'Leak repair (per visit)', description: 'Find and fix leaks — taps, pipes, toilets. Includes labour; parts quoted separately. Same-day available in Accra/Tema.', price: 120, duration_minutes: 90, category: 'Plumbing', image_seed: 'plumber1' },
+      { title: 'Blockage clearance', description: 'Unblock sinks, toilets, and drains. Power auger for stubborn blockages. Callout within 24 hours.', price: 150, duration_minutes: 60, category: 'Plumbing', image_seed: 'plumber2' },
+      { title: 'Bathroom installation support', description: 'Install or replace WC, sink, shower fittings. Supply your fixtures or I can source. Quote after site visit.', price: 250, duration_minutes: 240, category: 'Plumbing', image_seed: 'plumber3' },
+    ],
+  },
+  {
+    name: 'Esi Tawiah',
+    email: 'esi.tawiah@demo.locallink.agency',
+    phone: '+233 55 444 5566',
+    role: 'artisan',
+    bio: 'Certified electrician. Residential and small commercial. Wiring, lighting, fault-finding, and meter work. Safe, certified, and insured.',
+    service_area: 'Accra, Kumasi, Tema',
+    skills: ['Electrical wiring', 'Lighting', 'Fault finding'],
+    job_categories: ['Skilled Labour'],
+    experience_years: 7,
+    services: [
+      { title: 'Electrical fault finding (per visit)', description: 'Trace and fix power cuts, tripping, flickering lights. Includes basic repairs. Same-day in Accra.', price: 80, duration_minutes: 60, category: 'Electrical', image_seed: 'electrician1' },
+      { title: 'Lighting installation', description: 'Install ceiling lights, outdoor lights, switches. Bring your fittings or I supply. Per point from GHS 45.', price: 45, duration_minutes: 45, category: 'Electrical', image_seed: 'electrician2' },
+      { title: 'Room wiring (small job)', description: 'Wire one room or extension: sockets, switches, lighting. Compliant with local standards. Quote after visit.', price: 350, duration_minutes: 360, category: 'Electrical', image_seed: 'electrician3' },
+    ],
+  },
+  {
+    name: 'Kwabena Mensah',
+    email: 'kwabena.mensah@demo.locallink.agency',
+    phone: '+233 20 777 8899',
+    role: 'artisan',
+    bio: 'Mason and general builder. Blockwork, plastering, tiling, small extensions. Quality work for homes and shops in Greater Accra.',
+    service_area: 'Accra, Tema, Dodowa',
+    skills: ['Masonry', 'Plastering', 'Tiling'],
+    job_categories: ['Skilled Labour'],
+    experience_years: 12,
+    services: [
+      { title: 'Blockwork (per m²)', description: 'Single or double block walls, foundations. Quality sand and blocks. Ideal for walls, room divisions, compound walls.', price: 55, duration_minutes: null, category: 'Masonry', image_seed: 'mason1' },
+      { title: 'Plastering (per m²)', description: 'Smooth or rough cast plaster for interior and exterior. Ready for paint or finish. Minimum 10 m².', price: 35, duration_minutes: null, category: 'Masonry', image_seed: 'mason2' },
+      { title: 'Tiling (per m²)', description: 'Floor and wall tiling — bathroom, kitchen, living area. Supply your tiles or I source. Adhesive and labour included.', price: 65, duration_minutes: null, category: 'Masonry', image_seed: 'mason3' },
     ],
   },
 ]
 
-// Stable, correct images: Wikimedia Commons (CC) for food/produce; Unsplash for domestic services
+// Stable, correct images: Wikimedia Commons (CC) for food/produce; Unsplash for services
 const IMAGE_URLS = {
   // Kofi – Events & Catering (Ghanaian dishes)
   catering1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Ghana_Jollof_Rice_with_Chicken.jpg/400px-Ghana_Jollof_Rice_with_Chicken.jpg',
@@ -107,11 +155,24 @@ const IMAGE_URLS = {
   cleaning1: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop',
   cleaning2: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=300&fit=crop',
   laundry1: 'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=400&h=300&fit=crop',
-  // Abena – Produce (Wikimedia Commons: real photos, simple filenames for reliable loading)
+  // Abena – Produce
   tomatoes: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Tomato.jpg/400px-Tomato.jpg',
   plantain: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Bunch_of_plantain.jpg/400px-Bunch_of_plantain.jpg',
   okro: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Okra_from_farm.jpg/400px-Okra_from_farm.jpg',
   'garden-eggs': 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Garden_Egg%28Fresh%29.jpg/400px-Garden_Egg%28Fresh%29.jpg',
+  // Kwame – Plumbing (valid Unsplash URLs; distinct from landing)
+  // Kwame – Plumbing: job-matched images
+  plumber1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/A_Plumbing_work_in_Walewale.jpg/400px-A_Plumbing_work_in_Walewale.jpg', // Leak repair – Ghana plumbing
+  plumber2: '/images/blockage-clearance.png', // Blockage clearance – desktop screenshot
+  plumber3: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?w=400&h=300&fit=crop', // Bathroom installation – bathroom
+  // Esi – Electrical: job-matched images
+  electrician1: '/images/electrical-fault.png', // Electrical fault finding – desktop screenshot
+  electrician2: '/images/lighting-installation.png', // Lighting installation – desktop screenshot
+  electrician3: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop', // Room wiring – room interior
+  // Kwabena – Masonry / tiling / plastering: project images from desktop
+  mason1: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Ghanaian_Construction_Workers.jpg/400px-Ghanaian_Construction_Workers.jpg', // Blockwork – construction
+  mason2: '/images/plastering.png', // Plastering – desktop screenshot
+  mason3: '/images/tiling.png', // Tiling – desktop screenshot
 }
 function productImage(seed) {
   if (IMAGE_URLS[seed]) return IMAGE_URLS[seed]
@@ -323,8 +384,8 @@ async function run() {
         for (const j of u.job_posts) {
           try {
             await pool.query(
-              `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, tags, status, closes_at, updated_at)
-               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::text[], 'open', $11, now())`,
+              `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, tags, status, closes_at, image_url, updated_at)
+               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::text[], 'open', $13, $14, now())`,
               [
                 companyId,
                 j.title,
@@ -335,8 +396,11 @@ async function run() {
                 j.pay_min ?? null,
                 j.pay_max ?? null,
                 j.currency ?? 'GHS',
+                j.pay_period ?? 'month',
+                j.job_term ?? null,
                 j.tags ?? null,
                 j.closes_at ?? null,
+                j.image_url ?? null,
               ],
             )
             totalJobPosts += 1

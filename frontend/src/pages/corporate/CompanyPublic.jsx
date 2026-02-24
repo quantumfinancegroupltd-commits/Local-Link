@@ -10,6 +10,23 @@ import { useToast } from '../../components/ui/Toast.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
 import { FollowListModal } from '../../components/social/FollowListModal.jsx'
 
+// Role-based default images for job cards when job has no image_url
+const jobCardDefaults = {
+  retail: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70',
+  warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70',
+  supervisor: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70', // retail store
+  office: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=240&fit=crop&q=70',
+  default: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=240&fit=crop&q=70',
+}
+function getDefaultJobImage(job) {
+  const t = String((job?.title || '') + ' ' + (job?.employment_type || '')).toLowerCase()
+  if (/\b(retail|store|sales|associate|shop)\b/.test(t)) return jobCardDefaults.retail
+  if (/\b(warehouse|packer|packing|logistics|inventory)\b/.test(t)) return jobCardDefaults.warehouse
+  if (/\b(supervisor|manager|operations|team lead)\b/.test(t)) return jobCardDefaults.supervisor
+  if (/\b(office|admin|coordinator)\b/.test(t)) return jobCardDefaults.office
+  return jobCardDefaults.default
+}
+
 export function CompanyPublic() {
   const { slug } = useParams()
   const navigate = useNavigate()
@@ -410,21 +427,32 @@ export function CompanyPublic() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2">
-            {jobsPreview.map((j) => (
-            <Card key={j.id} className="p-5">
-              <div className="text-sm font-semibold">{j.title}</div>
-              <div className="mt-1 text-xs text-slate-600">
-                {j.location ? `${j.location} • ` : ''}
-                {j.employment_type ? String(j.employment_type).replaceAll('_', ' ') : ''}
-                {j.work_mode ? ` • ${j.work_mode}` : ''}
+            {jobsPreview.map((j) => {
+              const jobImgSrc = j.image_url
+                ? (j.image_url.startsWith('/') ? `${typeof window !== 'undefined' ? window.location.origin : ''}${j.image_url}` : j.image_url)
+                : getDefaultJobImage(j)
+              return (
+            <Card key={j.id} className="p-0 overflow-hidden">
+              <div className="relative h-32 w-full bg-slate-100">
+                <img src={jobImgSrc} alt="" className="h-full w-full object-cover" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
-              <div className="mt-3">
-                <Link to={`/jobs/${j.id}`}>
-                  <Button>View & apply</Button>
-                </Link>
+              <div className="p-5">
+                <div className="text-sm font-semibold text-slate-900">{j.title}</div>
+                <div className="mt-1 text-xs text-slate-600">
+                  {j.location ? `${j.location} • ` : ''}
+                  {j.employment_type ? String(j.employment_type).replaceAll('_', ' ') : ''}
+                  {j.work_mode ? ` • ${j.work_mode}` : ''}
+                </div>
+                <div className="mt-3">
+                  <Link to={`/jobs/${j.id}`}>
+                    <Button>View & apply</Button>
+                  </Link>
+                </div>
               </div>
             </Card>
-            ))}
+              )
+            })}
           </div>
           {jobs.length > jobsPreview.length ? (
             <div className="pt-2">

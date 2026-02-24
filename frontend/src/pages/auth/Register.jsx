@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/useAuth.js'
 import { getRoleLabel, roleHomePath } from '../../lib/roles.js'
 import { trackEvent } from '../../lib/useAnalytics.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
+import { openAssistant } from '../../components/assistant/AssistantFab.jsx'
 
 export function Register() {
   const { register } = useAuth()
@@ -73,6 +74,11 @@ export function Register() {
               <option value="company">Company — hire staff, manage shifts</option>
             </Select>
             <p className="mt-1.5 text-xs text-slate-500">Buyers post jobs and use escrow; artisans, farmers and drivers get hired and earn.</p>
+            <p className="mt-2">
+              <button type="button" onClick={openAssistant} className="text-xs font-semibold text-emerald-700 hover:underline">
+                Not sure which role to pick? Ask YAO
+              </button>
+            </p>
           </div>
 
           <div>

@@ -23,6 +23,23 @@ function jobTypeSummary(j) {
   return parts.length ? parts.join(', ') : null
 }
 
+// Role-based default images when job has no image_url (same as Home landing)
+const jobCardDefaults = {
+  retail: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70',
+  warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70',
+  supervisor: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70', // retail store
+  office: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=240&fit=crop&q=70',
+  default: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=240&fit=crop&q=70',
+}
+function getDefaultJobImage(job) {
+  const t = String((job?.title || '') + ' ' + (job?.employment_type || '')).toLowerCase()
+  if (/\b(retail|store|sales|associate|shop)\b/.test(t)) return jobCardDefaults.retail
+  if (/\b(warehouse|packer|packing|logistics|inventory)\b/.test(t)) return jobCardDefaults.warehouse
+  if (/\b(supervisor|manager|operations|team lead)\b/.test(t)) return jobCardDefaults.supervisor
+  if (/\b(office|admin|coordinator)\b/.test(t)) return jobCardDefaults.office
+  return jobCardDefaults.default
+}
+
 function PromoCard({ imgUrl, title, body, bullets = [] }) {
   return (
     <Card className="p-0 overflow-hidden">
@@ -189,39 +206,55 @@ export function JobsBoard() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {filtered.map((j) => (
-            <Card key={j.id} className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-slate-900">{j.title}</div>
-                  <div className="mt-1 text-xs text-slate-600">
-                    {j.company_name || 'Company'}{j.location ? ` • ${j.location}` : ''}{' '}
-                    {j.employment_type ? ` • ${String(j.employment_type).replaceAll('_', ' ')}` : ''}
-                    {j.work_mode ? ` • ${j.work_mode}` : ''}
-                  </div>
-                </div>
-                {j.company_logo_url ? (
-                  <img src={j.company_logo_url} alt="logo" className="h-10 w-10 rounded-xl border object-cover" />
-                ) : null}
+          {filtered.map((j) => {
+            const jobImgSrc = j.image_url
+              ? (j.image_url.startsWith('/') ? `${typeof window !== 'undefined' ? window.location.origin : ''}${j.image_url}` : j.image_url)
+              : getDefaultJobImage(j)
+            return (
+            <Card key={j.id} className="p-0 overflow-hidden">
+              <div className="relative h-40 w-full bg-slate-100">
+                <img
+                  src={jobImgSrc}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
               </div>
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-900">{j.title}</div>
+                    <div className="mt-1 text-xs text-slate-600">
+                      {j.company_name || 'Company'}{j.location ? ` • ${j.location}` : ''}{' '}
+                      {j.employment_type ? ` • ${String(j.employment_type).replaceAll('_', ' ')}` : ''}
+                      {j.work_mode ? ` • ${j.work_mode}` : ''}
+                    </div>
+                  </div>
+                  {j.company_logo_url ? (
+                    <img src={j.company_logo_url} alt="logo" className="h-10 w-10 rounded-xl border object-cover flex-shrink-0" />
+                  ) : null}
+                </div>
 
-              {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
-              {jobTypeSummary(j) ? <div className="mt-1 text-xs font-semibold text-slate-600">{jobTypeSummary(j)}</div> : null}
+                {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
+                {jobTypeSummary(j) ? <div className="mt-1 text-xs font-semibold text-slate-600">{jobTypeSummary(j)}</div> : null}
 
-              <div className="mt-3 line-clamp-2 text-sm text-slate-700">{j.description}</div>
+                <div className="mt-3 line-clamp-2 text-sm text-slate-700">{j.description}</div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link to={`/jobs/${j.id}`}>
-                  <Button>View</Button>
-                </Link>
-                {j.company_slug ? (
-                  <Link to={`/c/${j.company_slug}`}>
-                    <Button variant="secondary">Company</Button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Link to={`/jobs/${j.id}`}>
+                    <Button>View</Button>
                   </Link>
-                ) : null}
+                  {j.company_slug ? (
+                    <Link to={`/c/${j.company_slug}`}>
+                      <Button variant="secondary">Company</Button>
+                    </Link>
+                  ) : null}
+                </div>
               </div>
             </Card>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

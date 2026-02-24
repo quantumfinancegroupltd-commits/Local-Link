@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
+import { useAuth } from '../../auth/useAuth.js'
+import { useToast } from '../../components/ui/Toast.jsx'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { Button, Card } from '../../components/ui/FormControls.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
@@ -100,6 +102,9 @@ export function BuyerJobDetail() {
   const [proofs, setProofs] = useState([])
   const [proofsLoading, setProofsLoading] = useState(false)
   const [proofsError, setProofsError] = useState(null)
+  const [shareToFeedBusy, setShareToFeedBusy] = useState(false)
+  const { user } = useAuth()
+  const toast = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -461,6 +466,32 @@ export function BuyerJobDetail() {
 
           <Card>
             <div className="flex flex-wrap gap-2">
+              {user && id ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={shareToFeedBusy}
+                  onClick={async () => {
+                    setShareToFeedBusy(true)
+                    try {
+                      await http.post('/posts', {
+                        body: '',
+                        type: 'job',
+                        related_type: 'job',
+                        related_id: id,
+                      })
+                      toast.success('Shared to feed')
+                      navigate('/feed')
+                    } catch (e) {
+                      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to share')
+                    } finally {
+                      setShareToFeedBusy(false)
+                    }
+                  }}
+                >
+                  {shareToFeedBusy ? 'Sharing…' : 'Share to feed'}
+                </Button>
+              ) : null}
               {job?.assigned_artisan_id ? (
                 <Link to={`/messages/job/${id}`}>
                   <Button variant="secondary">Message artisan</Button>

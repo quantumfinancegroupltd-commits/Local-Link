@@ -18,15 +18,23 @@ const TAB_PRODUCTS = 'products'
 const TAB_SERVICES = 'services'
 
 export function MarketplaceBrowse() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab')
   const initialTab = tabParam === 'services' ? TAB_SERVICES : TAB_PRODUCTS
   const [tab, setTab] = useState(initialTab)
 
   useEffect(() => {
     if (tabParam === 'services') setTab(TAB_SERVICES)
-    else if (tabParam === 'products') setTab(TAB_PRODUCTS)
+    else setTab(TAB_PRODUCTS) // default to products when tab is missing or 'products'
   }, [tabParam])
+
+  function switchTab(newTab) {
+    setTab(newTab)
+    const next = new URLSearchParams(searchParams)
+    if (newTab === TAB_SERVICES) next.set('tab', 'services')
+    else next.delete('tab')
+    setSearchParams(next, { replace: true })
+  }
 
   const [products, setProducts] = useState([])
   const [searchProducts, setSearchProducts] = useState(null) // when q is set, results from GET /search
@@ -82,7 +90,9 @@ export function MarketplaceBrowse() {
     http
       .get('/marketplace/services')
       .then((res) => {
-        if (!cancelled) setServices(Array.isArray(res.data) ? res.data : [])
+        const data = res.data
+        const list = Array.isArray(data) ? data : (data?.services ?? [])
+        if (!cancelled) setServices(list)
       })
       .catch((err) => {
         if (!cancelled) {
@@ -244,120 +254,88 @@ export function MarketplaceBrowse() {
     return list
   }, [services, serviceCategory, serviceSort])
 
+  // Group services by category for carousel sections (display order for known categories)
+  const CATEGORY_ORDER = ['Domestic Services', 'Events & Catering', 'Plumbing', 'Electrical', 'Masonry']
+  const servicesByCategory = useMemo(() => {
+    const byCat = new Map()
+    for (const s of filteredServices) {
+      const c = String(s?.category ?? '').trim() || 'Other'
+      if (!byCat.has(c)) byCat.set(c, [])
+      byCat.get(c).push(s)
+    }
+    const ordered = []
+    for (const cat of CATEGORY_ORDER) {
+      if (byCat.has(cat)) ordered.push({ category: cat, services: byCat.get(cat) })
+    }
+    const rest = [...byCat.keys()].filter((c) => !CATEGORY_ORDER.includes(c)).sort((a, b) => a.localeCompare(b))
+    for (const cat of rest) ordered.push({ category: cat, services: byCat.get(cat) })
+    return ordered
+  }, [filteredServices])
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Marketplace"
+        title={tab === TAB_SERVICES ? 'Services' : 'Marketplace'}
         subtitle={
-          tab === TAB_PRODUCTS
-            ? 'Produce, flowers & plants. Click the Services tab for provider services (catering, cleaning, repairs).'
-            : 'Provider services — book catering, cleaning, repairs, and more from verified artisans.'
+          tab === TAB_SERVICES
+            ? 'Book plumbers, electricians, caterers, cleaners, masons and more from verified artisans.'
+            : 'Produce, flowers & plants from local farmers and florists.'
         }
         actions={
-          <div className="flex items-center gap-4">
-            <div className="flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-              <button
-                type="button"
-                onClick={() => setTab(TAB_PRODUCTS)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${tab === TAB_PRODUCTS ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                {FARMER_FLORIST_MARKETPLACE_LABEL}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTab(TAB_SERVICES)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${tab === TAB_SERVICES ? 'bg-white text-slate-900 shadow' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                Services
-              </button>
-            </div>
-            <div className="text-sm font-semibold text-slate-700">
-              {tab === TAB_PRODUCTS
-                ? (loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`)
-                : (servicesLoading ? 'Loading…' : `${filteredServices.length} service${filteredServices.length === 1 ? '' : 's'}`)}
-            </div>
+          <div className="text-sm font-semibold text-slate-700">
+            {tab === TAB_PRODUCTS
+              ? (loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`)
+              : (servicesLoading ? 'Loading…' : `${filteredServices.length} service${filteredServices.length === 1 ? '' : 's'}`)}
           </div>
         }
       />
 
       {tab === TAB_SERVICES ? (
-        <>
-          <Card>
-            <div className="grid gap-3 md:grid-cols-12 md:items-end">
-              <div className="md:col-span-4">
-                <div className={ui.label}>Category</div>
-                <Select value={serviceCategory} onChange={(e) => setServiceCategory(e.target.value)}>
-                  <option value="all">All</option>
-                  {serviceCategories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div className="md:col-span-4">
-                <div className={ui.label}>Sort</div>
-                <Select value={serviceSort} onChange={(e) => setServiceSort(e.target.value)}>
-                  <option value="price_asc">Price: low to high</option>
-                  <option value="price_desc">Price: high to low</option>
-                  <option value="newest">Newest</option>
-                </Select>
-              </div>
-              <div className="md:col-span-4">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => {
-                    setServiceCategory('all')
-                    setServiceSort('price_asc')
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-            </div>
-          </Card>
-          <div>
-            {servicesLoading ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                    <Skeleton className="aspect-[4/3] w-full rounded-none" />
-                    <div className="p-4 space-y-2">
-                      <Skeleton className="h-4 w-2/3" />
-                      <Skeleton className="h-3 w-1/2" />
-                      <div className="flex justify-between">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
+        <div className="space-y-8">
+          {servicesLoading ? (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="mb-4 h-7 w-48 rounded bg-slate-200" />
+                  <div className="relative -mx-2">
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {Array.from({ length: 4 }).map((_, j) => (
+                        <div key={j} className="flex-shrink-0 w-72 h-64 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse" />
+                      ))}
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </>
+          ) : servicesError ? (
+            <Card>
+              <div className="text-sm text-red-700">{servicesError}</div>
+            </Card>
+          ) : servicesByCategory.length === 0 ? (
+            <EmptyState
+              title="No services yet"
+              description="Artisans add services from their dashboard. Check back soon."
+            />
+          ) : (
+            servicesByCategory.map(({ category, services: catServices }) => (
+              <div key={category}>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-slate-900">{category}</h2>
+                  <span className="text-sm text-slate-500">{catServices.length} service{catServices.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="relative -mx-2">
+                  <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory scrollbar-thin" style={{ scrollbarGutter: 'stable' }}>
+                    {catServices.map((s) => (
+                      <div key={s.id} className="flex-shrink-0 w-72 snap-start">
+                        <ServiceCard service={s} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ) : servicesError ? (
-              <Card>
-                <div className="text-sm text-red-700">{servicesError}</div>
-              </Card>
-            ) : filteredServices.length === 0 ? (
-              <EmptyState
-                title="No services found"
-                description="Try another category or check back later. Artisans add services from their dashboard."
-                actions={
-                  <Button variant="secondary" onClick={() => setServiceCategory('all')}>
-                    Clear filters
-                  </Button>
-                }
-              />
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredServices.map((s) => (
-                  <ServiceCard key={s.id} service={s} />
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+            ))
+          )}
+        </div>
       ) : (
         <>
       <Card>

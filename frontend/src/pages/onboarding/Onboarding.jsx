@@ -3,6 +3,7 @@ import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
 import { Button, Card } from '../../components/ui/FormControls.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
+import { openAssistant } from '../../components/assistant/AssistantFab.jsx'
 
 function Icon({ kind }) {
   const k = String(kind || '')
@@ -114,6 +115,20 @@ export function Onboarding() {
           <div className="text-3xl font-extrabold tracking-tight text-slate-900">Get started with LocalLink</div>
           <div className="text-slate-700">
             Choose what you’re here to do. You can always switch later—LocalLink supports buyers, providers, and companies.
+          </div>
+          <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3">
+            <p className="text-sm font-medium text-emerald-900">Not sure where to start?</p>
+            <p className="mt-0.5 text-sm text-emerald-800">Ask YAO — your LocalLink guide. He can help you choose and explain escrow, jobs, verification, and more.</p>
+            <button
+              type="button"
+              onClick={openAssistant}
+              className="mt-2 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              Ask YAO
+            </button>
           </div>
           {!isAuthed ? (
             <div className="mt-2 text-sm text-slate-600">

@@ -4,7 +4,7 @@
 
 set -e
 
-KEY="${LOCALLINK_PEM:-$HOME/Downloads/ssh-key-2026-02-18 (2).key}"
+KEY="${LOCALLINK_PEM:-$HOME/Downloads/Local Link SSH Key/ssh-key-2026-02-18 (2).key}"
 HOST="${LOCALLINK_HOST:-140.238.93.79}"
 USER="${LOCALLINK_SSH_USER:-ubuntu}"
 # On the server: path to the LocalLink repo (contains docker-compose.selfhost.yml). Default: LocalLink = ~/LocalLink on server.

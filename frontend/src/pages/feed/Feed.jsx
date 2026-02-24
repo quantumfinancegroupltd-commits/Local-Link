@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { Button, Card, Input } from '../../components/ui/FormControls.jsx'
 import { SocialPostCard } from '../../components/social/SocialPostCard.jsx'
+import { FeedLayout } from '../../components/feed/FeedLayout.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
@@ -194,26 +195,63 @@ export function Feed() {
   const [params] = useSearchParams()
   const compose = String(params.get('compose') || '').toLowerCase()
   const composeMode = compose === '1' || compose === 'true' || compose === 'yes'
+  const topicSlug = params.get('topic') ?? ''
+  const TOPIC_LABELS = { 'rainy-season': 'Rainy Season Tips', 'kumasi-jobs': 'New Jobs in Kumasi', 'escrow': 'How Escrow Works' }
+  const topicLabel = topicSlug ? (TOPIC_LABELS[topicSlug] ?? topicSlug) : ''
 
   const [posts, setPosts] = useState([])
+  const [nextCursor, setNextCursor] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
 
   const [suggested, setSuggested] = useState([])
   const [suggestedLoading, setSuggestedLoading] = useState(true)
   const [followBusyId, setFollowBusyId] = useState(null)
+  const [topPostId, setTopPostId] = useState(null)
+  const [showNewPostsBanner, setShowNewPostsBanner] = useState(false)
 
-  async function loadFeed() {
-    setLoading(true)
-    setError(null)
-    try {
-      const r = await http.get('/posts/feed')
-      setPosts(Array.isArray(r.data) ? r.data : [])
-    } catch (e) {
-      setError(e?.response?.data?.message ?? e?.message ?? 'Failed to load feed')
-    } finally {
-      setLoading(false)
+  const FEED_PAGE_SIZE = 20
+
+  const loadFeed = useCallback(async (cursor = null) => {
+    const isInitial = cursor == null
+    if (isInitial) {
+      setLoading(true)
+      setError(null)
+      setShowNewPostsBanner(false)
+    } else {
+      setLoadingMore(true)
     }
+    try {
+      const queryParams = { limit: FEED_PAGE_SIZE }
+      if (cursor) queryParams.cursor = cursor
+      if (topicSlug) queryParams.topic = topicSlug
+      const r = await http.get('/posts/feed', { params: queryParams })
+      const items = Array.isArray(r.data?.items) ? r.data.items : []
+      const next = r.data?.next_cursor ?? null
+      if (isInitial) {
+        setPosts(items)
+        setTopPostId(items[0]?.id ?? null)
+      } else {
+        setPosts((prev) => {
+          const seen = new Set(prev.map((p) => p.id))
+          const added = items.filter((p) => p.id && !seen.has(p.id))
+          return prev.concat(added)
+        })
+      }
+      setNextCursor(next)
+    } catch (e) {
+      if (isInitial) setError(e?.response?.data?.message ?? e?.message ?? 'Failed to load feed')
+      else toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to load more')
+    } finally {
+      if (isInitial) setLoading(false)
+      else setLoadingMore(false)
+    }
+  }, [toast, topicSlug])
+
+  async function loadMore() {
+    if (!nextCursor || loadingMore) return
+    await loadFeed(nextCursor)
   }
 
   async function loadSuggested() {
@@ -231,7 +269,29 @@ export function Feed() {
   useEffect(() => {
     loadFeed()
     loadSuggested()
-  }, [])
+  }, [topicSlug])
+
+  // Check for new posts when tab becomes visible or every 90s
+  useEffect(() => {
+    if (posts.length === 0 || loading) return
+    function checkNew() {
+      http.get('/posts/feed', { params: { limit: 1 } })
+        .then((r) => {
+          const first = r.data?.items?.[0]
+          if (first?.id && first.id !== topPostId) setShowNewPostsBanner(true)
+        })
+        .catch(() => {})
+    }
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') checkNew()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    const t = setInterval(checkNew, 90000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      clearInterval(t)
+    }
+  }, [posts.length, loading, topPostId])
 
   useEffect(() => {
     if (!composeMode) return
@@ -263,66 +323,106 @@ export function Feed() {
 
   const empty = useMemo(() => !loading && !error && posts.length === 0, [loading, error, posts.length])
 
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <PageHeader kicker="Community" title="Feed" subtitle="Posts from people you follow (and your own posts)." />
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
-          <div id="feed-compose">
-            <CreatePostCard viewerId={viewerId} onPosted={loadFeed} autoFocus={composeMode} />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-xs text-slate-500">Tip: follow providers or friends to curate this feed.</div>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={loadFeed} disabled={loading}>
-                Refresh
-              </Button>
-              <Link to="/people">
-                <Button variant="secondary">Find people</Button>
-              </Link>
-            </div>
-          </div>
-
-          {loading ? (
-            <Card>Loading…</Card>
-          ) : error ? (
-            <Card>
-              <div className="text-sm text-red-700">{error}</div>
-            </Card>
-          ) : empty ? (
-            <Card>
-              <div className="text-sm text-slate-600">Your feed is empty. Follow someone, then come back.</div>
-            </Card>
-          ) : (
-            posts.map((p) => <SocialPostCard key={p.id} post={p} viewerId={viewerId} onRefresh={loadFeed} />)
-          )}
-        </div>
-
-        <div className="space-y-4 lg:col-span-1">
-          <Card>
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-sm font-semibold">Suggested</div>
-              <Button size="sm" variant="secondary" onClick={loadSuggested} disabled={suggestedLoading}>
-                Refresh
-              </Button>
-            </div>
-            {suggestedLoading ? (
-              <div className="mt-3 text-sm text-slate-600">Loading…</div>
-            ) : suggested.length === 0 ? (
-              <div className="mt-3 text-sm text-slate-600">No suggestions right now.</div>
-            ) : (
-              <div className="mt-3 space-y-2">
-                {suggested.map((u) => (
-                  <SuggestedCard key={u.id} user={u} onFollow={follow} busy={followBusyId === u.id} />
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
+  const suggestedSection = (
+    <Card className="overflow-hidden rounded-2xl border-slate-200 p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm font-semibold text-slate-900">Suggested to follow</div>
+        <Button size="sm" variant="secondary" onClick={loadSuggested} disabled={suggestedLoading}>
+          Refresh
+        </Button>
       </div>
-    </div>
+      {suggestedLoading ? (
+        <div className="mt-3 text-sm text-slate-600">Loading…</div>
+      ) : suggested.length === 0 ? (
+        <div className="mt-3 text-sm text-slate-600">No suggestions right now.</div>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {suggested.map((u) => (
+            <SuggestedCard key={u.id} user={u} onFollow={follow} busy={followBusyId === u.id} />
+          ))}
+        </div>
+      )}
+      <Link to="/people" className="mt-2 block text-xs font-medium text-emerald-700 hover:underline">
+        See all
+      </Link>
+    </Card>
+  )
+
+  return (
+    <FeedLayout suggestedSection={suggestedSection}>
+      <div className="space-y-6">
+        <PageHeader
+          kicker="Community"
+          title="Feed"
+          subtitle="Updates from people you follow — ranked by recency and engagement."
+        />
+
+        <div id="feed-compose">
+          <CreatePostCard viewerId={viewerId} onPosted={() => loadFeed()} autoFocus={composeMode} />
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {topicSlug ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
+                Trending: {topicLabel}
+                <Link to="/feed" className="font-semibold text-emerald-700 hover:underline" aria-label="Clear topic">
+                  ×
+                </Link>
+              </span>
+            ) : null}
+            <span className="text-xs text-slate-500">Follow providers or friends to curate your feed.</span>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => loadFeed()} disabled={loading}>
+              Refresh
+            </Button>
+            <Link to="/people">
+              <Button variant="secondary">Find people</Button>
+            </Link>
+          </div>
+        </div>
+
+        {showNewPostsBanner && !loading && (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <span className="text-sm font-medium text-emerald-900">New posts available</span>
+            <Button size="sm" onClick={() => loadFeed()}>
+              Refresh
+            </Button>
+          </div>
+        )}
+
+        {loading ? (
+          <Card className="rounded-2xl border-slate-200 p-8 text-center text-slate-600 shadow-sm">Loading…</Card>
+        ) : error ? (
+          <Card className="rounded-2xl border-slate-200 shadow-sm">
+            <div className="text-sm text-red-700">{error}</div>
+          </Card>
+        ) : empty ? (
+          <Card className="rounded-2xl border-slate-200 p-8 text-center shadow-sm">
+            <div className="text-sm text-slate-600">Your feed is empty. Follow someone or post an update.</div>
+            <Link to="/people" className="mt-3 inline-block">
+              <Button>Find people</Button>
+            </Link>
+          </Card>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {posts.map((p) => (
+                <SocialPostCard key={p.id} post={p} viewerId={viewerId} onRefresh={() => loadFeed()} />
+              ))}
+            </div>
+            {nextCursor ? (
+              <div className="flex justify-center py-4">
+                <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? 'Loading…' : 'Load more'}
+                </Button>
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+    </FeedLayout>
   )
 }
 

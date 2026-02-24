@@ -372,6 +372,7 @@ export function Feed() {
               </span>
             ) : null}
             <span className="text-xs text-slate-500">Follow providers or friends to curate your feed.</span>
+            <span className="text-[10px] text-slate-400" title="Build identifier">v2026-02</span>
           </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => loadFeed()} disabled={loading}>

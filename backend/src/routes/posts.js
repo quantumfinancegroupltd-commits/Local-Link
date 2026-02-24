@@ -143,8 +143,8 @@ const MediaSchema = z.object({
   size: z.number().optional(),
 })
 
-const PostType = z.enum(['update', 'produce', 'job', 'service'])
-const RelatedType = z.enum(['product', 'job', 'artisan_service'])
+const PostType = z.enum(['update', 'produce', 'job', 'service', 'job_post'])
+const RelatedType = z.enum(['product', 'job', 'artisan_service', 'job_post'])
 
 const CreatePostSchema = z.object({
   body: z.string().max(5000).optional().nullable(),
@@ -164,7 +164,8 @@ postsRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
       coalesce(
         (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
         (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
-        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1),
+        (select json_build_object('id', jp.id, 'title', jp.title, 'pay_min', jp.pay_min, 'pay_max', jp.pay_max, 'pay_period', jp.pay_period, 'currency', jp.currency, 'location', jp.location) from job_posts jp where jp.id = p.related_id and p.related_type = 'job_post' and jp.status = 'open' limit 1)
       ) as related,
       coalesce(c.name, u.name) as author_name,
       coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
@@ -237,7 +238,8 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
         coalesce(
           (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
           (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
-          (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+          (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1),
+          (select json_build_object('id', jp.id, 'title', jp.title, 'pay_min', jp.pay_min, 'pay_max', jp.pay_max, 'pay_period', jp.pay_period, 'currency', jp.currency, 'location', jp.location) from job_posts jp where jp.id = p.related_id and p.related_type = 'job_post' and jp.status = 'open' limit 1)
         ) as related,
         coalesce(c.name, u.name) as author_name,
         coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
@@ -319,7 +321,8 @@ postsRouter.get('/user/:userId', optionalAuth, asyncHandler(async (req, res) => 
       coalesce(
         (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
         (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
-        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1)
+        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1),
+        (select json_build_object('id', jp.id, 'title', jp.title, 'pay_min', jp.pay_min, 'pay_max', jp.pay_max, 'pay_period', jp.pay_period, 'currency', jp.currency, 'location', jp.location) from job_posts jp where jp.id = p.related_id and p.related_type = 'job_post' and jp.status = 'open' limit 1)
       ) as related,
       coalesce(c.name, u.name) as author_name,
       coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
@@ -362,12 +365,18 @@ postsRouter.post('/', requireAuth, asyncHandler(async (req, res) => {
   if (!body && (!Array.isArray(media) || media.length === 0) && type === 'update') {
     return res.status(400).json({ message: 'Post must have text or media' })
   }
-  if ((type === 'produce' || type === 'job' || type === 'service') && (!relatedType || !relatedId)) {
+  if ((type === 'produce' || type === 'job' || type === 'service' || type === 'job_post') && (!relatedType || !relatedId)) {
     return res.status(400).json({ message: 'Linked posts require related_type and related_id' })
   }
 
   if (relatedId && relatedType) {
-    if (relatedType === 'product') {
+    if (relatedType === 'job_post') {
+      const own = await pool.query(
+        'select 1 from job_posts jp join companies c on c.id = jp.company_id where jp.id = $1 and c.owner_user_id = $2',
+        [relatedId, req.user.sub],
+      )
+      if (!own.rows[0]) return res.status(403).json({ message: 'You can only share your company\'s job posts' })
+    } else if (relatedType === 'product') {
       const own = await pool.query(
         'select 1 from products p join farmers f on f.id = p.farmer_id where p.id = $1 and f.user_id = $2',
         [relatedId, req.user.sub],

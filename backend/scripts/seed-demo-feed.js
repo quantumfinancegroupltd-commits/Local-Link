@@ -38,10 +38,12 @@ async function run() {
   for (const row of r.rows) {
     usersByEmail[row.email] = row
   }
-  if (Object.keys(usersByEmail).length === 0) {
+  const demoCount = Object.keys(usersByEmail).length
+  if (demoCount === 0) {
     console.error('No demo users found. Run node scripts/seed-demo-users.js first.')
     process.exit(1)
   }
+  console.log(`Found ${demoCount} demo users by email.`)
 
   const abena = usersByEmail['abena.osei@demo.locallink.agency']
   const yaw = usersByEmail['yaw.boateng@demo.locallink.agency']
@@ -160,21 +162,25 @@ async function run() {
   }
 
   // Follows: everyone follows everyone (except self) so feed is full for any demo login
+  let followCount = 0
   for (const follower of Object.values(usersByEmail)) {
     for (const following of Object.values(usersByEmail)) {
       if (follower.id === following.id) continue
       await pool.query(
-        `insert into user_follows (follower_id, following_id, status) values ($1, $2, 'accepted')
-         on conflict (follower_id, following_id) do update set status = 'accepted'`,
+        `insert into user_follows (follower_id, following_id, status, requested_at, accepted_at)
+         values ($1, $2, 'accepted', now(), now())
+         on conflict (follower_id, following_id) do update set status = 'accepted', accepted_at = now()`,
         [follower.id, following.id],
       )
+      followCount += 1
     }
   }
+  console.log(`Created ${followCount} follow relationships.`)
 
   console.log('\n--- Demo feed seed complete ---')
   console.log('Posts: Yaw (driver), Abena (farmer), Kwame (artisan x2: update + boosted service), Afia, Kofi (caterer), Ama (company – sponsored job_post).')
-  console.log('All demo users follow each other. Log in as any demo user (e.g. akua.mensah@demo.locallink.agency) and open /feed.')
-  console.log('Password for all: Ghana2025!\n')
+  console.log(`Demo users: ${Object.keys(usersByEmail).length}; follow pairs: ${followCount}.`)
+  console.log('Log in with any demo email (e.g. kwabena.mensah@demo.locallink.agency) and open /feed. Password: Ghana2025!\n')
   process.exit(0)
 }
 

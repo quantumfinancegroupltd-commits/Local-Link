@@ -77,15 +77,19 @@ pm2 restart locallink-api locallink-worker
 
 ---
 
-## 4. Seed demo data (required for Marketplace services and landing content)
+## 4. Seed demo data (required for Marketplace, Employers, and Feed)
 
-**If the Marketplace "Services" tab or the landing page sections (Farmers & Florists, Provider services, Employers) are empty**, the database needs demo data. Run the seed **on the server** (same machine as the API, using the same `DATABASE_URL` as the API):
+**If the Marketplace "Services" tab, landing page sections, or the Feed is empty**, run the seeds **on the server** (same machine as the API, using the same `DATABASE_URL` as the API):
 
 ```bash
 cd ~/LocalLink/backend
 export $(grep -v '^#' .env | xargs)
 node scripts/seed-demo-users.js
+node scripts/seed-demo-feed.js
 ```
+
+- **seed-demo-users.js** — Demo users (buyer, artisan, farmer, driver, company), products, services, job posts.
+- **seed-demo-feed.js** — Feed posts from demo users (driver, farmer, artisan, company) and follows so the feed is populated. Includes one **sponsored job post** (Ama Serwaa – carpenters) and one **boosted service post** (Kwame – plumbing).
 
 Password for all demo logins: **Ghana2025!**
 
@@ -96,7 +100,7 @@ cd ~/LocalLink/backend
 node scripts/check-demo-data.js
 ```
 
-If it reports 0 artisan_services (or 0 products / 0 job_posts), run the seed command above.
+If it reports 0 artisan_services (or 0 products / 0 job_posts), run the seed commands above.
 
 ---
 

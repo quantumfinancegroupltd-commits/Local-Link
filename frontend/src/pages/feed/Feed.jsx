@@ -16,6 +16,7 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
   const toast = useToast()
   const { online } = useOnlineStatus()
   const textRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const [text, setText] = useState('')
   const [files, setFiles] = useState([])
@@ -109,21 +110,41 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
           ref={textRef}
           className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           rows={3}
-          placeholder="Share an update, new hire, team win, behind-the-scenes…"
+          placeholder="Share an update…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           disabled={busy}
         />
-        <div>
-          <Input
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={() => fileInputRef.current?.click?.()}
+          >
+            Photo
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={busy}
+            onClick={() => fileInputRef.current?.click?.()}
+          >
+            Video
+          </Button>
+          <input
+            ref={fileInputRef}
             type="file"
             accept="image/*,video/*"
             multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            className="hidden"
+            onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
             disabled={busy}
           />
-          <div className="mt-2 text-xs text-slate-500">Images/videos supported. Max 50MB per file.</div>
         </div>
+        <div className="text-xs text-slate-500">Images/videos supported. Max 50MB per file.</div>
         {previews.length ? (
           <div className="grid gap-3 sm:grid-cols-2">
             {previews.map((p) => (
@@ -183,6 +204,23 @@ function SuggestedCard({ user, onFollow, busy }) {
         Follow
       </Button>
     </div>
+  )
+}
+
+function JoinConversationCard() {
+  return (
+    <Card className="rounded-2xl border-slate-200 bg-slate-50/50 shadow-sm">
+      <div className="text-sm font-semibold text-slate-800">Join the conversation!</div>
+      <p className="mt-2 text-sm text-slate-700">
+        &ldquo;Using LocalLink has really boosted my business!&rdquo; #gratitude
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <img src="/locallink-logo.png" alt="" className="h-8 w-8 rounded-full border border-slate-200 object-cover" />
+        <span className="text-sm font-medium text-slate-800">Afia Addo</span>
+        <span className="text-xs text-slate-500">Artisan</span>
+        <span className="text-slate-400" aria-hidden>💬</span>
+      </div>
+    </Card>
   )
 }
 
@@ -323,7 +361,7 @@ export function Feed() {
 
   const empty = useMemo(() => !loading && !error && posts.length === 0, [loading, error, posts.length])
 
-  const suggestedSection = (
+  const leftSuggestedSection = (
     <Card className="overflow-hidden rounded-2xl border-slate-200 p-4 shadow-sm">
       <div className="flex items-center justify-between gap-2">
         <div className="text-sm font-semibold text-slate-900">Suggested to follow</div>
@@ -343,18 +381,18 @@ export function Feed() {
         </div>
       )}
       <Link to="/people" className="mt-2 block text-xs font-medium text-emerald-700 hover:underline">
-        See all
+        See all &gt;
       </Link>
     </Card>
   )
 
   return (
-    <FeedLayout suggestedSection={suggestedSection}>
+    <FeedLayout leftSuggestedSection={leftSuggestedSection}>
       <div className="space-y-6">
         <PageHeader
           kicker="Community"
           title="Feed"
-          subtitle="Updates from people you follow — ranked by recency and engagement."
+          subtitle="Posts from people you follow (and your own posts)."
         />
 
         <div id="feed-compose">
@@ -413,6 +451,7 @@ export function Feed() {
                 <SocialPostCard key={p.id} post={p} viewerId={viewerId} onRefresh={() => loadFeed()} />
               ))}
             </div>
+            <JoinConversationCard />
             {nextCursor ? (
               <div className="flex justify-center py-4">
                 <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>

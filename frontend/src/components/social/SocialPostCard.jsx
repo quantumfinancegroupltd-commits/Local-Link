@@ -51,6 +51,31 @@ function LinkedPostBlock({ type, related }) {
       </Link>
     )
   }
+  if (type === 'job_post') {
+    const title = related?.title ?? 'Job'
+    const payMin = related?.pay_min != null ? Number(related.pay_min) : null
+    const payMax = related?.pay_max != null ? Number(related.pay_max) : null
+    const period = related?.pay_period ?? 'month'
+    const payLabel =
+      payMin != null && payMax != null
+        ? `GHS ${payMin.toLocaleString()}${payMin === payMax ? '' : `–${payMax.toLocaleString()}`}/${period}`
+        : payMin != null
+          ? `GHS ${payMin.toLocaleString()}/${period}`
+          : null
+    const to = '/jobs'
+    return (
+      <Link to={to} className="relative mt-3 block rounded-2xl border border-amber-200 bg-amber-50/80 p-3 hover:bg-amber-100/80">
+        {payLabel ? (
+          <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">
+            {payLabel}
+          </span>
+        ) : null}
+        <div className="font-semibold text-slate-900 pr-24">{title}</div>
+        {related?.location ? <div className="text-xs text-slate-600">{related.location}</div> : null}
+        <span className="mt-2 inline-block rounded-full bg-amber-600 px-3 py-1 text-xs font-semibold text-white">Apply now</span>
+      </Link>
+    )
+  }
   return null
 }
 
@@ -89,7 +114,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
       : `/u/${encodeURIComponent(authorId)}`
     : null
   const canDelete = viewerId && authorId && String(viewerId) === String(authorId)
-  const canBoost = canDelete && post?.type && ['job', 'service'].includes(post.type)
+  const canBoost = canDelete && post?.type && ['job', 'service', 'job_post'].includes(post.type)
   const isSponsored = Boolean(post?.sponsored)
 
   function openLikers() {
@@ -603,16 +628,33 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
             }
             disabled={Number(post?.like_count ?? 0) < 1}
           >
-            {Number(post?.like_count ?? 0)} likes
+            {Number(post?.like_count ?? 0)} reactions
           </button>
-          {' • '}
-          {Number(post?.comment_count ?? 0)} comments
+          {' · '}
+          <button
+            type="button"
+            onClick={toggleComments}
+            className="font-medium text-slate-700 hover:text-slate-900 hover:underline"
+          >
+            {Number(post?.comment_count ?? 0)} Comments
+          </button>
+          {' · '}
+          <button
+            type="button"
+            className="font-medium text-slate-700 hover:text-slate-900 hover:underline"
+            onClick={() => {
+              const url = window.location.origin + window.location.pathname + '?post=' + (post?.id ?? '')
+              navigator.clipboard?.writeText(url).then(() => {}, () => {})
+            }}
+          >
+            Share
+          </button>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" disabled={busyLike} onClick={toggleLike}>
+          <Button variant="secondary" size="sm" disabled={busyLike} onClick={toggleLike}>
             {post.viewer_liked ? 'Unlike' : 'Like'}
           </Button>
-          <Button variant="secondary" onClick={toggleComments}>
+          <Button variant="secondary" size="sm" onClick={toggleComments}>
             {commentsOpen ? 'Hide comments' : 'Comments'}
           </Button>
         </div>

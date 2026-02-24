@@ -182,7 +182,7 @@ export function Home() {
   if (isAuthed) return <Navigate to={roleHomePath(user?.role)} replace />
 
   return (
-    <div className="space-y-10" data-build="locallink-2025-02-events-domestic-live">
+    <div className="space-y-10" data-build="locallink-2026-02-feed-boost">
       <ComingSoonModal open={comingOpen} onClose={() => setComingOpen(false)} item={comingKey ? comingSoonItems[comingKey] : null} />
       {/* HERO */}
       <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-soft md:p-12">

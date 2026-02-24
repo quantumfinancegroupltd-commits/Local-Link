@@ -19,7 +19,8 @@ fi
 chmod 400 "$KEY" 2>/dev/null || true
 
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
-if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd $REPO_DIR && git fetch origin && git checkout main && git pull origin main && docker compose -f docker-compose.selfhost.yml up -d --build && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"; then
+# Rebuild web (frontend) without cache so the site actually updates; then api, worker, migrate
+if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd $REPO_DIR && git fetch origin && git checkout main && git pull origin main && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"; then
   echo ""
   echo "Failed. The repo may not be at ~/$REPO_DIR on the server."
   echo "To find the project on the server, run:"
@@ -30,4 +31,4 @@ if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd $REPO_D
 fi
 
 echo "Done. In a few seconds, open https://locallink.agency/ and hard refresh (Cmd+Shift+R)."
-echo "Inspect the page for data-build=\"locallink-2025-02-events-domestic-live\" to confirm the new frontend is live."
+echo "Inspect the page for data-build=\"locallink-2026-02-feed-boost\" to confirm the new frontend is live."

@@ -13,6 +13,7 @@
 - **Health & ops** — `/api/health`, `/api/ready`; error logging; 502 runbook; deploy + rollback docs  
 - **Testing** — Smoke (health, auth, profile, timeline, marketplace, artisans); all-9-roles script; E2E checklists  
 - **Docs** — ENV_VARS.md, ROLLBACK.md, PRODUCTION_READINESS_REPORT, PLATFORM_SCORE  
+- **Stable demo users** — Re-running `seed-demo-users.js` updates demo users in place (no delete/re-insert), so user IDs stay the same and sessions/feed keep working. See [DEPLOY_TO_LOCALLINK.md](./DEPLOY_TO_LOCALLINK.md) for seeding and “feed looks old” (cache / log out and log in again).
 
 So for **current scope** (internal/demo/controlled), no extra hardening is **required** before use.
 

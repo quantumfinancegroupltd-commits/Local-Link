@@ -104,6 +104,10 @@ docker compose -f docker-compose.selfhost.yml run --rm \
 
 2. **New session** — Log out on the site, then log in again as a demo user (e.g. `kwabena.mensah@demo.locallink.agency` / `Ghana2025!`) and open the feed. Old sessions can point at a previous user id.
 
+**Demo user data:** Re-running `seed-demo-users.js` no longer deletes and recreates demo users; it updates them in place so user IDs stay stable and existing sessions/feed keep working. Only `seed-demo-feed.js` still wipes and re-creates feed data (posts and follows between demo users).
+
+**Feed page looks old (e.g. “Share an update, new hire…” or no “Log out and sign in again”):** The app shell may be cached. Do a hard refresh (Cmd+Shift+R) or open the site in a private/incognito window, then log in and try the feed again.
+
 ### Without Docker (npm + pm2)
 
 ```bash

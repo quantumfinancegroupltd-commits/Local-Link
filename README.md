@@ -7,7 +7,7 @@ LocalLink is a marketplace and jobs platform (buyers, artisans, farmers, drivers
 - **backend/** — Node/Express API (Postgres, JWT, Paystack, etc.)
 - **frontend/** — React SPA (Vite)
 - **scripts/** — Smoke test, run-all-tests
-- **docs/** — Testing, UAT checklist, production readiness, seed logins
+- **docs/** — Testing, UAT checklist, production readiness, [deploy & seed](docs/DEPLOY_TO_LOCALLINK.md) (stable demo users), seed logins
 
 ## Testing (run from project root)
 

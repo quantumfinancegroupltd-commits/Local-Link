@@ -187,7 +187,7 @@ const COVER_IMAGE = 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d
 const DEMO_EMAILS = USERS.map((u) => u.email)
 
 async function run() {
-  // Idempotent: remove existing demo users and their dependent data
+  // Preserve demo user IDs so sessions and feed keep working. Only clear dependent data we re-insert.
   const demoIds = await pool.query(
     "select id from users where email = any($1::text[]) and deleted_at is null",
     [DEMO_EMAILS],
@@ -198,16 +198,9 @@ async function run() {
     const farmerIds = await pool.query('select id from farmers where user_id = any($1::uuid[])', [ids])
     const fid = farmerIds.rows.map((r) => r.id)
     if (fid.length) await pool.query('delete from products where farmer_id = any($1::uuid[])', [fid])
-    await pool.query('delete from user_profiles where user_id = any($1::uuid[])', [ids])
-    await pool.query('delete from wallets where user_id = any($1::uuid[])', [ids])
-    await pool.query('delete from artisans where user_id = any($1::uuid[])', [ids])
-    await pool.query('delete from farmers where user_id = any($1::uuid[])', [ids])
-    await pool.query('delete from drivers where user_id = any($1::uuid[])', [ids])
     const companyIds = await pool.query('select id from companies where owner_user_id = any($1::uuid[])', [ids])
     const cids = companyIds.rows.map((r) => r.id)
     if (cids.length) await pool.query('delete from job_posts where company_id = any($1::uuid[])', [cids])
-    await pool.query('delete from companies where owner_user_id = any($1::uuid[])', [ids])
-    await pool.query('delete from users where id = any($1::uuid[])', [ids])
   }
 
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 10)

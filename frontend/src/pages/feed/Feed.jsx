@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
@@ -232,7 +232,8 @@ export function Feed() {
   usePageMeta({ title: 'Feed • LocalLink', description: 'Updates from people you follow.' })
 
   const toast = useToast()
-  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const viewerId = user?.id ?? null
   const [params] = useSearchParams()
   const compose = String(params.get('compose') || '').toLowerCase()
@@ -444,9 +445,21 @@ export function Feed() {
         ) : empty ? (
           <Card className="rounded-2xl border-slate-200 p-8 text-center shadow-sm">
             <div className="text-sm text-slate-600">Your feed is empty. Follow someone or post an update.</div>
-            <Link to="/people" className="mt-3 inline-block">
-              <Button>Find people</Button>
-            </Link>
+            <p className="mt-2 text-xs text-slate-500">If you already follow people and still see this, your session may be stale. Log out and log in again to refresh.</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Link to="/people">
+                <Button>Find people</Button>
+              </Link>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  logout()
+                  navigate('/login?reason=session&next=/feed', { replace: true })
+                }}
+              >
+                Log out and sign in again
+              </Button>
+            </div>
           </Card>
         ) : (
           <>

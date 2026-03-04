@@ -1,6 +1,10 @@
 # Domain first: Let's Encrypt for these hostnames
 locallink.agency, www.locallink.agency {
   encode zstd gzip
+  # Force no cache for HTML so deploys show immediately (no "Build ... UTC" stuck)
+  header / Cache-Control "no-cache, no-store, must-revalidate"
+  header / Pragma "no-cache"
+  header / Expires "0"
   reverse_proxy 127.0.0.1:8080
 }
 

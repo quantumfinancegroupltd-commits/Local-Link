@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
@@ -76,6 +77,10 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
+  const servicesButtonRef = useRef(null)
+  const [servicesMenuPosition, setServicesMenuPosition] = useState({ top: 0, left: 0 })
+  const accountButtonRef = useRef(null)
+  const [accountMenuPosition, setAccountMenuPosition] = useState({ top: 0, left: 0 })
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
@@ -84,6 +89,38 @@ export function AppLayout() {
   })
   const searchRef = useRef(null)
   const { online } = useOnlineStatus()
+
+  useLayoutEffect(() => {
+    if (!servicesOpen || !servicesButtonRef.current) return
+    const update = () => {
+      if (!servicesButtonRef.current) return
+      const r = servicesButtonRef.current.getBoundingClientRect()
+      setServicesMenuPosition({ top: r.bottom + 8, left: r.left })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [servicesOpen])
+
+  useLayoutEffect(() => {
+    if (!accountOpen || !accountButtonRef.current) return
+    const update = () => {
+      if (!accountButtonRef.current) return
+      const r = accountButtonRef.current.getBoundingClientRect()
+      setAccountMenuPosition({ top: r.bottom + 8, right: window.innerWidth - r.right, left: r.left })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [accountOpen])
 
   const saveRecentSearch = useCallback((q) => {
     const trimmed = String(q ?? '').trim()
@@ -242,6 +279,7 @@ export function AppLayout() {
 
                 <div className="relative">
                   <button
+                    ref={servicesButtonRef}
                     type="button"
                     onClick={() => setServicesOpen((v) => !v)}
                     className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
@@ -253,14 +291,17 @@ export function AppLayout() {
                       <path d="M6 9l6 6 6-6" />
                     </svg>
                   </button>
-                  {servicesOpen ? (
+                  {servicesOpen && createPortal(
                     <>
                       <button
-                        className="fixed inset-0 z-40 cursor-default"
+                        className="fixed inset-0 z-[9998] cursor-default"
                         onClick={() => setServicesOpen(false)}
                         aria-label="Close services menu"
                       />
-                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
+                      <div
+                        className="fixed z-[9999] w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-white/10 dark:bg-black/95"
+                        style={{ top: servicesMenuPosition.top, left: servicesMenuPosition.left }}
+                      >
                         {servicesLinks.map((l) => (
                           <NavLink
                             key={l.to}
@@ -273,8 +314,9 @@ export function AppLayout() {
                           </NavLink>
                         ))}
                       </div>
-                    </>
-                  ) : null}
+                    </>,
+                    document.body
+                  )}
                 </div>
 
                 {desktopLinks.slice(1).filter((l) => !servicesLinks.some((s) => s.to === l.to)).map((l) => (
@@ -385,6 +427,7 @@ export function AppLayout() {
 
                 <div className="relative hidden md:block overflow-visible">
                   <button
+                    ref={accountButtonRef}
                     type="button"
                     onClick={() => setAccountOpen((v) => !v)}
                     className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
@@ -398,14 +441,17 @@ export function AppLayout() {
                     </svg>
                   </button>
 
-                  {accountOpen ? (
+                  {accountOpen && createPortal(
                     <>
                       <button
-                        className="fixed inset-0 z-40 cursor-default"
+                        className="fixed inset-0 z-[9998] cursor-default"
                         onClick={() => setAccountOpen(false)}
                         aria-label="Close account menu"
                       />
-                      <div className="absolute right-0 top-full z-[100] mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
+                      <div
+                        className="fixed z-[9999] w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-white/10 dark:bg-black/95"
+                        style={{ top: accountMenuPosition.top, right: accountMenuPosition.right, left: 'auto' }}
+                      >
                         <Link
                           to={roleHomePath(user?.role)}
                           className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
@@ -464,8 +510,9 @@ export function AppLayout() {
                           Logout
                         </button>
                       </div>
-                    </>
-                  ) : null}
+                    </>,
+                    document.body
+                  )}
                 </div>
 
                 <button

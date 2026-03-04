@@ -164,6 +164,21 @@ For production at scale, use object storage (S3/R2) and set `STORAGE_DRIVER=s3` 
 
 - Open **https://locallink.agency/** and do a hard refresh (Cmd+Shift+R).
 - Check API: **https://locallink.agency/api/health** (should return `{"ok":true}`).
+- **Deploy fingerprint:** View Page Source and look for `<!-- build 2026-... -->` near the end; the timestamp should match your deploy time.
+
+---
+
+## Site not updating after deploy?
+
+If the live site still shows old UI (e.g. old header/footer) after a deploy:
+
+1. **Force the web container to use the new image** (on the server):
+   ```bash
+   cd ~/LocalLink
+   docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway
+   ```
+2. **Hard refresh** in the browser (Cmd+Shift+R / Ctrl+Shift+R) or open the site in an **incognito/private** window.
+3. The gateway now strips `Etag` and `Last-Modified` for the frontend so caches (and Caddy) don’t reuse old HTML. After pulling the latest repo, the next deploy will use this behaviour.
 
 ---
 

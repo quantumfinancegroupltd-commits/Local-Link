@@ -4,7 +4,7 @@
 
 set -e
 
-KEY="${LOCALLINK_PEM:-$HOME/Downloads/Local Link SSH Key/ssh-key-2026-02-18 (2).key}"
+KEY="${LOCALLINK_PEM:-$HOME/Desktop/ssh-key-2026-02-18 (2).key}"
 HOST="${LOCALLINK_HOST:-140.238.93.79}"
 USER="${LOCALLINK_SSH_USER:-ubuntu}"
 # On the server: path to the LocalLink repo (contains docker-compose.selfhost.yml). Default: LocalLink (i.e. ~/LocalLink when SSH starts in home).
@@ -12,7 +12,7 @@ REPO_DIR="${LOCALLINK_REPO_DIR:-LocalLink}"
 
 if [[ ! -f "$KEY" ]]; then
   echo "Key not found: $KEY"
-  echo "Set LOCALLINK_PEM to your key path if it's elsewhere."
+  echo "Run this script from your Mac (not on the server). Set LOCALLINK_PEM to your key path if it's elsewhere (e.g. ~/.ssh/locallink_ssh_key)."
   exit 1
 fi
 
@@ -20,7 +20,7 @@ chmod 400 "$KEY" 2>/dev/null || true
 
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
 # Reset server repo to match origin/main (discard local/untracked changes), then rebuild
-CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"
+CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build --force-recreate web gateway && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"
 if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; then
   echo ""
   echo "Failed. The repo may not be at ~/$REPO_DIR on the server."

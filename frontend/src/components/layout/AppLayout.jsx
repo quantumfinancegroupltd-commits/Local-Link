@@ -198,14 +198,15 @@ export function AppLayout() {
   const isFeedPage = location.pathname === '/feed'
 
   return (
-    <div className={isFeedPage ? 'flex h-screen flex-col overflow-x-hidden overflow-y-hidden' : 'flex min-h-screen flex-col overflow-x-hidden'}>
+    <div className={isFeedPage ? 'flex h-screen flex-col overflow-y-hidden' : 'flex min-h-screen flex-col'}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="w-full shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="flex w-full items-center py-3 pl-3 pr-2 sm:py-4 sm:pl-4 sm:pr-3">
-          {/* Left: logo + nav — scrolls if needed so right block always stays in view */}
-          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Header can scroll horizontally when nav is long so user block (name + logout) stays visible */}
+      <header className="w-full shrink-0 overflow-x-auto border-b bg-white dark:border-white/10 dark:bg-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="banner">
+        <div className="flex items-center py-3 pl-3 pr-2 sm:py-4 sm:pl-4 sm:pr-3" style={{ minWidth: 'max-content' }}>
+          {/* Left: logo + nav */}
+          <div className="flex min-w-0 flex-1 items-center gap-2">
           <Link to="/" className="flex shrink-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -391,7 +392,7 @@ export function AppLayout() {
                     aria-expanded={accountOpen ? 'true' : 'false'}
                   >
                     <Avatar src={user?.profile_pic || null} name={user?.name} size={32} />
-                    <span className="max-w-[8rem] truncate sm:max-w-[10rem] lg:max-w-[14rem]">{user?.name ?? 'Account'}</span>
+                    <span className="max-w-[5rem] truncate sm:max-w-[6rem] md:max-w-[8rem] lg:max-w-[10rem] xl:max-w-[12rem]">{user?.name ?? 'Account'}</span>
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M6 9l6 6 6-6" />
                     </svg>
@@ -698,7 +699,7 @@ export function AppLayout() {
           </main>
         </div>
       ) : (
-        <main id="main-content" className="mx-auto max-w-6xl flex-1 px-4 py-8" role="main">
+        <main id="main-content" className="mx-auto max-w-6xl flex-1 overflow-x-hidden px-4 py-8" role="main">
           <Outlet />
         </main>
       )}

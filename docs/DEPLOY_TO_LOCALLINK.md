@@ -170,15 +170,32 @@ For production at scale, use object storage (S3/R2) and set `STORAGE_DRIVER=s3` 
 
 ## Site not updating after deploy?
 
-If the live site still shows old UI (e.g. old header/footer) after a deploy:
+If the live site still shows **old UI** (e.g. “Build 2026-03-04 … UTC” in the footer, or user name / Logout cut off in the header) after a deploy:
 
-1. **Force the web container to use the new image** (on the server):
-   ```bash
-   cd ~/LocalLink
-   docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway
-   ```
-2. **Hard refresh** in the browser (Cmd+Shift+R / Ctrl+Shift+R) or open the site in an **incognito/private** window.
-3. The gateway now strips `Etag` and `Last-Modified` for the frontend so caches (and Caddy) don’t reuse old HTML. After pulling the latest repo, the next deploy will use this behaviour.
+### 1. On the server: rebuild and force-recreate the web container
+
+```bash
+cd ~/LocalLink
+git pull origin main
+docker compose -f docker-compose.selfhost.yml build --no-cache web
+docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway
+```
+
+### 2. In your browser: load the new bundle
+
+- **Hard refresh:** Cmd+Shift+R (Mac) or Ctrl+Shift+R (Windows/Linux).
+- **Or** open the site in an **incognito/private** window.
+- **If it still shows old UI:** clear site data and unregister the service worker:
+  1. Open DevTools (F12) → Application (Chrome) or Storage (Firefox).
+  2. **Application** → **Storage** → “Clear site data” (or delete cookies/local storage for locallink.agency).
+  3. **Service Workers** → Unregister the worker for locallink.agency (if listed).
+  4. Close the tab, open https://locallink.agency/ again.
+
+### 3. Verify
+
+- **View Page Source** (Ctrl+U / Cmd+Option+U) and look for `<!-- build 2026-... -->` near the end; the timestamp should match your deploy.
+- Footer should show only **LOCALLINK.agency 2026 ©** (no “Build … UTC”).
+- When logged in, the header should show your name and Logout; if the nav is long, the **header bar scrolls horizontally** so you can scroll right to see them.
 
 ---
 

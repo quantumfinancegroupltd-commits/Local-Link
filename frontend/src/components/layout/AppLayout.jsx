@@ -284,8 +284,8 @@ export function AppLayout() {
             </div>
           </nav>
 
-          <div className="flex min-w-0 shrink items-center justify-end gap-2 sm:gap-3">
-            <div className="relative hidden min-w-0 md:block md:min-w-[6rem] md:max-w-[12rem] lg:max-w-[14rem]">
+          <div className="flex shrink-0 items-center justify-end gap-2 sm:gap-3">
+            <div className="relative hidden min-w-0 xl:block xl:min-w-[7rem] xl:max-w-[14rem]">
               <form onSubmit={handleSearchSubmit} className="block min-w-0">
                 <input
                   ref={searchRef}
@@ -465,7 +465,7 @@ export function AppLayout() {
 
                 <button
                   onClick={logout}
-                  className="hidden rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10 md:inline-flex"
+                  className="hidden rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10 xl:inline-flex"
                 >
                   Logout
                 </button>

@@ -19,8 +19,8 @@ fi
 chmod 400 "$KEY" 2>/dev/null || true
 
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
-# Reset server repo to match origin/main (discard local/untracked changes), then rebuild
-CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --build --force-recreate web gateway && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate"
+# 1) Pull latest 2) Rebuild web image with no cache 3) Recreate web + gateway so new bundle is served 4) Migrate
+CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && echo \"Deploying commit: \$(git rev-parse --short HEAD)\" && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate && echo \"Web image: \$(docker compose -f docker-compose.selfhost.yml images -q web)\""
 if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; then
   echo ""
   echo "Failed. The repo may not be at ~/$REPO_DIR on the server."
@@ -31,5 +31,6 @@ if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; the
   exit 1
 fi
 
-echo "Done. In a few seconds, open https://locallink.agency/ and hard refresh (Cmd+Shift+R)."
-echo "Inspect the page for data-build=\"locallink-2026-02-feed-boost\" to confirm the new frontend is live."
+echo ""
+echo "Done. Open https://locallink.agency/ in a NEW incognito/private window (or clear site data + hard refresh)."
+echo "Footer should show only \"LOCALLINK.agency 2026 ©\" (no \"Build ... UTC\"). View Page Source and look for \"<!-- build\" to confirm new bundle."

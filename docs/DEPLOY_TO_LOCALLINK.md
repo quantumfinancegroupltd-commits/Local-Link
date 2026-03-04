@@ -203,8 +203,12 @@ docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway
 
 If you’ve already synced code and only need to run the server steps, you can do everything in one SSH session:
 
+**From Mac:** run `./scripts/redeploy-ssh.sh` from repo root (after `git push origin main`). Then open https://locallink.agency/ in a **new incognito/private window** so the new bundle loads. If you still see "Build 2026-03-04 … UTC", clear site data for locallink.agency.
+
+**From server (one paste):**
+
 ```bash
-ssh -i /path/to/key.pem ubuntu@YOUR_SERVER_IP_OR_HOST 'cd ~/LocalLink/backend && npm ci && npm run migrate && cd ~/LocalLink/frontend && npm ci && npm run build && cd ~/LocalLink && pm2 restart locallink-api locallink-worker'
+cd ~/LocalLink && git fetch origin && git reset --hard origin/main && git clean -fd && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate
 ```
 
-Then open https://locallink.agency/
+Then open the site in a new incognito/private window.

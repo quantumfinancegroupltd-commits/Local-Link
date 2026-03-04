@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
 import { http } from '../../api/http.js'
@@ -194,13 +194,16 @@ export function AppLayout() {
     }
   }, [isAuthed])
 
+  const location = useLocation()
+  const isFeedPage = location.pathname === '/feed'
+
   return (
-    <div className="min-h-full overflow-x-hidden">
+    <div className={isFeedPage ? 'flex h-screen flex-col overflow-x-hidden overflow-y-hidden' : 'flex min-h-screen flex-col overflow-x-hidden'}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto flex min-w-0 max-w-6xl flex-nowrap items-stretch justify-between gap-3 px-4 py-4">
+      <header className="shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="mx-auto flex min-w-0 max-w-6xl flex-nowrap items-stretch justify-between gap-3 overflow-x-hidden px-4 py-4">
           <Link to="/" className="flex shrink-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -275,7 +278,7 @@ export function AppLayout() {
             )}
           </div>
 
-          <nav className="hidden shrink-0 items-center justify-end gap-2 md:flex">
+          <nav className="hidden min-w-0 shrink items-center justify-end gap-2 md:flex">
             {!isAuthed ? (
               <>
                 {servicesLinks.map((l) => (
@@ -680,11 +683,19 @@ export function AppLayout() {
         </div>
       ) : null}
 
-      <main id="main-content" className="mx-auto max-w-6xl px-4 py-8" role="main">
-        <Outlet />
-      </main>
+      {isFeedPage ? (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <main id="main-content" className="min-h-0 flex-1 overflow-hidden" role="main">
+            <Outlet />
+          </main>
+        </div>
+      ) : (
+        <main id="main-content" className="mx-auto max-w-6xl flex-1 px-4 py-8" role="main">
+          <Outlet />
+        </main>
+      )}
 
-      <footer className="border-t bg-white dark:border-white/10 dark:bg-black" role="contentinfo">
+      <footer className="shrink-0 border-t bg-white dark:border-white/10 dark:bg-black" role="contentinfo">
         <div className="mx-auto max-w-6xl px-4 py-10">
           <div className="grid gap-8 md:grid-cols-5">
             <div>

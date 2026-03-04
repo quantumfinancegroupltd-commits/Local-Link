@@ -255,13 +255,14 @@ adminRouter.put('/affiliates/:id/notes', requireAuth, requireRole(['admin']), as
 
 adminRouter.get('/payouts', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
   const status = String(req.query.status || 'all')
-  const whereStatus = status === 'requested' || status === 'processing' || status === 'paid' ? status : null
+  // Affiliate payouts use enum 'pending' for requested; map query param to enum value
+  const whereStatus = status === 'requested' ? 'pending' : (status === 'processing' || status === 'paid' ? status : null)
   const r = await pool.query(
     `select p.*, a.full_name as affiliate_name, a.email as affiliate_email
      from payouts p
      join affiliates a on a.id = p.affiliate_id
      where ($1::text is null or p.status = $1)
-     order by p.requested_at desc
+     order by coalesce(p.requested_at, p.created_at) desc
      limit 200`,
     [whereStatus],
   )
@@ -282,7 +283,7 @@ adminRouter.patch('/payouts/:id/pay', requireAuth, requireRole(['admin']), async
       await client.query('commit')
       return res.json(payout)
     }
-    if (payout.status !== 'requested' && payout.status !== 'processing') {
+    if (payout.status !== 'requested' && payout.status !== 'pending' && payout.status !== 'processing') {
       await client.query('rollback')
       return res.status(400).json({ message: `Payout in status '${payout.status}' cannot be marked paid` })
     }
@@ -340,7 +341,7 @@ adminRouter.patch('/payouts/:id/pay', requireAuth, requireRole(['admin']), async
 
 adminRouter.patch('/payouts/:id/processing', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
   const r = await pool.query(
-    `update payouts set status = 'processing' where id = $1 and status = 'requested' returning *`,
+    `update payouts set status = 'processing' where id = $1 and status = 'pending' and affiliate_id is not null returning *`,
     [req.params.id],
   )
   if (!r.rows[0]) return res.status(404).json({ message: 'Payout not found or not in requested status' })

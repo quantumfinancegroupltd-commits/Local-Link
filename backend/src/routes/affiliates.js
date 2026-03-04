@@ -360,7 +360,7 @@ affiliatesRouter.post(
 
     const r = await pool.query(
       'insert into payouts (affiliate_id, amount, method, status) values ($1,$2,$3,$4) returning id, amount, method, status, requested_at',
-      [affiliate.id, parsed.data.amount, parsed.data.method, 'requested'],
+      [affiliate.id, parsed.data.amount, parsed.data.method, 'pending'],
     )
     return res.status(201).json(r.rows[0])
   }),

@@ -202,8 +202,8 @@ export function AppLayout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="w-full shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-4">
+      <header className="w-full shrink-0 overflow-x-hidden border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-4">
           <Link to="/" className="flex shrink-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -284,8 +284,8 @@ export function AppLayout() {
             </div>
           </nav>
 
-          <div className="flex shrink-0 items-center justify-end gap-3">
-            <div className="relative hidden min-w-0 md:block md:min-w-[7rem] md:max-w-[14rem] lg:max-w-[16rem]">
+          <div className="flex min-w-0 shrink items-center justify-end gap-2 sm:gap-3">
+            <div className="relative hidden min-w-0 md:block md:min-w-[6rem] md:max-w-[12rem] lg:max-w-[14rem]">
               <form onSubmit={handleSearchSubmit} className="block min-w-0">
                 <input
                   ref={searchRef}
@@ -387,7 +387,7 @@ export function AppLayout() {
                     aria-expanded={accountOpen ? 'true' : 'false'}
                   >
                     <Avatar src={user?.profile_pic || null} name={user?.name} size={32} />
-                    <span className="max-w-[14rem] truncate">{user?.name ?? 'Account'}</span>
+                    <span className="max-w-[8rem] truncate sm:max-w-[10rem] lg:max-w-[14rem]">{user?.name ?? 'Account'}</span>
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M6 9l6 6 6-6" />
                     </svg>

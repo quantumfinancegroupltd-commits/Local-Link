@@ -3,7 +3,7 @@ import { FeedSidebarRight } from './FeedSidebarRight.jsx'
 
 export function FeedLayout({ children, leftSuggestedSection, showLeft = true, showRight = true }) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col" style={{ minHeight: 0 }}>
       <div className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col px-4 py-6 md:px-6">
         <div className="flex min-h-0 min-w-0 flex-1 gap-6">
           {showLeft ? (
@@ -12,7 +12,7 @@ export function FeedLayout({ children, leftSuggestedSection, showLeft = true, sh
               {leftSuggestedSection ?? null}
             </div>
           ) : null}
-          <main className="min-h-0 min-w-0 flex-1 max-w-[720px] overflow-y-auto">
+          <main className="flex min-h-0 min-w-0 flex-1 max-w-[720px] flex-col overflow-y-auto overflow-x-hidden" style={{ minHeight: 0 }}>
             {children}
           </main>
           {showRight ? (

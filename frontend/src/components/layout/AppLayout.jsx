@@ -769,7 +769,7 @@ export function AppLayout() {
             </div>
           </div>
           <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-white/10 dark:text-slate-500" data-footer="copyright">
-            © 2026 LOCALLINK.agency
+            LOCALLINK.agency 2026 ©
           </div>
         </div>
       </footer>

@@ -18,7 +18,7 @@ function NavItem({ to, children, isActive: isActiveFn }) {
       className={({ isActive, location }) => {
         const active = isActiveFn ? isActiveFn({ isActive, location }) : isActive
         return [
-          'rounded-lg px-3 py-2 text-sm font-medium',
+          'rounded-lg px-2 py-1.5 text-sm font-medium sm:px-3 sm:py-2',
           active ? 'bg-slate-900 text-white dark:bg-brand-emerald dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10',
         ].join(' ')
       }}
@@ -202,8 +202,8 @@ export function AppLayout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto grid min-w-0 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-x-auto px-4 py-4">
+      <header className="w-full shrink-0 overflow-x-auto border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="mx-auto grid w-full min-w-0 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 overflow-x-auto px-3 py-3 sm:gap-3 sm:px-4 sm:py-4">
           <Link to="/" className="flex shrink-0 items-center gap-3 justify-self-start">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -766,8 +766,8 @@ export function AppLayout() {
               </div>
             </div>
           </div>
-          <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-white/10 dark:text-slate-500">
-            LOCALLINK.agency 2026©
+          <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-white/10 dark:text-slate-500" data-footer="copyright">
+            © 2026 LOCALLINK.agency
           </div>
         </div>
       </footer>

@@ -16,16 +16,21 @@ git clean -fd
 echo "   Commit: $(git rev-parse --short HEAD)"
 
 echo ""
-echo "2. Stopping and removing web + gateway containers..."
+echo "2. Stopping web + gateway and removing web container + image..."
 $COMPOSE stop web gateway 2>/dev/null || true
 $COMPOSE rm -f web gateway 2>/dev/null || true
+# Remove the web image so the next build is the only one
+WEB_IMAGE=$($COMPOSE images -q web 2>/dev/null || true)
+if [ -n "$WEB_IMAGE" ]; then
+  docker rmi -f "$WEB_IMAGE" 2>/dev/null || true
+fi
 
 echo ""
 echo "3. Rebuilding web image (no cache)..."
 $COMPOSE build --no-cache web
 
 echo ""
-echo "4. Starting web and gateway (new containers)..."
+echo "4. Starting web and gateway..."
 $COMPOSE up -d web gateway
 
 echo ""
@@ -33,5 +38,12 @@ echo "5. Running migrations..."
 $COMPOSE run --rm api npm run migrate
 
 echo ""
-echo "Done. Wait ~10 seconds, then open https://locallink.agency/ in a new incognito window."
-echo "Check: curl -sI https://locallink.agency/ and View Page Source for a new script name (not index-BZdWTx5c.js)."
+echo "6. Restarting Caddy (clear any proxy cache)..."
+sudo systemctl restart caddy 2>/dev/null || true
+
+echo ""
+echo "7. Verify: script name in built index.html (should NOT be index-BZdWTx5c.js):"
+$COMPOSE exec web cat /usr/share/nginx/html/index.html 2>/dev/null | grep -o 'index-[^.]*\.js' || echo "(could not read)"
+
+echo ""
+echo "Done. Wait 15s, then open https://locallink.agency/ in a NEW incognito window."

@@ -203,7 +203,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       <header className="shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto grid min-w-0 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-x-hidden px-4 py-4">
+        <div className="mx-auto grid min-w-0 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-3 overflow-x-auto px-4 py-4">
           <Link to="/" className="flex shrink-0 items-center gap-3 justify-self-start">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -288,7 +288,7 @@ export function AppLayout() {
                 <input
                   ref={searchRef}
                   type="search"
-                  placeholder="Search services, jobs or produce…"
+                  placeholder="Search…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}

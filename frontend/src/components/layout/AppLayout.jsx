@@ -202,9 +202,9 @@ export function AppLayout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="w-full shrink-0 overflow-x-auto overflow-y-hidden border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto grid min-w-max max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-4">
-          <Link to="/" className="flex shrink-0 items-center gap-3 justify-self-start">
+      <header className="w-full shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-4">
+          <Link to="/" className="flex shrink-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
                 src="/locallink-logo.png"
@@ -221,7 +221,8 @@ export function AppLayout() {
             </div>
           </Link>
 
-          <nav className="hidden min-w-0 shrink items-center justify-center gap-2 md:flex">
+          <nav className="hidden min-w-0 flex-1 overflow-x-auto md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex shrink-0 items-center justify-center gap-2">
             {!isAuthed ? (
               <>
                 {servicesLinks.map((l) => (
@@ -280,9 +281,10 @@ export function AppLayout() {
                 ))}
               </>
             )}
+            </div>
           </nav>
 
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-3">
+          <div className="flex shrink-0 items-center justify-end gap-3">
             <div className="relative hidden min-w-0 md:block md:min-w-[7rem] md:max-w-[14rem] lg:max-w-[16rem]">
               <form onSubmit={handleSearchSubmit} className="block min-w-0">
                 <input

@@ -3,6 +3,7 @@ import { createContext } from 'react'
 export const AuthContext = createContext(null)
 
 export const LS_TOKEN = 'locallink_token'
+export const LS_REFRESH_TOKEN = 'locallink_refresh_token'
 export const LS_USER = 'locallink_user'
 
 export function safeParse(json) {

@@ -74,6 +74,8 @@ Reference for backend (API) environment variables. The source of truth is `backe
 |----------|-------------|
 | `SENTRY_DSN` | Sentry DSN for error tracking |
 
+**Verify Sentry (backend):** After setting `SENTRY_DSN`, call `GET /api/health/sentry-test`. If configured, the API returns `{ "ok": true, "message": "Test event sent; ..." }` and a test message appears in your Sentry project. If not set, the endpoint returns 503.
+
 ## Feature flags / workers
 
 | Variable | Default | Description |

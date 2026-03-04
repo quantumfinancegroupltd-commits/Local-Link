@@ -11,7 +11,10 @@ import { StatusPill } from '../../components/ui/StatusPill.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { EarningsGoalWidget } from '../../components/artisan/EarningsGoalWidget.jsx'
 import { ProfileCompletionWidget } from '../../components/artisan/ProfileCompletionWidget.jsx'
+import { SimpleLineChart } from '../../components/ui/SimpleLineChart.jsx'
 import { ProviderActivationChecklist } from '../../components/provider/ProviderActivationChecklist.jsx'
+import { SkeletonDashboard } from '../../components/ui/Skeleton.jsx'
+import { ConfirmModal } from '../../components/ui/Modal.jsx'
 
 export function ArtisanDashboard() {
   const toast = useToast()
@@ -27,6 +30,8 @@ export function ArtisanDashboard() {
   const [error, setError] = useState(null)
   const [artisanProfile, setArtisanProfile] = useState(null)
   const [jobActionBusyId, setJobActionBusyId] = useState(null)
+  const [confirmStartJobId, setConfirmStartJobId] = useState(null)
+  const [confirmCompleteJobId, setConfirmCompleteJobId] = useState(null)
 
   const [summary, setSummary] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(true)
@@ -44,6 +49,8 @@ export function ArtisanDashboard() {
   const [instantBookAmount, setInstantBookAmount] = useState('')
   const [instantBookBusy, setInstantBookBusy] = useState(false)
   const [servicesCount, setServicesCount] = useState(0)
+  const [walletAnalytics, setWalletAnalytics] = useState(null)
+  const [chartDays, setChartDays] = useState(30)
 
   useEffect(() => {
     let cancelled = false
@@ -212,6 +219,19 @@ export function ArtisanDashboard() {
     }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    http
+      .get('/wallets/analytics', { params: { days: chartDays } })
+      .then((res) => {
+        if (!cancelled) setWalletAnalytics(res.data)
+      })
+      .catch(() => {
+        if (!cancelled) setWalletAnalytics(null)
+      })
+    return () => { cancelled = true }
+  }, [chartDays])
+
   const stages = useMemo(
     () => [
       { key: 'all', label: 'All' },
@@ -342,33 +362,29 @@ export function ArtisanDashboard() {
     }
   }
 
-  async function startJob(jobId) {
+  async function doStartJob(jobId) {
     const id = String(jobId || '').trim()
     if (!id) return
-    if (jobActionBusyId) return
-    const ok = window.confirm('Mark this job as started?')
-    if (!ok) return
     setJobActionBusyId(id)
     try {
       await http.post(`/jobs/${encodeURIComponent(id)}/start`)
       await reloadPipeline()
     } finally {
       setJobActionBusyId(null)
+      setConfirmStartJobId(null)
     }
   }
 
-  async function completeJob(jobId) {
+  async function doCompleteJob(jobId) {
     const id = String(jobId || '').trim()
     if (!id) return
-    if (jobActionBusyId) return
-    const ok = window.confirm('Mark this job as completed?')
-    if (!ok) return
     setJobActionBusyId(id)
     try {
       await http.post(`/jobs/${encodeURIComponent(id)}/complete`)
       await reloadPipeline()
     } finally {
       setJobActionBusyId(null)
+      setConfirmCompleteJobId(null)
     }
   }
 
@@ -494,8 +510,8 @@ export function ArtisanDashboard() {
 
       <div className="grid gap-3 md:grid-cols-3">
         <Card>
-          <div className="text-xs text-slate-600">Available balance</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Available balance</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : available.toFixed(0)}
           </div>
           <div className="mt-3">
@@ -510,19 +526,53 @@ export function ArtisanDashboard() {
           </div>
         </Card>
         <Card>
-          <div className="text-xs text-slate-600">Pending (Escrow)</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Pending (Escrow)</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : pending.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">Jobs/orders in progress</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">Jobs/orders in progress</div>
         </Card>
         <Card>
-          <div className="text-xs text-slate-600">Completed this month</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Completed this month</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : completed.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">After platform fees</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">After platform fees</div>
         </Card>
+      </div>
+
+      {/* Earnings & jobs over time */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Earnings & jobs over time</h2>
+          <select
+            value={chartDays}
+            onChange={(e) => setChartDays(Number(e.target.value))}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 dark:border-white/20 dark:bg-white/10 dark:text-slate-200"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="earnings"
+            title="Earnings"
+            valueLabel={currency}
+            color="#0d9488"
+            formatValue={(n) => `${currency} ${Number(n).toFixed(0)}`}
+          />
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="jobs"
+            title="Jobs completed"
+            valueLabel="Released to you"
+            color="#0369a1"
+            formatValue={(n) => `${n} job(s)`}
+          />
+        </div>
       </div>
 
       <EarningsGoalWidget thisMonthEarnings={completed} currency={currency} loading={summaryLoading} />
@@ -629,13 +679,13 @@ export function ArtisanDashboard() {
                     const sign = isIn ? '+' : '-'
                     return (
                       <tr key={t.id}>
-                        <td className="py-2 pr-3 text-slate-700">{new Date(t.created_at).toLocaleDateString()}</td>
-                        <td className="py-2 pr-3 text-slate-700">{source}</td>
-                        <td className="py-2 pr-3 font-medium text-slate-900">
+                        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(t.created_at).toLocaleDateString()}</td>
+                        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{source}</td>
+                        <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                           {sign} {currency} {Math.abs(amt).toFixed(0)}
                         </td>
                         <td className="py-2 pr-3">
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{t.status}</span>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{t.status}</span>
                         </td>
                       </tr>
                     )
@@ -759,13 +809,13 @@ export function ArtisanDashboard() {
                         <tbody className="divide-y">
                           {payouts.map((p) => (
                             <tr key={p.id}>
-                              <td className="py-2 pr-3 text-slate-700">{new Date(p.created_at).toLocaleDateString()}</td>
-                              <td className="py-2 pr-3 text-slate-700">{p.method}</td>
-                              <td className="py-2 pr-3 font-medium text-slate-900">
+                              <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(p.created_at).toLocaleDateString()}</td>
+                              <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{p.method}</td>
+                              <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                                 {currency} {Number(p.amount ?? 0).toFixed(0)}
                               </td>
                               <td className="py-2 pr-3">
-                                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{p.status}</span>
+                                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{p.status}</span>
                               </td>
                             </tr>
                           ))}
@@ -793,13 +843,13 @@ export function ArtisanDashboard() {
                       <tbody className="divide-y">
                         {disputes.map((d) => (
                           <tr key={d.id}>
-                            <td className="py-2 pr-3 text-slate-700">{new Date(d.created_at).toLocaleDateString()}</td>
-                            <td className="py-2 pr-3 text-slate-700">{d.reason}</td>
-                            <td className="py-2 pr-3 font-medium text-slate-900">
+                            <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(d.created_at).toLocaleDateString()}</td>
+                            <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{d.reason}</td>
+                            <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                               {currency} {Number(d.escrow_amount ?? 0).toFixed(0)}
                             </td>
                             <td className="py-2 pr-3">
-                              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{d.status}</span>
+                              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{d.status}</span>
                             </td>
                           </tr>
                         ))}
@@ -862,7 +912,7 @@ export function ArtisanDashboard() {
         </div>
 
         {loading ? (
-          <div className="mt-3 text-sm text-slate-600">Loading…</div>
+          <div className="mt-3"><SkeletonDashboard cards={3} /></div>
         ) : error ? (
           <div className="mt-3 text-sm text-red-700">{error}</div>
         ) : jobsTab === 'calendar' ? (
@@ -871,7 +921,7 @@ export function ArtisanDashboard() {
               <Button variant="secondary" size="sm" onClick={() => setCalendarMonth((m) => (m.month === 0 ? { year: m.year - 1, month: 11 } : { year: m.year, month: m.month - 1 }))}>
                 ← Prev
               </Button>
-              <span className="text-sm font-semibold text-slate-900">
+              <span className="text-sm font-semibold text-slate-900 dark:text-white">
                 {new Date(calendarMonth.year, calendarMonth.month, 1).toLocaleString(undefined, { month: 'long', year: 'numeric' })}
               </span>
               <Button variant="secondary" size="sm" onClick={() => setCalendarMonth((m) => (m.month === 11 ? { year: m.year + 1, month: 0 } : { year: m.year, month: m.month + 1 }))}>
@@ -966,12 +1016,12 @@ export function ArtisanDashboard() {
                               <Button variant="secondary">Open</Button>
                             </Link>
                             {String(j.status || '') === 'assigned' ? (
-                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => startJob(j.id)}>
+                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => setConfirmStartJobId(j.id)}>
                                 {jobActionBusyId === j.id ? 'Working…' : 'Start'}
                               </Button>
                             ) : null}
                             {String(j.status || '') === 'in_progress' ? (
-                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => completeJob(j.id)}>
+                              <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => setConfirmCompleteJobId(j.id)}>
                                 {jobActionBusyId === j.id ? 'Working…' : 'Complete'}
                               </Button>
                             ) : null}
@@ -1031,12 +1081,12 @@ export function ArtisanDashboard() {
                       <Button variant="secondary">Open</Button>
                     </Link>
                     {String(j.status || '') === 'assigned' ? (
-                      <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => startJob(j.id)}>
+                      <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => setConfirmStartJobId(j.id)}>
                         {jobActionBusyId === j.id ? 'Working…' : 'Start'}
                       </Button>
                     ) : null}
                     {String(j.status || '') === 'in_progress' ? (
-                      <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => completeJob(j.id)}>
+                      <Button variant="secondary" disabled={jobActionBusyId === j.id} onClick={() => setConfirmCompleteJobId(j.id)}>
                         {jobActionBusyId === j.id ? 'Working…' : 'Complete'}
                       </Button>
                     ) : null}
@@ -1047,8 +1097,27 @@ export function ArtisanDashboard() {
           </div>
         )}
       </Card>
+
+      <ConfirmModal
+        open={!!confirmStartJobId}
+        onClose={() => setConfirmStartJobId(null)}
+        onConfirm={() => doStartJob(confirmStartJobId)}
+        title="Start this job?"
+        description="This marks the job as in progress. The buyer will be notified."
+        confirmLabel="Start job"
+        variant="primary"
+        loading={!!jobActionBusyId}
+      />
+      <ConfirmModal
+        open={!!confirmCompleteJobId}
+        onClose={() => setConfirmCompleteJobId(null)}
+        onConfirm={() => doCompleteJob(confirmCompleteJobId)}
+        title="Mark as completed?"
+        description="This marks the job as done. The buyer will review and release escrow."
+        confirmLabel="Complete job"
+        variant="primary"
+        loading={!!jobActionBusyId}
+      />
     </div>
   )
 }
-
-

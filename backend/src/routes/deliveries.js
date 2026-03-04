@@ -554,6 +554,12 @@ deliveriesRouter.post('/:id/confirm', requireAuth, requireRole(['buyer', 'admin'
           meta: { order_id: e.order_id, kind: e.meta?.kind ?? null, platform_fee: platformFee, confirmed_by: req.user.sub },
         })
       }
+      const { tryAffiliateCommissionOnRelease } = await import('../services/affiliateCommission.js')
+      await tryAffiliateCommissionOnRelease(client, {
+        counterpartyUserId: e.counterparty_user_id,
+        platformFee,
+        escrowId: e.id,
+      })
       await client.query(
         `update escrow_transactions
          set status='released', platform_fee=$2, updated_at=now()

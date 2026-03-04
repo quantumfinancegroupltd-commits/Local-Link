@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
+import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { useDraftAutosave } from '../../lib/drafts.js'
@@ -10,6 +11,7 @@ import { trackEvent } from '../../lib/useAnalytics.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { ImageCropperModal } from '../../components/ui/ImageCropperModal.jsx'
+import { SimpleLineChart } from '../../components/ui/SimpleLineChart.jsx'
 
 function fmtDate(x) {
   try {
@@ -43,7 +45,7 @@ export function CompanyDashboard() {
   const [myCompaniesError, setMyCompaniesError] = useState(null)
 
   const [busy, setBusy] = useState(false)
-  const [tab, setTab] = useState('hiring') // profile | hiring | staff | ops | payroll | insights
+  const [tab, setTab] = useState('hiring') // profile | hiring | staff | ops | payroll | insights | events
 
   const [name, setName] = useState('')
   const [industry, setIndustry] = useState('')
@@ -62,6 +64,8 @@ export function CompanyDashboard() {
 
   const [jobTitle, setJobTitle] = useState('')
   const [jobLocation, setJobLocation] = useState('')
+  const [jobLocationLat, setJobLocationLat] = useState(null)
+  const [jobLocationLng, setJobLocationLng] = useState(null)
   const [jobType, setJobType] = useState('full_time')
   const [jobMode, setJobMode] = useState('onsite')
   const [jobPayMin, setJobPayMin] = useState('')
@@ -209,6 +213,20 @@ export function CompanyDashboard() {
   const [runBusy, setRunBusy] = useState(false)
   const [lastRun, setLastRun] = useState(null) // {run, items, settings}
 
+  // Company events (feed Local Events card)
+  const [companyEvents, setCompanyEvents] = useState([])
+  const [companyEventsLoading, setCompanyEventsLoading] = useState(false)
+  const [companyEventsError, setCompanyEventsError] = useState(null)
+  const [eventTitle, setEventTitle] = useState('')
+  const [eventDesc, setEventDesc] = useState('')
+  const [eventLocation, setEventLocation] = useState('')
+  const [eventLocationUrl, setEventLocationUrl] = useState('')
+  const [eventStartsAt, setEventStartsAt] = useState('')
+  const [eventEndsAt, setEventEndsAt] = useState('')
+  const [eventImageUrl, setEventImageUrl] = useState('')
+  const [eventExternalUrl, setEventExternalUrl] = useState('')
+  const [eventBusy, setEventBusy] = useState(false)
+
   // Enterprise Mode: Workspace + audit + reporting
   const [members, setMembers] = useState([])
   const [membersLoading, setMembersLoading] = useState(false)
@@ -240,6 +258,9 @@ export function CompanyDashboard() {
   const [analytics, setAnalytics] = useState(null)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [analyticsError, setAnalyticsError] = useState(null)
+  const [analyticsSeries, setAnalyticsSeries] = useState(null)
+  const [analyticsSeriesLoading, setAnalyticsSeriesLoading] = useState(false)
+  const [analyticsPeriodDays, setAnalyticsPeriodDays] = useState(30)
 
   const [departments, setDepartments] = useState([])
   const [departmentsLoading, setDepartmentsLoading] = useState(false)
@@ -356,8 +377,9 @@ export function CompanyDashboard() {
   const canSetWorkerPreferred = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops' || myWorkspaceRole === 'hr' || myWorkspaceRole === 'supervisor'
   const canSetWorkerBlocked = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
   const canSaveOpsSettings = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops'
+  const canManageEvents = myWorkspaceRole === 'owner' || myWorkspaceRole === 'ops' || myWorkspaceRole === 'hr'
 
-  const allowedTabs = useMemo(() => new Set(['profile', 'hiring', 'staff', 'ops', 'payroll', 'insights']), [])
+  const allowedTabs = useMemo(() => new Set(['profile', 'hiring', 'staff', 'ops', 'payroll', 'insights', 'events']), [])
 
   function setTabInUrl(nextTab, { replace } = {}) {
     const t = String(nextTab || '').trim().toLowerCase()
@@ -544,6 +566,8 @@ export function CompanyDashboard() {
     data: {
       jobTitle,
       jobLocation,
+      jobLocationLat,
+      jobLocationLng,
       jobType,
       jobMode,
       jobPayMin,
@@ -641,6 +665,67 @@ export function CompanyDashboard() {
       setWorkerLists([])
     } finally {
       setWorkerListsLoading(false)
+    }
+  }
+
+  async function loadCompanyEvents() {
+    const cid = companyIdFromUrl || company?.id
+    if (!cid) {
+      setCompanyEvents([])
+      return
+    }
+    setCompanyEventsLoading(true)
+    setCompanyEventsError(null)
+    try {
+      const r = await http.get('/events', { params: { company_id: cid } })
+      setCompanyEvents(Array.isArray(r.data) ? r.data : [])
+    } catch (e) {
+      setCompanyEventsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load events')
+      setCompanyEvents([])
+    } finally {
+      setCompanyEventsLoading(false)
+    }
+  }
+
+  async function createEvent(e) {
+    e.preventDefault()
+    const cid = companyIdFromUrl || company?.id
+    if (!cid) {
+      toast.error('Select a company first.')
+      return
+    }
+    const starts = eventStartsAt ? new Date(eventStartsAt) : null
+    if (!starts || Number.isNaN(starts.getTime())) {
+      toast.error('Please set a valid start date and time.')
+      return
+    }
+    setEventBusy(true)
+    try {
+      await http.post('/events', {
+        company_id: cid,
+        title: (eventTitle || '').trim() || 'Untitled Event',
+        description: (eventDesc || '').trim() || null,
+        location: (eventLocation || '').trim() || null,
+        location_url: (eventLocationUrl || '').trim() || null,
+        starts_at: starts.toISOString(),
+        ends_at: eventEndsAt ? (() => { const d = new Date(eventEndsAt); return Number.isNaN(d.getTime()) ? null : d.toISOString() })() : null,
+        image_url: (eventImageUrl || '').trim() || null,
+        external_url: (eventExternalUrl || '').trim() || null,
+      })
+      toast.success('Event created. It will appear on the feed Local Events card.')
+      setEventTitle('')
+      setEventDesc('')
+      setEventLocation('')
+      setEventLocationUrl('')
+      setEventStartsAt('')
+      setEventEndsAt('')
+      setEventImageUrl('')
+      setEventExternalUrl('')
+      await loadCompanyEvents()
+    } catch (err) {
+      toast.error(err?.response?.data?.message ?? err?.message ?? 'Failed to create event')
+    } finally {
+      setEventBusy(false)
     }
   }
 
@@ -1309,8 +1394,23 @@ export function CompanyDashboard() {
     } catch (e) {
       setAnalyticsError(e?.response?.data?.message ?? e?.message ?? 'Failed to load analytics')
       setAnalytics(null)
+} finally {
+    setAnalyticsLoading(false)
+  }
+  }
+
+  async function loadAnalyticsSeries(daysOverride) {
+    if (!companyReady) return
+    const days = daysOverride != null ? Number(daysOverride) : Number(wfDays || 30)
+    if (!Number.isFinite(days) || days <= 0) return
+    setAnalyticsSeriesLoading(true)
+    try {
+      const r = await http.get('/corporate/company/analytics/series', { params: withCompanyParams({ days }) })
+      setAnalyticsSeries(r.data ?? null)
+    } catch {
+      setAnalyticsSeries(null)
     } finally {
-      setAnalyticsLoading(false)
+      setAnalyticsSeriesLoading(false)
     }
   }
 
@@ -1633,8 +1733,10 @@ export function CompanyDashboard() {
     if (tab === 'insights') {
       loadMembers().catch(() => {})
       loadInvites().catch(() => {})
+      loadAnalyticsSeries().catch(() => {})
       loadAudit({ reset: true }).catch(() => {})
-      loadCompanyAnalytics().catch(() => {})
+      loadCompanyAnalytics(Number(analyticsPeriodDays)).catch(() => {})
+      loadAnalyticsSeries(Number(analyticsPeriodDays)).catch(() => {})
       loadDepartments().catch(() => {})
       loadBudgets().catch(() => {})
       loadWorkforceInsights().catch(() => {})
@@ -2165,6 +2267,8 @@ export function CompanyDashboard() {
       loadCompanyOpsAlerts().catch(() => {})
       loadOpsCoverage().catch(() => {})
       loadOpsCalendar().catch(() => {})
+    } else if (tab === 'events') {
+      loadCompanyEvents().catch(() => {})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyReady, tab])
@@ -2198,6 +2302,8 @@ export function CompanyDashboard() {
       if (d) {
         setJobTitle(String(d.jobTitle ?? ''))
         setJobLocation(String(d.jobLocation ?? ''))
+        setJobLocationLat(d.jobLocationLat != null ? Number(d.jobLocationLat) : null)
+        setJobLocationLng(d.jobLocationLng != null ? Number(d.jobLocationLng) : null)
         setJobType(String(d.jobType ?? 'full_time'))
         setJobMode(String(d.jobMode ?? 'onsite'))
         setJobPayMin(String(d.jobPayMin ?? ''))
@@ -2318,6 +2424,8 @@ export function CompanyDashboard() {
           title: jobTitle,
           description: jobDesc,
           location: jobLocation || null,
+          location_lat: jobLocationLat != null ? Number(jobLocationLat) : null,
+          location_lng: jobLocationLng != null ? Number(jobLocationLng) : null,
           employment_type: jobType || null,
           work_mode: jobMode || null,
           pay_min: jobPayMin ? Number(jobPayMin) : null,
@@ -2340,6 +2448,8 @@ export function CompanyDashboard() {
       setJobs((prev) => [res.data, ...(Array.isArray(prev) ? prev : [])])
       setJobTitle('')
       setJobLocation('')
+      setJobLocationLat(null)
+      setJobLocationLng(null)
       setJobPayMin('')
       setJobPayMax('')
       setJobPayPeriod('month')
@@ -3050,6 +3160,15 @@ export function CompanyDashboard() {
               >
                 Insights
               </Button>
+              <Button
+                type="button"
+                variant={tab === 'events' ? undefined : 'secondary'}
+                onClick={() => setTabInUrl('events')}
+                disabled={companyReady && !canManageEvents}
+                title={companyReady && !canManageEvents ? 'Your workspace role does not have access to Events.' : undefined}
+              >
+                Events
+              </Button>
             </div>
             <div className="mt-2 text-xs text-slate-600">
               {tab === 'profile'
@@ -3062,7 +3181,9 @@ export function CompanyDashboard() {
                       ? 'Create shifts, manage assignments, and run check-ins.'
                       : tab === 'payroll'
                         ? 'Set up employees and export pay runs (beta).'
-                        : 'Workspace access, audit history, and exports.'}
+                        : tab === 'events'
+                          ? 'Create events that appear on the feed Local Events card. Users can RSVP Going or Interested.'
+                          : 'Workspace access, audit history, and exports.'}
               {!companyReady ? (
                 <span className="ml-2 text-amber-800">
                   Step 1: complete your company profile to unlock everything.
@@ -3348,6 +3469,8 @@ export function CompanyDashboard() {
                         jobDraft.clear()
                         setJobTitle('')
                         setJobLocation('')
+                        setJobLocationLat(null)
+                        setJobLocationLng(null)
                         setJobType('full_time')
                         setJobMode('onsite')
                         setJobPayMin('')
@@ -3377,9 +3500,18 @@ export function CompanyDashboard() {
                         <Label>Job title</Label>
                         <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} required />
                       </div>
-                      <div>
-                        <Label>Location</Label>
-                        <Input value={jobLocation} onChange={(e) => setJobLocation(e.target.value)} placeholder="Tema / Accra…" />
+                      <div className="md:col-span-2">
+                        <Label>Location (pick on map to show job on the Jobs board map)</Label>
+                        <LocationInput
+                          value={jobLocation}
+                          onChange={setJobLocation}
+                          onPick={({ formatted, lat, lng }) => {
+                            setJobLocation(formatted || jobLocation)
+                            setJobLocationLat(typeof lat === 'number' ? lat : null)
+                            setJobLocationLng(typeof lng === 'number' ? lng : null)
+                          }}
+                          placeholder="e.g. Tema, Accra, Kumasi…"
+                        />
                       </div>
                       <div>
                         <Label>Employment type</Label>
@@ -3623,6 +3755,110 @@ export function CompanyDashboard() {
                         <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">{a.cover_letter}</div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </Card>
+            </>
+          ) : null}
+
+          {tab === 'events' ? (
+            <>
+              <Card className="p-5">
+                <div className="text-sm font-semibold">Create an event</div>
+                <div className="mt-1 text-xs text-slate-500">Events appear on the feed Local Events card. Users can click to expand and set Going or Interested.</div>
+                {companyReady && !canManageEvents ? (
+                  <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    Your workspace role doesn’t have permission to create events. Ask an owner/ops/HR member.
+                  </div>
+                ) : !companyReady ? (
+                  <div className="mt-2 text-sm text-slate-600">Save your company profile first.</div>
+                ) : (
+                  <form onSubmit={createEvent} className="mt-4 space-y-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="md:col-span-2">
+                        <Label>Event title</Label>
+                        <Input value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} required placeholder="e.g. Workplace Safety Briefing" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Description (optional)</Label>
+                        <textarea
+                          className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                          rows={3}
+                          value={eventDesc}
+                          onChange={(e) => setEventDesc(e.target.value)}
+                          placeholder="What’s the event about?"
+                        />
+                      </div>
+                      <div>
+                        <Label>Start date & time</Label>
+                        <Input
+                          type="datetime-local"
+                          value={eventStartsAt}
+                          onChange={(e) => setEventStartsAt(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label>End date & time (optional)</Label>
+                        <Input type="datetime-local" value={eventEndsAt} onChange={(e) => setEventEndsAt(e.target.value)} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Location (optional)</Label>
+                        <Input value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} placeholder="e.g. Accra, Community Hall" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Location URL / map link (optional)</Label>
+                        <Input type="url" value={eventLocationUrl} onChange={(e) => setEventLocationUrl(e.target.value)} placeholder="https://..." />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>Image URL (optional)</Label>
+                        <Input type="url" value={eventImageUrl} onChange={(e) => setEventImageUrl(e.target.value)} placeholder="https://..." />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label>External link (e.g. Eventbrite) (optional)</Label>
+                        <Input type="url" value={eventExternalUrl} onChange={(e) => setEventExternalUrl(e.target.value)} placeholder="https://..." />
+                      </div>
+                    </div>
+                    <Button type="submit" disabled={eventBusy || !online} title={!online ? 'Reconnect to create' : undefined}>
+                      {eventBusy ? 'Creating…' : !online ? 'Offline' : 'Create event'}
+                    </Button>
+                  </form>
+                )}
+              </Card>
+              <Card className="p-5">
+                <div className="text-sm font-semibold">Your events</div>
+                {companyEventsLoading ? (
+                  <div className="mt-2 text-sm text-slate-600">Loading…</div>
+                ) : companyEventsError ? (
+                  <div className="mt-2 text-sm text-red-600">{companyEventsError}</div>
+                ) : companyEvents.length === 0 ? (
+                  <div className="mt-2 text-sm text-slate-600">No events yet. Create one above to show on the feed.</div>
+                ) : (
+                  <div className="mt-3 divide-y">
+                    {companyEvents.map((ev) => {
+                      const starts = ev.starts_at ? new Date(ev.starts_at) : null
+                      const isPast = starts && starts.getTime() < Date.now()
+                      return (
+                        <div key={ev.id} className="flex flex-wrap items-start justify-between gap-3 py-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold">{ev.title}</div>
+                            <div className="mt-1 text-xs text-slate-600">
+                              {starts ? starts.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'} • {ev.company_name}
+                              {isPast ? ' (past)' : ''}
+                            </div>
+                            {ev.location ? <div className="mt-1 text-xs text-slate-500">{ev.location}</div> : null}
+                            <div className="mt-1 text-xs text-slate-500">
+                              {Number(ev.going_count || 0)} going · {Number(ev.interested_count || 0)} interested
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Link to="/feed">
+                              <Button variant="secondary" size="sm">View on feed</Button>
+                            </Link>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </Card>
@@ -5528,51 +5764,96 @@ export function CompanyDashboard() {
                   <div>
                     <div className="text-sm font-semibold">Enterprise analytics</div>
                     <div className="mt-1 text-sm text-slate-600">
-                      Workforce cost and operational metrics. Last {analytics?.window_days ?? 30} days.
+                      Workforce cost and operational metrics.
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select
+                      value={String(analyticsPeriodDays)}
+                      onChange={(e) => {
+                        const days = Number(e.target.value)
+                        setAnalyticsPeriodDays(days)
+                        loadCompanyAnalytics(days).catch(() => {})
+                        loadAnalyticsSeries(days).catch(() => {})
+                      }}
+                      disabled={analyticsLoading || analyticsSeriesLoading}
+                      className="w-auto min-w-[7rem]"
+                    >
+                      <option value={7}>Last 7 days</option>
+                      <option value={30}>Last 30 days</option>
+                      <option value={90}>Last 90 days</option>
+                    </Select>
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={() => loadCompanyAnalytics(Number(wfDays || 30)).catch(() => {})}
-                      disabled={analyticsLoading}
+                      onClick={() => {
+                        loadCompanyAnalytics(Number(analyticsPeriodDays)).catch(() => {})
+                        loadAnalyticsSeries(Number(analyticsPeriodDays)).catch(() => {})
+                      }}
+                      disabled={analyticsLoading || analyticsSeriesLoading}
                     >
-                      {analyticsLoading ? 'Loading…' : 'Refresh'}
+                      {analyticsLoading || analyticsSeriesLoading ? 'Loading…' : 'Refresh'}
                     </Button>
                   </div>
                 </div>
                 {analyticsError ? <div className="mt-3 text-sm text-red-700">{analyticsError}</div> : null}
                 {analytics ? (
                   <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                    <div className="rounded-xl border bg-slate-50 p-4">
-                      <div className="text-xs font-semibold text-slate-600">Shifts</div>
-                      <div className="mt-1 text-2xl font-semibold text-slate-900">{analytics.workforce?.shifts_total ?? 0}</div>
-                      <div className="mt-0.5 text-xs text-slate-500">in period</div>
+                    <div className="rounded-xl border bg-slate-50 p-4 dark:border-white/10 dark:bg-black/95 dark:text-slate-200">
+                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">Shifts</div>
+                      <div className="mt-1 text-2xl font-semibold text-slate-900 dark:text-white">{analytics.workforce?.shifts_total ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">in period</div>
                     </div>
-                    <div className="rounded-xl border bg-emerald-50 p-4">
-                      <div className="text-xs font-semibold text-emerald-700">Completed</div>
-                      <div className="mt-1 text-2xl font-semibold text-emerald-800">{analytics.workforce?.shifts_completed ?? 0}</div>
-                      <div className="mt-0.5 text-xs text-emerald-600">assignments</div>
+                    <div className="rounded-xl border bg-emerald-50 p-4 dark:border-white/10 dark:bg-black/95 dark:text-slate-200">
+                      <div className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Completed</div>
+                      <div className="mt-1 text-2xl font-semibold text-emerald-800 dark:text-white">{analytics.workforce?.shifts_completed ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">assignments</div>
                     </div>
-                    <div className="rounded-xl border bg-amber-50 p-4">
-                      <div className="text-xs font-semibold text-amber-700">No-shows</div>
-                      <div className="mt-1 text-2xl font-semibold text-amber-800">{analytics.workforce?.no_shows_total ?? 0}</div>
-                      <div className="mt-0.5 text-xs text-amber-600">impact</div>
+                    <div className="rounded-xl border bg-amber-50 p-4 dark:border-white/10 dark:bg-black/95 dark:text-slate-200">
+                      <div className="text-xs font-semibold text-amber-700 dark:text-amber-400">No-shows</div>
+                      <div className="mt-1 text-2xl font-semibold text-amber-800 dark:text-white">{analytics.workforce?.no_shows_total ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">impact</div>
                     </div>
-                    <div className="rounded-xl border bg-blue-50 p-4">
-                      <div className="text-xs font-semibold text-blue-700">Preferred</div>
-                      <div className="mt-1 text-2xl font-semibold text-blue-800">{analytics.workforce?.preferred_count ?? 0}</div>
-                      <div className="mt-0.5 text-xs text-blue-600">workers</div>
+                    <div className="rounded-xl border bg-blue-50 p-4 dark:border-white/10 dark:bg-black/95 dark:text-slate-200">
+                      <div className="text-xs font-semibold text-blue-700 dark:text-blue-400">Preferred</div>
+                      <div className="mt-1 text-2xl font-semibold text-blue-800 dark:text-white">{analytics.workforce?.preferred_count ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-blue-600 dark:text-blue-400">workers</div>
                     </div>
-                    <div className="rounded-xl border bg-indigo-50 p-4">
-                      <div className="text-xs font-semibold text-indigo-700">In pools</div>
-                      <div className="mt-1 text-2xl font-semibold text-indigo-800">{analytics.workforce?.workers_in_pools ?? 0}</div>
-                      <div className="mt-0.5 text-xs text-indigo-600">unique workers</div>
+                    <div className="rounded-xl border bg-indigo-50 p-4 dark:border-white/10 dark:bg-black/95 dark:text-slate-200">
+                      <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">In pools</div>
+                      <div className="mt-1 text-2xl font-semibold text-indigo-800 dark:text-white">{analytics.workforce?.workers_in_pools ?? 0}</div>
+                      <div className="mt-0.5 text-xs text-indigo-600 dark:text-indigo-400">unique workers</div>
                     </div>
                   </div>
                 ) : analyticsLoading ? (
                   <div className="mt-4 text-sm text-slate-600">Loading…</div>
+                ) : null}
+                {analyticsSeriesLoading ? (
+                  <div className="mt-6 text-sm text-slate-600">Loading charts…</div>
+                ) : analyticsSeries ? (
+                  <div className="mt-6">
+                    <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">Performance over time</div>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <SimpleLineChart
+                        series={analyticsSeries.series ?? []}
+                        valueKey="shifts_completed"
+                        title="Shifts completed"
+                        valueLabel="Completed"
+                        color="rgb(16, 185, 129)"
+                        formatValue={(v) => String(v ?? 0)}
+                        height={180}
+                      />
+                      <SimpleLineChart
+                        series={analyticsSeries.series ?? []}
+                        valueKey="no_shows"
+                        title="No-shows"
+                        valueLabel="No-shows"
+                        color="rgb(245, 158, 11)"
+                        formatValue={(v) => String(v ?? 0)}
+                        height={180}
+                      />
+                    </div>
+                  </div>
                 ) : null}
                 {analytics?.budgets?.length ? (
                   <div className="mt-4">

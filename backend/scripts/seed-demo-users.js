@@ -29,6 +29,8 @@ const USERS = [
     role: 'artisan',
     bio: 'Professional caterer and event planner from Kumasi. 8+ years cooking for weddings, corporate events, and parties across Ghana. I offer full catering packages and drop-off platters.',
     service_area: 'Kumasi, Accra, Tema',
+    service_lat: 6.6884,
+    service_lng: -1.6244,
     skills: ['Catering', 'Event planning', 'Traditional & continental cuisine'],
     job_categories: ['Events & Catering'],
     experience_years: 8,
@@ -70,6 +72,8 @@ const USERS = [
     role: 'artisan',
     bio: 'Domestic services professional in Accra. Cleaning, laundry, and home organisation. Reliable, discreet, and thorough. Available for one-off or recurring bookings.',
     service_area: 'Accra, East Legon, Cantonments, Osu',
+    service_lat: 5.6037,
+    service_lng: -0.187,
     skills: ['House cleaning', 'Laundry', 'Home organisation'],
     job_categories: ['Domestic Services'],
     experience_years: 6,
@@ -90,10 +94,10 @@ const USERS = [
     company_location: 'Accra',
     company_size: '11-50',
     job_posts: [
-      { title: 'Skilled carpenters (daily rate)', description: 'Looking for skilled carpenters! Hiring now. Furniture, joinery, and general carpentry. Apply today.', location: 'Accra', employment_type: 'contract', work_mode: 'onsite', pay_min: 250, pay_max: 250, currency: 'GHS', pay_period: 'day', job_term: 'contract', tags: ['carpentry', 'skilled labour'], image_url: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=240&fit=crop&q=70' },
-      { title: 'Store Associate (Accra)', description: 'Full-time store associate for our Accra branch. Cash handling, stock, customer service. Reliable and presentable.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1200, pay_max: 1500, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'customer service'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
-      { title: 'Warehouse Packer (Tema)', description: 'Packing and dispatching orders. Morning shifts, 5 days/week. Start ASAP.', location: 'Tema', employment_type: 'part_time', work_mode: 'onsite', pay_min: 15, pay_max: 18, currency: 'GHS', pay_period: 'hour', job_term: 'contract', tags: ['warehouse', 'logistics'], image_url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70' },
-      { title: 'Supervisor – Retail Operations', description: 'Supervise daily operations at one of our Accra stores. 2+ years retail experience. Good with people and systems.', location: 'Accra', employment_type: 'full_time', work_mode: 'onsite', pay_min: 1800, pay_max: 2200, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'supervisor'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
+      { title: 'Skilled carpenters (daily rate)', description: 'Looking for skilled carpenters! Hiring now. Furniture, joinery, and general carpentry. Apply today.', location: 'Accra', location_lat: 5.6037, location_lng: -0.187, employment_type: 'contract', work_mode: 'onsite', pay_min: 250, pay_max: 250, currency: 'GHS', pay_period: 'day', job_term: 'contract', tags: ['carpentry', 'skilled labour'], image_url: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400&h=240&fit=crop&q=70' },
+      { title: 'Store Associate (Accra)', description: 'Full-time store associate for our Accra branch. Cash handling, stock, customer service. Reliable and presentable.', location: 'Accra', location_lat: 5.61, location_lng: -0.19, employment_type: 'full_time', work_mode: 'onsite', pay_min: 1200, pay_max: 1500, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'customer service'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
+      { title: 'Warehouse Packer (Tema)', description: 'Packing and dispatching orders. Morning shifts, 5 days/week. Start ASAP.', location: 'Tema', location_lat: 5.6698, location_lng: -0.0167, employment_type: 'part_time', work_mode: 'onsite', pay_min: 15, pay_max: 18, currency: 'GHS', pay_period: 'hour', job_term: 'contract', tags: ['warehouse', 'logistics'], image_url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70' },
+      { title: 'Supervisor – Retail Operations', description: 'Supervise daily operations at one of our Accra stores. 2+ years retail experience. Good with people and systems.', location: 'Accra', location_lat: 5.59, location_lng: -0.18, employment_type: 'full_time', work_mode: 'onsite', pay_min: 1800, pay_max: 2200, currency: 'GHS', pay_period: 'month', job_term: 'permanent', tags: ['retail', 'supervisor'], image_url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70' },
     ],
   },
   {
@@ -103,6 +107,8 @@ const USERS = [
     role: 'artisan',
     bio: 'Licensed plumber in Accra and Tema. Leaks, blockages, new installations, and bathroom repairs. Over 10 years experience. Fair pricing, same-day callouts.',
     service_area: 'Accra, Tema, East Legon, Spintex',
+    service_lat: 5.61,
+    service_lng: -0.19,
     skills: ['Plumbing', 'Pipe fitting', 'Drainage'],
     job_categories: ['Skilled Labour'],
     experience_years: 10,
@@ -119,6 +125,8 @@ const USERS = [
     role: 'artisan',
     bio: 'Certified electrician. Residential and small commercial. Wiring, lighting, fault-finding, and meter work. Safe, certified, and insured.',
     service_area: 'Accra, Kumasi, Tema',
+    service_lat: 5.67,
+    service_lng: -0.02,
     skills: ['Electrical wiring', 'Lighting', 'Fault finding'],
     job_categories: ['Skilled Labour'],
     experience_years: 7,
@@ -135,6 +143,8 @@ const USERS = [
     role: 'artisan',
     bio: 'Mason and general builder. Blockwork, plastering, tiling, small extensions. Quality work for homes and shops in Greater Accra.',
     service_area: 'Accra, Tema, Dodowa',
+    service_lat: 5.58,
+    service_lng: -0.21,
     skills: ['Masonry', 'Plastering', 'Tiling'],
     job_categories: ['Skilled Labour'],
     experience_years: 12,
@@ -175,9 +185,12 @@ const IMAGE_URLS = {
   mason2: '/images/plastering.png', // Plastering – desktop screenshot
   mason3: '/images/tiling.png', // Tiling – desktop screenshot
 }
+// Local placeholder so profile images always show (no external URL dependency)
+const DEMO_PROFILE_PIC = '/images/avatar-placeholder.jpeg'
+
 function productImage(seed) {
   if (IMAGE_URLS[seed]) return IMAGE_URLS[seed]
-  if (String(seed).startsWith('profile-')) return 'https://images.unsplash.com/photo-1535713875002-d1d0f377253a?w=400&h=300&fit=crop'
+  if (String(seed).startsWith('profile-')) return DEMO_PROFILE_PIC
   return 'https://images.unsplash.com/photo-1577223625814-096a56d7e7b6?w=400&h=300&fit=crop'
 }
 
@@ -210,7 +223,7 @@ async function run() {
 
   for (const u of USERS) {
     const refCode = genRefCode()
-    const profilePic = productImage(`profile-${u.email}`)
+    const profilePic = DEMO_PROFILE_PIC
     const r = await pool.query(
       `insert into users (name, email, phone, password_hash, role, referral_code, profile_pic)
        values ($1, $2, $3, $4, $5, $6, $7)
@@ -246,13 +259,15 @@ async function run() {
 
     if (u.role === 'artisan') {
       await pool.query(
-        `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, job_categories, updated_at)
-         values ($1, $2, $3, $4, $5, $6::text[], now())
+        `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, service_lat, service_lng, job_categories, updated_at)
+         values ($1, $2, $3, $4, $5, $6, $7, $8::text[], now())
          on conflict (user_id) do update set
            skills = excluded.skills,
            primary_skill = excluded.primary_skill,
            experience_years = excluded.experience_years,
            service_area = excluded.service_area,
+           service_lat = excluded.service_lat,
+           service_lng = excluded.service_lng,
            job_categories = excluded.job_categories,
            updated_at = now()`,
         [
@@ -261,6 +276,8 @@ async function run() {
           u.skills?.[0] ?? null,
           u.experience_years ?? 5,
           u.service_area ?? null,
+          u.service_lat ?? null,
+          u.service_lng ?? null,
           u.job_categories ?? null,
         ],
       )
@@ -378,13 +395,15 @@ async function run() {
         for (const j of u.job_posts) {
           try {
             await pool.query(
-              `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, tags, status, closes_at, image_url, updated_at)
-               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::text[], 'open', $13, $14, now())`,
+              `insert into job_posts (company_id, title, description, location, location_lat, location_lng, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, tags, status, closes_at, image_url, updated_at)
+               values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::text[], 'open', $15, $16, now())`,
               [
                 companyId,
                 j.title,
                 j.description ?? '',
                 j.location ?? null,
+                j.location_lat ?? null,
+                j.location_lng ?? null,
                 j.employment_type ?? null,
                 j.work_mode ?? null,
                 j.pay_min ?? null,

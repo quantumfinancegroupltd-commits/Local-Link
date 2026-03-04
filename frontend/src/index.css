@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 /* LocalLink baseline */
+html {
+  overflow-x: hidden;
+}
+
 html,
 body,
 #root {
@@ -10,7 +14,22 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 font-sans;
+  @apply bg-slate-50 text-slate-900 font-sans antialiased;
+  overflow-x: hidden;
+}
+
+.dark body {
+  @apply bg-black text-slate-100;
+}
+
+/* Subtle brand accent on selection */
+::selection {
+  @apply bg-orange-100 text-slate-900;
+}
+
+/* Hero headlines: better line-wrap on narrow viewports */
+.text-balance {
+  text-wrap: balance;
 }
 
 /* Line clamp utility */

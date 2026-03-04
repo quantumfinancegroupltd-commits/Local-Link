@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { getRoleLabel, roleHomePath } from '../../lib/roles.js'
 import { trackEvent } from '../../lib/useAnalytics.js'
+import { getReferralFromCookie } from '../../lib/referralTracking.js'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { openAssistant } from '../../components/assistant/AssistantFab.jsx'
 
@@ -23,13 +24,29 @@ export function Register() {
   useEffect(() => {
     const r = params.get('role')
     if (r === 'buyer' || r === 'artisan' || r === 'farmer' || r === 'driver' || r === 'company') setRole(r)
-    const ref = params.get('ref') || params.get('referral')
+    const ref = params.get('ref') || params.get('referral') || getReferralFromCookie()
     if (ref) setReferralCode(String(ref).trim())
   }, [params])
+
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  function validate() {
+    const errs = {}
+    if (!name.trim()) errs.name = 'Name is required'
+    const em = email.trim()
+    if (!em) errs.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) errs.email = 'Enter a valid email address'
+    if (!password) errs.password = 'Password is required'
+    else if (password.length < 6) errs.password = 'Password must be at least 6 characters'
+    return errs
+  }
 
   async function onSubmit(e) {
     e.preventDefault()
     setError(null)
+    const errs = validate()
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) return
     setBusy(true)
     try {
       const u = await register({ name, email, phone, password, role, referral_code: referralCode.trim() || undefined })
@@ -83,7 +100,8 @@ export function Register() {
 
           <div>
             <Label htmlFor="reg-name">Full name</Label>
-            <Input id="reg-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
+            <Input id="reg-name" value={name} onChange={(e) => { setName(e.target.value); setFieldErrors((p) => ({ ...p, name: undefined })) }} autoComplete="name" required aria-invalid={!!fieldErrors.name} />
+            {fieldErrors.name ? <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p> : null}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -92,11 +110,13 @@ export function Register() {
               <Input
                 id="reg-email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })) }}
                 type="email"
                 autoComplete="email"
                 required
+                aria-invalid={!!fieldErrors.email}
               />
+              {fieldErrors.email ? <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p> : null}
             </div>
             <div>
               <Label htmlFor="reg-phone">Phone</Label>
@@ -115,11 +135,13 @@ export function Register() {
             <Input
               id="reg-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: undefined })) }}
               type="password"
               autoComplete="new-password"
               required
+              aria-invalid={!!fieldErrors.password}
             />
+            {fieldErrors.password ? <p className="mt-1 text-xs text-red-600">{fieldErrors.password}</p> : null}
           </div>
 
           <div>

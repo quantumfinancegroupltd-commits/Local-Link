@@ -8,6 +8,7 @@ import { NextStepBanner } from '../../components/ui/NextStepBanner.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 import { ProviderActivationChecklist } from '../../components/provider/ProviderActivationChecklist.jsx'
+import { SimpleLineChart } from '../../components/ui/SimpleLineChart.jsx'
 
 export function FarmerDashboard() {
   const { user } = useAuth()
@@ -19,6 +20,8 @@ export function FarmerDashboard() {
 
   const [summary, setSummary] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(true)
+  const [walletAnalytics, setWalletAnalytics] = useState(null)
+  const [chartDays, setChartDays] = useState(30)
   const [transactions, setTransactions] = useState([])
   const [walletTab, setWalletTab] = useState('transactions')
   const [payouts, setPayouts] = useState([])
@@ -79,6 +82,19 @@ export function FarmerDashboard() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    http
+      .get('/wallets/analytics', { params: { days: chartDays } })
+      .then((res) => {
+        if (!cancelled) setWalletAnalytics(res.data)
+      })
+      .catch(() => {
+        if (!cancelled) setWalletAnalytics(null)
+      })
+    return () => { cancelled = true }
+  }, [chartDays])
 
   const currency = summary?.currency ?? 'GHS'
   const available = useMemo(() => Number(summary?.available_balance ?? 0), [summary])
@@ -223,8 +239,8 @@ export function FarmerDashboard() {
 
       <div className="grid gap-3 md:grid-cols-3">
         <Card>
-          <div className="text-xs text-slate-600">Available balance</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Available balance</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : available.toFixed(0)}
           </div>
           <div className="mt-3">
@@ -239,19 +255,52 @@ export function FarmerDashboard() {
           </div>
         </Card>
         <Card>
-          <div className="text-xs text-slate-600">Pending (Escrow)</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Pending (Escrow)</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : pending.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">Orders in progress</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">Orders in progress</div>
         </Card>
         <Card>
-          <div className="text-xs text-slate-600">Completed this month</div>
-          <div className="mt-1 text-2xl font-bold text-slate-900">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Completed this month</div>
+          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
             {currency} {summaryLoading ? '—' : completed.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">After platform fees</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">After platform fees</div>
         </Card>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Revenue & orders over time</h2>
+          <select
+            value={chartDays}
+            onChange={(e) => setChartDays(Number(e.target.value))}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 dark:border-white/20 dark:bg-white/10 dark:text-slate-200"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="earnings"
+            title="Revenue"
+            valueLabel={currency}
+            color="#0d9488"
+            formatValue={(n) => `${currency} ${Number(n).toFixed(0)}`}
+          />
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="jobs"
+            title="Orders released"
+            valueLabel="Orders paid out"
+            color="#0369a1"
+            formatValue={(n) => `${n} order(s)`}
+          />
+        </div>
       </div>
 
       <Card>
@@ -313,13 +362,13 @@ export function FarmerDashboard() {
                     const sign = isIn ? '+' : '-'
                     return (
                       <tr key={t.id}>
-                        <td className="py-2 pr-3 text-slate-700">{new Date(t.created_at).toLocaleDateString()}</td>
-                        <td className="py-2 pr-3 text-slate-700">{source}</td>
-                        <td className="py-2 pr-3 font-medium text-slate-900">
+                        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(t.created_at).toLocaleDateString()}</td>
+                        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{source}</td>
+                        <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                           {sign} {currency} {Math.abs(amt).toFixed(0)}
                         </td>
                         <td className="py-2 pr-3">
-                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{t.status}</span>
+                          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{t.status}</span>
                         </td>
                       </tr>
                     )
@@ -443,13 +492,13 @@ export function FarmerDashboard() {
                         <tbody className="divide-y">
                           {payouts.map((p) => (
                             <tr key={p.id}>
-                              <td className="py-2 pr-3 text-slate-700">{new Date(p.created_at).toLocaleDateString()}</td>
-                              <td className="py-2 pr-3 text-slate-700">{p.method}</td>
-                              <td className="py-2 pr-3 font-medium text-slate-900">
+                              <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(p.created_at).toLocaleDateString()}</td>
+                              <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{p.method}</td>
+                              <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                                 {currency} {Number(p.amount ?? 0).toFixed(0)}
                               </td>
                               <td className="py-2 pr-3">
-                                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{p.status}</span>
+                                <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{p.status}</span>
                               </td>
                             </tr>
                           ))}
@@ -477,13 +526,13 @@ export function FarmerDashboard() {
                       <tbody className="divide-y">
                         {disputes.map((d) => (
                           <tr key={d.id}>
-                            <td className="py-2 pr-3 text-slate-700">{new Date(d.created_at).toLocaleDateString()}</td>
-                            <td className="py-2 pr-3 text-slate-700">{d.reason}</td>
-                            <td className="py-2 pr-3 font-medium text-slate-900">
+                            <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(d.created_at).toLocaleDateString()}</td>
+                            <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{d.reason}</td>
+                            <td className="py-2 pr-3 font-medium text-slate-900 dark:text-white">
                               {currency} {Number(d.escrow_amount ?? 0).toFixed(0)}
                             </td>
                             <td className="py-2 pr-3">
-                              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{d.status}</span>
+                              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700 dark:bg-white/10 dark:text-slate-300">{d.status}</span>
                             </td>
                           </tr>
                         ))}
@@ -513,7 +562,7 @@ export function FarmerDashboard() {
           <div className="mt-3 text-sm text-red-700">{deleteError}</div>
         ) : products.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-            <div className="text-sm font-semibold text-slate-900">No listings yet</div>
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">No listings yet</div>
             <div className="mt-2 text-sm text-slate-600">Add your first product to start selling on the marketplace.</div>
             <Link to="/farmer/products/new" className="mt-4 inline-block">
               <Button>Add your first product</Button>
@@ -531,7 +580,7 @@ export function FarmerDashboard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="text-xs font-medium text-slate-700">{p.status || 'available'}</div>
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{p.status || 'available'}</div>
                     <Link to={`/farmer/products/${p.id}/edit`}>
                       <Button variant="secondary">Edit</Button>
                     </Link>

@@ -259,4 +259,142 @@ reviewsRouter.post('/orders/:orderId', requireAuth, requireRole(['buyer']), asyn
   }
 }))
 
+// ----- Product reviews (marketplace products) -----
+
+const ProductReviewsQuerySchema = z.object({
+  limit: z.preprocess((v) => (v == null ? 10 : Number(v)), z.number().int().min(1).max(50)).optional(),
+  offset: z.preprocess((v) => (v == null ? 0 : Number(v)), z.number().int().min(0)).optional(),
+})
+
+// Public: list reviews for a product + summary
+reviewsRouter.get('/products/:productId', asyncHandler(async (req, res) => {
+  const parsed = ProductReviewsQuerySchema.safeParse(req.query)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const limit = Number(parsed.data?.limit ?? 10)
+  const offset = Number(parsed.data?.offset ?? 0)
+
+  const productRes = await pool.query('select id from products where id = $1', [req.params.productId])
+  if (!productRes.rows[0]) return res.status(404).json({ message: 'Product not found' })
+
+  const [summaryRes, listRes] = await Promise.all([
+    pool.query(
+      `select coalesce(avg(rating),0)::numeric(3,2) as avg_rating, count(*)::int as count
+       from product_reviews where product_id = $1`,
+      [req.params.productId],
+    ),
+    pool.query(
+      `select pr.id, pr.rating, pr.comment, pr.order_id is not null as verified_purchase, pr.created_at,
+              u.name as reviewer_name
+       from product_reviews pr
+       left join users u on u.id = pr.reviewer_id and u.deleted_at is null
+       where pr.product_id = $1
+       order by pr.created_at desc
+       limit $2 offset $3`,
+      [req.params.productId, limit, offset],
+    ),
+  ])
+  const summary = summaryRes.rows[0]
+  const avg = Number(summary?.avg_rating ?? 0)
+  const count = Number(summary?.count ?? 0)
+  return res.json({
+    summary: { avg_rating: Math.round(avg * 10) / 10, count },
+    reviews: listRes.rows,
+  })
+}))
+
+// Buyer: am I eligible to review this product? (have a delivered order containing it)
+reviewsRouter.get('/products/:productId/eligibility', requireAuth, requireRole(['buyer']), asyncHandler(async (req, res) => {
+  const productId = req.params.productId
+  const productRes = await pool.query('select id from products where id = $1', [productId])
+  if (!productRes.rows[0]) return res.status(404).json({ message: 'Product not found' })
+
+  const existingRes = await pool.query(
+    'select id, order_id from product_reviews where product_id = $1 and reviewer_id = $2 limit 1',
+    [productId, req.user.sub],
+  )
+  if (existingRes.rows[0]) {
+    return res.json({
+      eligible: false,
+      reason: 'You already reviewed this product.',
+      already_reviewed: true,
+    })
+  }
+
+  const orderRes = await pool.query(
+    `select o.id as order_id
+     from orders o
+     left join deliveries d on d.order_id = o.id
+     where o.product_id = $1 and o.buyer_id = $2
+       and o.order_status = 'delivered'
+     order by o.updated_at desc
+     limit 1`,
+    [productId, req.user.sub],
+  )
+  const order = orderRes.rows[0]
+  if (!order) {
+    return res.json({
+      eligible: false,
+      reason: 'Review this product after you receive an order containing it.',
+      already_reviewed: false,
+    })
+  }
+  return res.json({
+    eligible: true,
+    reason: null,
+    already_reviewed: false,
+    order_id: order.order_id,
+  })
+}))
+
+const LeaveProductReviewSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().max(2000).optional().nullable(),
+  order_id: z.string().uuid().optional().nullable(),
+})
+
+// Buyer: leave a product review (optionally linked to an order for "verified purchase")
+reviewsRouter.post('/products/:productId', requireAuth, requireRole(['buyer']), asyncHandler(async (req, res) => {
+  const parsed = LeaveProductReviewSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+
+  const productId = req.params.productId
+  const productRes = await pool.query('select id from products where id = $1', [productId])
+  if (!productRes.rows[0]) return res.status(404).json({ message: 'Product not found' })
+
+  let orderId = parsed.data.order_id ?? null
+  if (orderId) {
+    const orderRes = await pool.query(
+      'select id from orders where id = $1 and buyer_id = $2 and product_id = $3',
+      [orderId, req.user.sub, productId],
+    )
+    if (!orderRes.rows[0]) orderId = null
+    else {
+      const delRes = await pool.query("select id from deliveries where order_id = $1 and status = 'confirmed'", [orderId])
+      if (!delRes.rows[0]) orderId = null
+    }
+  }
+
+  try {
+    const r = await pool.query(
+      `insert into product_reviews (product_id, reviewer_id, order_id, rating, comment)
+       values ($1,$2,$3,$4,$5)
+       returning *`,
+      [productId, req.user.sub, orderId, parsed.data.rating, parsed.data.comment ?? null],
+    )
+    const summaryRes = await pool.query(
+      `select coalesce(avg(rating),0)::numeric(3,2) as avg_rating, count(*)::int as count from product_reviews where product_id = $1`,
+      [productId],
+    )
+    const row = summaryRes.rows[0]
+    const avg = Math.round(Number(row?.avg_rating ?? 0) * 10) / 10
+    const count = Number(row?.count ?? 0)
+    return res.status(201).json({ review: r.rows[0], summary: { avg_rating: avg, count } })
+  } catch (e) {
+    if (String(e?.message || '').includes('duplicate key')) {
+      return res.status(409).json({ message: 'You already reviewed this product.' })
+    }
+    throw e
+  }
+}))
+
 

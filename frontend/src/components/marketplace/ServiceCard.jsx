@@ -32,9 +32,11 @@ export function ServiceCard({ service }) {
       ? bookPath
       : `/login?next=${encodeURIComponent(bookPath)}`
 
+  const detailUrl = `/marketplace/services/${service?.id ?? ''}`
+
   return (
     <div className={['overflow-hidden', ui.card].join(' ')}>
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
+      <Link to={detailUrl} className="block relative aspect-[4/3] w-full overflow-hidden bg-slate-100">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -51,20 +53,22 @@ export function ServiceCard({ service }) {
           </span>
           <VerificationBadge entity={verifyEntity} />
         </div>
-      </div>
+      </Link>
       <div className="p-4 space-y-3">
         <div>
-          <div className="font-semibold text-slate-900 truncate">{title}</div>
-          <div className="mt-0.5 text-xs text-slate-600 truncate">
+          <Link to={detailUrl} className="font-semibold text-slate-900 truncate block hover:text-slate-700 dark:text-white dark:hover:text-slate-200">
+            {title}
+          </Link>
+          <div className="mt-0.5 text-xs text-slate-600 truncate dark:text-slate-400">
             {artisanName}
             {serviceArea ? ` · ${serviceArea}` : ''}
           </div>
         </div>
         {description ? (
-          <p className="text-xs text-slate-600 line-clamp-2">{description}</p>
+          <p className="text-xs text-slate-600 line-clamp-2 dark:text-slate-400">{description}</p>
         ) : null}
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm font-semibold text-slate-900">
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">
             {currency} {Number(price).toFixed(0)}
             {duration ? ` · ${duration}` : ''}
           </div>

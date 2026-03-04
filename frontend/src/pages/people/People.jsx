@@ -4,6 +4,7 @@ import { http } from '../../api/http.js'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
+import { SkeletonCard } from '../../components/ui/Skeleton.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
 import { getRoleLabel } from '../../lib/roles.js'
 
@@ -94,9 +95,17 @@ export function People() {
 
   async function toggleFollow(person) {
     if (person?.viewer_requested) return
+    const wasFollowing = person.viewer_following
     setBusyId(person.id)
+    setItems((prev) =>
+      prev.map((p) =>
+        p.id === person.id
+          ? { ...p, viewer_following: !wasFollowing, followers: Number(p.followers ?? 0) + (wasFollowing ? -1 : 1) }
+          : p,
+      ),
+    )
     try {
-      if (person.viewer_following) {
+      if (wasFollowing) {
         await http.delete(`/follows/${encodeURIComponent(person.id)}`)
         toast.success('Unfollowed.')
       } else {
@@ -145,7 +154,9 @@ export function People() {
       </Card>
 
       {loading ? (
-        <Card>Loading…</Card>
+        <div className="space-y-3">
+          {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} />)}
+        </div>
       ) : error ? (
         <Card>
           <div className="text-sm text-red-700">{error}</div>
@@ -155,7 +166,7 @@ export function People() {
           <div className="text-sm text-slate-600">No matches.</div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 animate-fade-in">
           {items.map((p) => (
             <PersonRow key={p.id} person={p} busy={busyId === p.id} onToggleFollow={toggleFollow} />
           ))}

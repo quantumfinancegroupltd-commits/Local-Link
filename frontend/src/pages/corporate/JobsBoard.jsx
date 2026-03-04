@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
-import { Button, Card, Input, Label } from '../../components/ui/FormControls.jsx'
+import { useAuth } from '../../auth/useAuth.js'
+import { useToast } from '../../components/ui/Toast.jsx'
+import { Button, Card, Input, Label, Select } from '../../components/ui/FormControls.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
+import { BrowseLayout } from '../../components/layout/BrowseLayout.jsx'
+import { BrowseMap } from '../../components/maps/BrowseMap.jsx'
 
 function moneyRange(j) {
   const min = j?.pay_min != null ? Number(j.pay_min) : null
@@ -23,11 +27,10 @@ function jobTypeSummary(j) {
   return parts.length ? parts.join(', ') : null
 }
 
-// Role-based default images when job has no image_url (same as Home landing)
 const jobCardDefaults = {
   retail: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70',
   warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400&h=240&fit=crop&q=70',
-  supervisor: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70', // retail store
+  supervisor: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=240&fit=crop&q=70',
   office: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=240&fit=crop&q=70',
   default: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=240&fit=crop&q=70',
 }
@@ -39,6 +42,28 @@ function getDefaultJobImage(job) {
   if (/\b(office|admin|coordinator)\b/.test(t)) return jobCardDefaults.office
   return jobCardDefaults.default
 }
+
+const EMPLOYMENT_OPTIONS = [
+  { value: '', label: 'Any type' },
+  { value: 'full_time', label: 'Full-time' },
+  { value: 'part_time', label: 'Part-time' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'shift', label: 'Shift' },
+  { value: 'internship', label: 'Internship' },
+]
+const WORK_MODE_OPTIONS = [
+  { value: '', label: 'Any mode' },
+  { value: 'onsite', label: 'On-site' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+]
+const JOB_TERM_OPTIONS = [
+  { value: '', label: 'Any term' },
+  { value: 'permanent', label: 'Permanent' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'internship', label: 'Internship' },
+  { value: 'temporary', label: 'Temporary' },
+]
 
 function PromoCard({ imgUrl, title, body, bullets = [] }) {
   return (
@@ -67,14 +92,51 @@ function PromoCard({ imgUrl, title, body, bullets = [] }) {
   )
 }
 
+const FILTER_KEYS = ['q', 'location', 'employment_type', 'work_mode', 'job_term', 'pay_min', 'pay_max']
+
 export function JobsBoard() {
-  const [searchParams] = useSearchParams()
-  const [q, setQ] = useState('')
+  const { isAuthed } = useAuth()
+  const toast = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const company = String(searchParams.get('company') || '').trim()
+  const [alertBusy, setAlertBusy] = useState(false)
+
+  const [q, setQ] = useState(() => searchParams.get('q') ?? '')
+  const [location, setLocation] = useState(() => searchParams.get('location') ?? '')
+  const [employmentType, setEmploymentType] = useState(() => searchParams.get('employment_type') ?? '')
+  const [workMode, setWorkMode] = useState(() => searchParams.get('work_mode') ?? '')
+  const [jobTerm, setJobTerm] = useState(() => searchParams.get('job_term') ?? '')
+  const [payMin, setPayMin] = useState(() => searchParams.get('pay_min') ?? '')
+  const [payMax, setPayMax] = useState(() => searchParams.get('pay_max') ?? '')
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const company = String(searchParams.get('company') || '').trim()
+  // Sync filter state from URL when user navigates (back/forward)
+  const prevParamsRef = useRef(searchParams.toString())
+  useEffect(() => {
+    const current = searchParams.toString()
+    if (current === prevParamsRef.current) return
+    prevParamsRef.current = current
+    setQ(searchParams.get('q') ?? '')
+    setLocation(searchParams.get('location') ?? '')
+    setEmploymentType(searchParams.get('employment_type') ?? '')
+    setWorkMode(searchParams.get('work_mode') ?? '')
+    setJobTerm(searchParams.get('job_term') ?? '')
+    setPayMin(searchParams.get('pay_min') ?? '')
+    setPayMax(searchParams.get('pay_max') ?? '')
+  }, [searchParams])
+
+  function updateUrlFilters(updates) {
+    const next = new URLSearchParams(searchParams)
+    FILTER_KEYS.forEach((key) => {
+      const v = updates[key] !== undefined ? updates[key] : (key === 'q' ? q : key === 'location' ? location : key === 'employment_type' ? employmentType : key === 'work_mode' ? workMode : key === 'job_term' ? jobTerm : key === 'pay_min' ? payMin : payMax)
+      if (v != null && String(v).trim() !== '') next.set(key, String(v).trim())
+      else next.delete(key)
+    })
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -82,7 +144,7 @@ export function JobsBoard() {
       setLoading(true)
       setError(null)
       try {
-        const res = await http.get('/corporate/jobs', { params: { limit: 120, company: company || undefined } })
+        const res = await http.get('/corporate/jobs', { params: { limit: 200, company: company || undefined } })
         if (!cancelled) setJobs(Array.isArray(res.data) ? res.data : [])
       } catch (e) {
         if (!cancelled) setError(e?.response?.data?.message ?? e?.message ?? 'Failed to load jobs')
@@ -96,29 +158,189 @@ export function JobsBoard() {
     }
   }, [company])
 
+  const locations = useMemo(() => {
+    const set = new Set()
+    for (const j of jobs) {
+      const loc = j?.location ?? j?.company_location
+      if (typeof loc === 'string' && loc.trim()) set.add(loc.trim())
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [jobs])
+
   const filtered = useMemo(() => {
     const query = String(q || '').trim().toLowerCase()
     const list = Array.isArray(jobs) ? jobs : []
-    if (!query) return list
     return list.filter((j) => {
-      const hay = [
-        j?.title,
-        j?.description,
-        j?.location,
-        j?.employment_type,
-        j?.work_mode,
-        j?.company_name,
-        ...(Array.isArray(j?.tags) ? j.tags : []),
-      ]
-        .filter(Boolean)
-        .map((x) => String(x).toLowerCase())
-        .join(' ')
-      return hay.includes(query)
+      if (query) {
+        const hay = [
+          j?.title,
+          j?.description,
+          j?.location,
+          j?.employment_type,
+          j?.work_mode,
+          j?.company_name,
+          j?.company_location,
+          ...(Array.isArray(j?.tags) ? j.tags : []),
+        ]
+          .filter(Boolean)
+          .map((x) => String(x).toLowerCase())
+          .join(' ')
+        if (!hay.includes(query)) return false
+      }
+      if (location && String(j?.location ?? j?.company_location ?? '').trim() !== location) return false
+      if (employmentType && String(j?.employment_type ?? '') !== employmentType) return false
+      if (workMode && String(j?.work_mode ?? '') !== workMode) return false
+      if (jobTerm && String(j?.job_term ?? '') !== jobTerm) return false
+      const minP = payMin !== '' ? Number(payMin) : null
+      const maxP = payMax !== '' ? Number(payMax) : null
+      const jobMin = j?.pay_min != null ? Number(j.pay_min) : null
+      const jobMax = j?.pay_max != null ? Number(j.pay_max) : null
+      if (minP != null && !Number.isNaN(minP) && (jobMax ?? 1e9) < minP) return false
+      if (maxP != null && !Number.isNaN(maxP) && (jobMin ?? 0) > maxP) return false
+      return true
     })
-  }, [jobs, q])
+  }, [jobs, q, location, employmentType, workMode, jobTerm, payMin, payMax])
+
+  const hasActiveFilters = q || location || employmentType || workMode || jobTerm || payMin || payMax
+
+  function clearFilters() {
+    setQ('')
+    setLocation('')
+    setEmploymentType('')
+    setWorkMode('')
+    setJobTerm('')
+    setPayMin('')
+    setPayMax('')
+    const next = new URLSearchParams(searchParams)
+    FILTER_KEYS.forEach((k) => next.delete(k))
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
+
+  const jobMapPins = useMemo(() => {
+    return (filtered || [])
+      .filter((j) => {
+        const rawLat = j?.location_lat ?? j?.locationLat ?? null
+        const rawLng = j?.location_lng ?? j?.locationLng ?? null
+        const lat = rawLat != null ? Number(rawLat) : NaN
+        const lng = rawLng != null ? Number(rawLng) : NaN
+        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      })
+      .map((j) => {
+        const rawLat = j?.location_lat ?? j?.locationLat ?? 0
+        const rawLng = j?.location_lng ?? j?.locationLng ?? 0
+        const lat = Number(rawLat) || 0
+        const lng = Number(rawLng) || 0
+        const loc = j?.location ?? j?.company_location ?? ''
+        const imgUrl = j?.image_url || j?.company_logo_url || null
+        const payLabel = moneyRange(j) || undefined
+        return {
+          id: j.id,
+          lat,
+          lng,
+          title: j?.title ?? 'Job',
+          subtitle: String(loc).trim() || undefined,
+          href: `/jobs/${j.id}`,
+          imageUrl: imgUrl || undefined,
+          priceLabel: payLabel,
+        }
+      })
+  }, [filtered])
+
+  const mapCard = (
+    <div className="space-y-2">
+      <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Map</h2>
+      <BrowseMap
+        pins={jobMapPins}
+        defaultZoom={jobMapPins.length > 0 ? undefined : 6}
+        emptyMessage="Jobs with a set location will show as pins. Companies can add location when posting a job."
+      />
+    </div>
+  )
+
+  const filtersSidebar = (
+    <div className="space-y-4">
+      <div className="text-sm font-semibold text-slate-800 dark:text-white">Filters</div>
+      <div>
+        <Label className="text-xs">Keyword</Label>
+        <Input
+          value={q}
+          onChange={(e) => {
+            const v = e.target.value
+            setQ(v)
+            updateUrlFilters({ q: v })
+          }}
+          placeholder="e.g. warehouse, driver, Tema"
+          className="mt-1"
+        />
+      </div>
+      <div>
+        <Label className="text-xs">Location</Label>
+        <Select value={location} onChange={(e) => { const v = e.target.value; setLocation(v); updateUrlFilters({ location: v }) }} className="mt-1">
+          <option value="">All locations</option>
+          {locations.map((loc) => (
+            <option key={loc} value={loc}>{loc}</option>
+          ))}
+        </Select>
+      </div>
+      <div>
+        <Label className="text-xs">Job type</Label>
+        <Select value={employmentType} onChange={(e) => { const v = e.target.value; setEmploymentType(v); updateUrlFilters({ employment_type: v }) }} className="mt-1">
+          {EMPLOYMENT_OPTIONS.map((o) => (
+            <option key={o.value || 'any'} value={o.value}>{o.label}</option>
+          ))}
+        </Select>
+      </div>
+      <div>
+        <Label className="text-xs">Work mode</Label>
+        <Select value={workMode} onChange={(e) => { const v = e.target.value; setWorkMode(v); updateUrlFilters({ work_mode: v }) }} className="mt-1">
+          {WORK_MODE_OPTIONS.map((o) => (
+            <option key={o.value || 'any'} value={o.value}>{o.label}</option>
+          ))}
+        </Select>
+      </div>
+      <div>
+        <Label className="text-xs">Job term</Label>
+        <Select value={jobTerm} onChange={(e) => { const v = e.target.value; setJobTerm(v); updateUrlFilters({ job_term: v }) }} className="mt-1">
+          {JOB_TERM_OPTIONS.map((o) => (
+            <option key={o.value || 'any'} value={o.value}>{o.label}</option>
+          ))}
+        </Select>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Salary min (GHS)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={payMin}
+            onChange={(e) => { const v = e.target.value; setPayMin(v); updateUrlFilters({ pay_min: v }) }}
+            placeholder="Min"
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Salary max (GHS)</Label>
+          <Input
+            type="number"
+            min={0}
+            value={payMax}
+            onChange={(e) => { const v = e.target.value; setPayMax(v); updateUrlFilters({ pay_max: v }) }}
+            placeholder="Max"
+            className="mt-1"
+          />
+        </div>
+      </div>
+      {hasActiveFilters ? (
+        <Button variant="secondary" className="w-full" onClick={clearFilters}>
+          Clear all filters
+        </Button>
+      ) : null}
+    </div>
+  )
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <BrowseLayout sidebar={filtersSidebar} sidebarBottom={mapCard}>
       <PageHeader
         kicker="Employers"
         title={company ? 'Jobs at this company' : 'Jobs'}
@@ -135,10 +357,41 @@ export function JobsBoard() {
         }
       />
 
-      <Card className="p-4">
-        <Label>Search</Label>
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. warehouse, electrician, driver, Tema…" />
-      </Card>
+      {!loading && !error && jobs.length > 0 ? (
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <span>{filtered.length} job{filtered.length === 1 ? '' : 's'} found</span>
+          {isAuthed ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={alertBusy}
+              onClick={async () => {
+                setAlertBusy(true)
+                try {
+                  await http.post('/corporate/job-alerts', {
+                    q: q || null,
+                    location: location || null,
+                    employment_type: employmentType || null,
+                    work_mode: workMode || null,
+                  })
+                  toast.success('Job alert saved. We’ll notify you when new jobs match.')
+                } catch (e) {
+                  toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save alert')
+                } finally {
+                  setAlertBusy(false)
+                }
+              }}
+            >
+              {alertBusy ? 'Saving…' : 'Notify me when jobs match'}
+            </Button>
+          ) : (
+            <Link to={`/login?next=${encodeURIComponent('/jobs')}`} className="text-emerald-700 hover:underline">
+              Sign in to get job alerts
+            </Link>
+          )}
+        </div>
+      ) : null}
 
       {loading ? (
         <Card className="p-5">
@@ -191,11 +444,11 @@ export function JobsBoard() {
             </>
           ) : (
             <Card className="p-6">
-              <div className="text-sm font-semibold text-slate-900">No jobs match your search.</div>
-              <div className="mt-1 text-sm text-slate-600">Try a broader keyword (e.g. “warehouse”, “driver”, “electrician”) or clear your filters.</div>
+              <div className="text-sm font-semibold text-slate-900">No jobs match your filters.</div>
+              <div className="mt-1 text-sm text-slate-600">Try broadening keyword, location, or salary range — or clear all filters.</div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button type="button" variant="secondary" onClick={() => setQ('')}>
-                  Clear search
+                <Button type="button" variant="secondary" onClick={clearFilters}>
+                  Clear all filters
                 </Button>
                 <Link to="/register?role=company">
                   <Button>Post a job</Button>
@@ -211,53 +464,52 @@ export function JobsBoard() {
               ? (j.image_url.startsWith('/') ? `${typeof window !== 'undefined' ? window.location.origin : ''}${j.image_url}` : j.image_url)
               : getDefaultJobImage(j)
             return (
-            <Card key={j.id} className="p-0 overflow-hidden">
-              <div className="relative h-40 w-full bg-slate-100">
-                <img
-                  src={jobImgSrc}
-                  alt=""
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-              </div>
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-slate-900">{j.title}</div>
-                    <div className="mt-1 text-xs text-slate-600">
-                      {j.company_name || 'Company'}{j.location ? ` • ${j.location}` : ''}{' '}
-                      {j.employment_type ? ` • ${String(j.employment_type).replaceAll('_', ' ')}` : ''}
-                      {j.work_mode ? ` • ${j.work_mode}` : ''}
+              <Card key={j.id} className="p-0 overflow-hidden">
+                <div className="relative h-40 w-full bg-slate-100">
+                  <img
+                    src={jobImgSrc}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                </div>
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-slate-900">{j.title}</div>
+                      <div className="mt-1 text-xs text-slate-600">
+                        {j.company_name || 'Company'}{j.location ? ` • ${j.location}` : ''}{' '}
+                        {j.employment_type ? ` • ${String(j.employment_type).replaceAll('_', ' ')}` : ''}
+                        {j.work_mode ? ` • ${j.work_mode}` : ''}
+                      </div>
                     </div>
+                    {j.company_logo_url ? (
+                      <img src={j.company_logo_url} alt="logo" className="h-10 w-10 rounded-xl border object-cover flex-shrink-0" />
+                    ) : null}
                   </div>
-                  {j.company_logo_url ? (
-                    <img src={j.company_logo_url} alt="logo" className="h-10 w-10 rounded-xl border object-cover flex-shrink-0" />
-                  ) : null}
-                </div>
 
-                {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
-                {jobTypeSummary(j) ? <div className="mt-1 text-xs font-semibold text-slate-600">{jobTypeSummary(j)}</div> : null}
+                  {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
+                  {jobTypeSummary(j) ? <div className="mt-1 text-xs font-semibold text-slate-600">{jobTypeSummary(j)}</div> : null}
 
-                <div className="mt-3 line-clamp-2 text-sm text-slate-700">{j.description}</div>
+                  <div className="mt-3 line-clamp-2 text-sm text-slate-700">{j.description}</div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link to={`/jobs/${j.id}`}>
-                    <Button>View</Button>
-                  </Link>
-                  {j.company_slug ? (
-                    <Link to={`/c/${j.company_slug}`}>
-                      <Button variant="secondary">Company</Button>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link to={`/jobs/${j.id}`}>
+                      <Button>View</Button>
                     </Link>
-                  ) : null}
+                    {j.company_slug ? (
+                      <Link to={`/c/${j.company_slug}`}>
+                        <Button variant="secondary">Company</Button>
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
             )
           })}
         </div>
       )}
-    </div>
+    </BrowseLayout>
   )
 }
-

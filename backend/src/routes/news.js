@@ -66,8 +66,10 @@ newsRouter.get('/image', asyncHandler(async (req, res) => {
   Readable.fromWeb(r.body).pipe(res)
 }))
 
-// Public list (published only)
-newsRouter.get('/', asyncHandler(async (_req, res) => {
+// Public list (published only). ?order=desc&limit=N for latest-first (e.g. feed sidebar).
+newsRouter.get('/', asyncHandler(async (req, res) => {
+  const order = String(req.query.order || 'asc').toLowerCase() === 'desc' ? 'desc' : 'asc'
+  const limit = Math.min(Number(req.query.limit) || 50, 50)
   const r = await pool.query(
     `select id, title, slug,
             coalesce(summary, left(body, 280)) as excerpt,
@@ -78,8 +80,9 @@ newsRouter.get('/', asyncHandler(async (_req, res) => {
      where deleted_at is null
        and status = 'published'
        and published_at is not null
-     order by published_at asc, created_at asc
-     limit 50`,
+     order by published_at ${order}, created_at ${order}
+     limit $1`,
+    [limit],
   )
   return res.json(r.rows)
 }))

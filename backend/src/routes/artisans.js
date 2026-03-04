@@ -7,7 +7,16 @@ import { asyncHandler } from '../middleware/asyncHandler.js'
 export const artisansRouter = Router()
 
 async function upsertArtisan(userId, data) {
-  const { skills, primary_skill, experience_years, service_area, job_categories: jobCategories } = data
+  const {
+    skills,
+    primary_skill,
+    experience_years,
+    service_area,
+    service_place_id: servicePlaceId,
+    service_lat: serviceLat,
+    service_lng: serviceLng,
+    job_categories: jobCategories,
+  } = data
   const inferredPrimary =
     primary_skill != null && String(primary_skill).trim()
       ? String(primary_skill).trim()
@@ -19,17 +28,30 @@ async function upsertArtisan(userId, data) {
       ? jobCategories.filter((c) => c != null && String(c).trim()).map((c) => String(c).trim())
       : null
   const r = await pool.query(
-    `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, job_categories)
-     values ($1,$2,$3,$4,$5,$6::text[])
+    `insert into artisans (user_id, skills, primary_skill, experience_years, service_area, service_place_id, service_lat, service_lng, job_categories)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9::text[])
      on conflict (user_id) do update set
        skills = excluded.skills,
        primary_skill = excluded.primary_skill,
        experience_years = excluded.experience_years,
        service_area = excluded.service_area,
+       service_place_id = excluded.service_place_id,
+       service_lat = excluded.service_lat,
+       service_lng = excluded.service_lng,
        job_categories = excluded.job_categories,
        updated_at = now()
      returning *`,
-    [userId, skills ?? null, inferredPrimary, experience_years ?? null, service_area ?? null, jobCats],
+    [
+      userId,
+      skills ?? null,
+      inferredPrimary,
+      experience_years ?? null,
+      service_area ?? null,
+      servicePlaceId ?? null,
+      serviceLat != null ? Number(serviceLat) : null,
+      serviceLng != null ? Number(serviceLng) : null,
+      jobCats,
+    ],
   )
   return r.rows[0]
 }
@@ -109,6 +131,9 @@ const CreateSchema = z.object({
   primary_skill: z.string().max(80).optional().nullable(),
   experience_years: z.number().int().min(0).optional().nullable(),
   service_area: z.string().optional().nullable(),
+  service_place_id: z.string().optional().nullable(),
+  service_lat: z.number().optional().nullable(),
+  service_lng: z.number().optional().nullable(),
   job_categories: z.array(z.string().max(80)).optional().nullable(),
 })
 

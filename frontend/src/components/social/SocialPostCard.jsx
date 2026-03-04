@@ -1,9 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { LikersModal } from './LikersModal.jsx'
-import { http } from '../../api/http.js'
-import { Button, Card, Input } from '../ui/FormControls.jsx'
+import { http, resolveUploadUrl } from '../../api/http.js'
+import { Button, Input } from '../ui/FormControls.jsx'
 import { useToast } from '../ui/Toast.jsx'
+import { ConfirmModal } from '../ui/Modal.jsx'
+
+function formatTimeAgo(date) {
+  const now = Date.now()
+  const diff = now - date.getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 7) return `${days}d ago`
+  return date.toLocaleDateString()
+}
 
 function LinkedPostBlock({ type, related }) {
   const id = related?.id
@@ -79,6 +93,56 @@ function LinkedPostBlock({ type, related }) {
   return null
 }
 
+function PostMediaItem({ media, single, gridSpan }) {
+  const [imgError, setImgError] = useState(false)
+  const url = resolveUploadUrl(media?.url)
+  const isVideo = media?.kind === 'video'
+  const wrapperClass = single ? 'rounded-none' : gridSpan === 2 ? 'col-span-2' : ''
+  const imgClass = single ? 'max-h-[400px]' : 'h-48'
+
+  if (!url) {
+    return (
+      <div className={`flex items-center justify-center overflow-hidden bg-stone-100 ${wrapperClass} ${single ? '' : 'min-h-[12rem]'}`}>
+        <div className="flex flex-col items-center gap-2 py-8 text-stone-400">
+          <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
+          <span className="text-xs font-medium">Image unavailable</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (isVideo) {
+    return (
+      <div className={`overflow-hidden bg-stone-100 ${wrapperClass}`}>
+        <video src={url} controls className="h-64 w-full object-cover" />
+      </div>
+    )
+  }
+
+  if (imgError) {
+    return (
+      <div className={`flex items-center justify-center overflow-hidden bg-stone-100 ${wrapperClass} ${single ? 'min-h-[200px]' : 'h-48'}`}>
+        <div className="flex flex-col items-center gap-2 py-6 text-stone-400">
+          <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" /></svg>
+          <span className="text-xs font-medium">Image unavailable</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`overflow-hidden bg-stone-100 ${wrapperClass}`}>
+      <img
+        src={url}
+        alt=""
+        className={`w-full object-cover ${imgClass}`}
+        loading="lazy"
+        onError={() => setImgError(true)}
+      />
+    </div>
+  )
+}
+
 export function SocialPostCard({ post, viewerId, onRefresh }) {
   const toast = useToast()
   const COMMENTS_PAGE_SIZE = 100
@@ -105,6 +169,11 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
   const [busyReportId, setBusyReportId] = useState(null)
   const [likersOpen, setLikersOpen] = useState(false)
   const [busyBoost, setBusyBoost] = useState(false)
+  const [confirmDeletePost, setConfirmDeletePost] = useState(false)
+  const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState(null)
+
+  const [optimisticLiked, setOptimisticLiked] = useState(null)
+  const [optimisticLikeCount, setOptimisticLikeCount] = useState(null)
 
   const media = Array.isArray(post?.media) ? post.media : []
   const authorId = post?.user_id ?? null
@@ -122,19 +191,30 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
     setLikersOpen(true)
   }
 
-  async function toggleLike() {
+  const isLiked = optimisticLiked ?? post.viewer_liked
+  const displayLikeCount = optimisticLikeCount ?? Number(post?.like_count ?? 0)
+
+  const toggleLike = useCallback(async () => {
     if (!canInteract) return toast.warning('Login required', 'Please login to like posts.')
+    const wasLiked = optimisticLiked ?? post.viewer_liked
+    const prevCount = optimisticLikeCount ?? Number(post?.like_count ?? 0)
+    setOptimisticLiked(!wasLiked)
+    setOptimisticLikeCount(wasLiked ? Math.max(0, prevCount - 1) : prevCount + 1)
     setBusyLike(true)
     try {
-      if (post.viewer_liked) await http.delete(`/posts/${post.id}/like`)
+      if (wasLiked) await http.delete(`/posts/${post.id}/like`)
       else await http.post(`/posts/${post.id}/like`)
       await onRefresh?.()
+      setOptimisticLiked(null)
+      setOptimisticLikeCount(null)
     } catch (e) {
+      setOptimisticLiked(wasLiked)
+      setOptimisticLikeCount(prevCount)
       toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to like')
     } finally {
       setBusyLike(false)
     }
-  }
+  }, [canInteract, optimisticLiked, optimisticLikeCount, post, toast, onRefresh])
 
   async function loadComments({ reset } = {}) {
     const doReset = !!reset
@@ -292,11 +372,8 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
     }
   }
 
-  async function deleteComment(id) {
-    if (!canInteract) return toast.warning('Login required', 'Please login to delete.')
+  async function doDeleteComment(id) {
     if (!id) return
-    const ok = window.confirm('Delete this comment?')
-    if (!ok) return
     setBusyDeleteCommentId(id)
     try {
       await http.delete(`/posts/comments/${id}`)
@@ -310,6 +387,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
       toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete comment')
     } finally {
       setBusyDeleteCommentId(null)
+      setConfirmDeleteCommentId(null)
     }
   }
 
@@ -475,7 +553,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
                 <button
                   type="button"
                   disabled={busyDeleteCommentId === id}
-                  onClick={() => deleteComment(id)}
+                  onClick={() => setConfirmDeleteCommentId(id)}
                   className="rounded-full border border-red-200 bg-white px-3 py-1 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
                 >
                   {busyDeleteCommentId === id ? 'Deleting…' : 'Delete'}
@@ -519,10 +597,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
     )
   }
 
-  async function del() {
-    if (!canInteract) return toast.warning('Login required', 'Please login to delete.')
-    const ok = window.confirm('Delete this post?')
-    if (!ok) return
+  async function doDeletePost() {
     setBusyDelete(true)
     try {
       await http.delete(`/posts/${post.id}`)
@@ -532,6 +607,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
       toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete')
     } finally {
       setBusyDelete(false)
+      setConfirmDeletePost(false)
     }
   }
 
@@ -549,121 +625,167 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
     }
   }
 
+  const roleLabel = post?.author_role ? String(post.author_role).charAt(0).toUpperCase() + String(post.author_role).slice(1) : ''
+  const timeAgo = post?.created_at ? formatTimeAgo(new Date(post.created_at)) : ''
+  const likeCount = displayLikeCount
+  const commentCount = Number(post?.comment_count ?? 0)
+  const reactionEmoji = likeCount > 50 ? '🔥' : likeCount > 10 ? '❤️' : '👍'
+
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-3">
+    <div className="animate-slide-up rounded-2xl border border-stone-200/60 bg-white shadow-sm">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-0">
         <div className="flex items-center gap-3">
           {authorTo ? (
             <Link to={authorTo} className="shrink-0">
-              <img src={post?.author_profile_pic || '/locallink-logo.png'} alt="avatar" className="h-10 w-10 rounded-2xl border object-cover" />
+              <img src={post?.author_profile_pic || '/locallink-logo.png'} alt="" className="h-11 w-11 rounded-full border-2 border-stone-100 object-cover" />
             </Link>
           ) : (
-            <img src={post?.author_profile_pic || '/locallink-logo.png'} alt="avatar" className="h-10 w-10 rounded-2xl border object-cover" />
+            <img src={post?.author_profile_pic || '/locallink-logo.png'} alt="" className="h-11 w-11 rounded-full border-2 border-stone-100 object-cover" />
           )}
           <div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {authorTo ? (
-                <Link to={authorTo} className="text-sm font-semibold text-slate-900 hover:underline">
+                <Link to={authorTo} className="text-sm font-bold text-stone-900 hover:underline">
                   {post?.author_name || 'User'}
                 </Link>
               ) : (
-                <span className="text-sm font-semibold text-slate-900">{post?.author_name || 'User'}</span>
+                <span className="text-sm font-bold text-stone-900">{post?.author_name || 'User'}</span>
               )}
+              {roleLabel ? (
+                <span className="text-[11px] text-stone-500">• {roleLabel}</span>
+              ) : null}
               {isSponsored ? (
-                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Sponsored</span>
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Sponsored</span>
               ) : null}
             </div>
-            <div className="text-xs text-slate-500">{post?.created_at ? new Date(post.created_at).toLocaleString() : ''}</div>
+            <div className="flex items-center gap-1.5 text-[11px] text-stone-400">
+              <span>{timeAgo}</span>
+              {post?.author_company_slug ? (
+                <>
+                  <span>•</span>
+                  <Link to={`/c/${post.author_company_slug}`} className="text-emerald-600 hover:underline">{post.author_company_slug}</Link>
+                </>
+              ) : null}
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1">
           {canBoost ? (
-            <Button
-              variant="secondary"
-              disabled={busyBoost}
-              onClick={toggleBoost}
-              title={isSponsored ? 'Remove boost' : 'Boost this post so it appears higher in the feed'}
-            >
-              {busyBoost ? '…' : isSponsored ? 'Unboost' : 'Boost'}
-            </Button>
+            <button type="button" disabled={busyBoost} onClick={toggleBoost} className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-stone-600 disabled:opacity-50" title={isSponsored ? 'Remove boost' : 'Boost'}>
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+            </button>
           ) : null}
           {canDelete ? (
-            <Button variant="secondary" disabled={busyDelete} onClick={del} title="Delete post">
-              {busyDelete ? 'Deleting…' : 'Delete'}
-            </Button>
+            <button type="button" disabled={busyDelete} onClick={() => setConfirmDeletePost(true)} className="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-red-500 disabled:opacity-50" title="Delete">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" /></svg>
+            </button>
           ) : null}
         </div>
       </div>
 
-      {post?.body ? <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">{post.body}</div> : null}
+      {/* Body */}
+      {post?.body ? <div className="mt-2 whitespace-pre-wrap px-5 text-[14px] leading-relaxed text-stone-800">{post.body}</div> : null}
 
-      {/* Marketplace linked post: produce / job / service with CTA */}
       {post?.type && post.type !== 'update' && post?.related?.id ? (
-        <LinkedPostBlock type={post.type} related={post.related} />
+        <div className="px-5"><LinkedPostBlock type={post.type} related={post.related} /></div>
       ) : null}
 
+      {/* Media */}
       {media.length ? (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {media.slice(0, 6).map((m) => (
-            <div key={m.url} className="overflow-hidden rounded-2xl border bg-white">
-              {m.kind === 'video' ? (
-                <video src={m.url} controls className="h-56 w-full object-cover" />
-              ) : (
-                <img src={m.url} alt="post media" className="h-56 w-full object-cover" loading="lazy" />
-              )}
-            </div>
+        <div className={`mt-3 ${media.length === 1 ? '' : 'grid grid-cols-2 gap-0.5'}`}>
+          {media.slice(0, 4).map((m, idx) => (
+            <PostMediaItem
+              key={`${m.url}-${idx}`}
+              media={m}
+              single={media.length === 1}
+              gridSpan={media.length > 2 && idx === 0 ? 2 : 1}
+            />
           ))}
         </div>
       ) : null}
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
-        <div className="text-slate-600">
+      {/* Reactions bar */}
+      <div className="flex items-center justify-between px-5 py-2">
+        <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
+          {likeCount > 0 ? (
+            <button type="button" onClick={openLikers} className="flex items-center gap-1 hover:underline">
+              <span>{reactionEmoji}</span>
+              <span className="font-medium">{likeCount}</span>
+            </button>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3 text-[12px] text-stone-400">
+          {commentCount > 0 ? (
+            <button type="button" onClick={toggleComments} className="hover:underline">
+              💬 {commentCount} Comments
+            </button>
+          ) : null}
           <button
             type="button"
-            onClick={openLikers}
-            className={
-              Number(post?.like_count ?? 0) > 0
-                ? 'font-medium text-slate-700 hover:text-slate-900 hover:underline'
-                : 'cursor-default'
-            }
-            disabled={Number(post?.like_count ?? 0) < 1}
-          >
-            {Number(post?.like_count ?? 0)} reactions
-          </button>
-          {' · '}
-          <button
-            type="button"
-            onClick={toggleComments}
-            className="font-medium text-slate-700 hover:text-slate-900 hover:underline"
-          >
-            {Number(post?.comment_count ?? 0)} Comments
-          </button>
-          {' · '}
-          <button
-            type="button"
-            className="font-medium text-slate-700 hover:text-slate-900 hover:underline"
+            className="hover:underline"
             onClick={() => {
               const url = window.location.origin + window.location.pathname + '?post=' + (post?.id ?? '')
               navigator.clipboard?.writeText(url).then(() => {}, () => {})
             }}
           >
-            Share
+            ↗ Share
           </button>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" size="sm" disabled={busyLike} onClick={toggleLike}>
-            {post.viewer_liked ? 'Unlike' : 'Like'}
-          </Button>
-          <Button variant="secondary" size="sm" onClick={toggleComments}>
-            {commentsOpen ? 'Hide comments' : 'Comments'}
-          </Button>
         </div>
       </div>
 
+      {/* Action buttons */}
+      <div className="flex items-center border-t border-stone-100 px-2">
+        <button
+          type="button"
+          disabled={busyLike}
+          onClick={toggleLike}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition ${isLiked ? 'text-emerald-600' : 'text-stone-500 hover:bg-stone-50'} disabled:opacity-50`}
+        >
+          <span className={isLiked ? 'scale-110' : ''} style={{ transition: 'transform 0.15s ease' }}>{isLiked ? '❤️' : '👍'}</span>
+          {isLiked ? 'Liked' : 'Like'}
+        </button>
+        <button
+          type="button"
+          onClick={toggleComments}
+          className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-50"
+        >
+          💬 Comment
+        </button>
+        <button
+          type="button"
+          className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-stone-500 transition hover:bg-stone-50"
+          onClick={() => {
+            const url = window.location.origin + window.location.pathname + '?post=' + (post?.id ?? '')
+            navigator.clipboard?.writeText(url).then(() => {}, () => {})
+          }}
+        >
+          ↗ Share
+        </button>
+      </div>
+
+      <ConfirmModal
+        open={confirmDeletePost}
+        onClose={() => setConfirmDeletePost(false)}
+        onConfirm={doDeletePost}
+        title="Delete post?"
+        description="This will permanently remove the post and all its comments. This can't be undone."
+        confirmLabel="Delete"
+        loading={busyDelete}
+      />
+      <ConfirmModal
+        open={!!confirmDeleteCommentId}
+        onClose={() => setConfirmDeleteCommentId(null)}
+        onConfirm={() => doDeleteComment(confirmDeleteCommentId)}
+        title="Delete comment?"
+        description="This comment will be permanently removed."
+        confirmLabel="Delete"
+        loading={!!busyDeleteCommentId}
+      />
       <LikersModal open={likersOpen} onClose={() => setLikersOpen(false)} postId={post?.id} />
 
       {commentsOpen ? (
-        <div className="mt-3 space-y-3">
+        <div className="border-t border-stone-100 px-5 py-3 space-y-3">
           <form onSubmit={submitComment} className="flex gap-2">
             <Input value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write a comment…" />
             <Button disabled={busyComment}>{busyComment ? '…' : 'Send'}</Button>
@@ -673,7 +795,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
               {thread.roots.map((c) => renderCommentNode(c, 0))}
             </div>
           ) : (
-            <div className="text-sm text-slate-600">No comments yet.</div>
+            <div className="text-sm text-stone-500">No comments yet.</div>
           )}
           {commentsHasMore ? (
             <div className="pt-1">
@@ -684,7 +806,7 @@ export function SocialPostCard({ post, viewerId, onRefresh }) {
           ) : null}
         </div>
       ) : null}
-    </Card>
+    </div>
   )
 }
 

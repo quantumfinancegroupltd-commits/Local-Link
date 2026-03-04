@@ -9,6 +9,7 @@ import { listOpsAlerts, resolveOpsAlert } from '../services/opsAlerts.js'
 import { isOffPlatformUrl, maskOffPlatformLinks, maskPhoneNumbers } from '../services/policy.js'
 import { recordPolicyEvent } from '../services/policy.js'
 import { generateShiftSeries } from '../services/workforce.js'
+import { notifyJobAlertSubscribers } from '../services/jobAlertNotify.js'
 
 export const corporateRouter = Router()
 
@@ -916,6 +917,8 @@ const CreateJobSchema = z.object({
   title: z.string().min(2).max(200),
   description: z.string().min(10).max(20_000),
   location: z.string().max(200).optional().nullable(),
+  location_lat: z.number().min(-90).max(90).optional().nullable(),
+  location_lng: z.number().min(-180).max(180).optional().nullable(),
   employment_type: z.enum(['full_time', 'part_time', 'contract', 'shift', 'internship']).optional().nullable(),
   work_mode: z.enum(['onsite', 'remote', 'hybrid']).optional().nullable(),
   pay_min: z.number().nonnegative().optional().nullable(),
@@ -954,14 +957,16 @@ corporateRouter.post('/company/jobs', requireAuth, asyncHandler(async (req, res)
 
   try {
     const r = await pool.query(
-      `insert into job_posts (company_id, title, description, location, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, schedule_text, benefits, tags, status, closes_at, image_url, updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::text[],$14::text[],'open',$15,$16,now())
+      `insert into job_posts (company_id, title, description, location, location_lat, location_lng, employment_type, work_mode, pay_min, pay_max, currency, pay_period, job_term, schedule_text, benefits, tags, status, closes_at, image_url, updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::text[],$15::text[],'open',$16,$17,now())
        returning *`,
       [
         companyId,
         parsed.data.title,
         parsed.data.description,
         parsed.data.location ?? null,
+        parsed.data.location_lat ?? null,
+        parsed.data.location_lng ?? null,
         parsed.data.employment_type ?? null,
         parsed.data.work_mode ?? null,
         parsed.data.pay_min ?? null,
@@ -978,6 +983,7 @@ corporateRouter.post('/company/jobs', requireAuth, asyncHandler(async (req, res)
     )
     const row = r.rows[0]
     await logCompanyAudit(req, { companyId, action: 'jobs.create', targetType: 'job_post', targetId: row?.id ?? null })
+    notifyJobAlertSubscribers(row).catch(() => {})
     return res.status(201).json(row)
   } catch (e) {
     // Backwards compatibility if migrations haven't been applied yet.
@@ -1000,12 +1006,53 @@ corporateRouter.post('/company/jobs', requireAuth, asyncHandler(async (req, res)
           parsed.data.closes_at ?? null,
         ],
       )
+      // Note: location_lat/lng not in fallback; migration 124 adds those columns
       const row = r.rows[0]
       await logCompanyAudit(req, { companyId, action: 'jobs.create', targetType: 'job_post', targetId: row?.id ?? null, meta: { compat: true } })
+      notifyJobAlertSubscribers(row).catch(() => {})
       return res.status(201).json(row)
     }
     throw e
   }
+}))
+
+// --- Job alerts (saved search: notify when new jobs match) ---
+const JobAlertCreateSchema = z.object({
+  name: z.string().max(100).optional().nullable(),
+  q: z.string().max(200).optional().nullable(),
+  location: z.string().max(200).optional().nullable(),
+  employment_type: z.string().max(50).optional().nullable(),
+  work_mode: z.string().max(50).optional().nullable(),
+})
+
+corporateRouter.get('/job-alerts', requireAuth, asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    'select * from job_alert_subscriptions where user_id = $1 order by created_at desc',
+    [req.user.sub],
+  )
+  return res.json(r.rows)
+}))
+
+corporateRouter.post('/job-alerts', requireAuth, asyncHandler(async (req, res) => {
+  const parsed = JobAlertCreateSchema.safeParse(req.body)
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const d = parsed.data
+  const r = await pool.query(
+    `insert into job_alert_subscriptions (user_id, name, q, location, employment_type, work_mode)
+     values ($1,$2,$3,$4,$5,$6)
+     returning *`,
+    [req.user.sub, d.name ?? null, d.q ?? null, d.location ?? null, d.employment_type ?? null, d.work_mode ?? null],
+  )
+  return res.status(201).json(r.rows[0])
+}))
+
+corporateRouter.delete('/job-alerts/:id', requireAuth, asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    'delete from job_alert_subscriptions where id = $1 and user_id = $2 returning id',
+    [req.params.id, req.user.sub],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Job alert not found' })
+  return res.status(204).send()
 }))
 
 // --- Payroll (beta): settings + employees + pay runs ---
@@ -3358,6 +3405,59 @@ corporateRouter.get('/company/analytics', requireAuth, asyncHandler(async (req, 
     budgets,
     departments_count: departmentsCount,
   })
+}))
+
+corporateRouter.get('/company/analytics/series', requireAuth, asyncHandler(async (req, res) => {
+  const days = Math.min(90, Math.max(7, Number(req.query.days) || 30))
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  const resolved = await resolveCompanyIdForReq(req)
+  if (!resolved.ok) return res.status(403).json({ message: 'Forbidden' })
+  const companyId = resolved.companyId
+  if (!companyId) return res.json({ series: [], days })
+
+  const ok = await requireWorkspaceRole(req, res, companyId, ['owner', 'ops', 'hr', 'finance', 'supervisor', 'auditor'])
+  if (!ok.ok) return
+
+  const [completedByDay, noShowsByDay] = await Promise.all([
+    pool.query(
+      `select date_trunc('day', a.updated_at at time zone 'UTC')::date as day, count(*)::int as count
+       from shift_assignments a
+       join shift_blocks s on s.id = a.shift_id
+       where s.company_id = $1 and a.status = 'completed' and a.updated_at >= $2
+       group by 1 order by 1`,
+      [companyId, since],
+    ),
+    pool.query(
+      `select date_trunc('day', coalesce(a.updated_at, a.created_at) at time zone 'UTC')::date as day, count(*)::int as count
+       from shift_assignments a
+       join shift_blocks s on s.id = a.shift_id
+       where s.company_id = $1 and a.status = 'no_show' and (a.updated_at >= $2 or a.created_at >= $2)
+       group by 1 order by 1`,
+      [companyId, since],
+    ),
+  ])
+
+  const dayMap = {}
+  for (let d = 0; d < days; d++) {
+    const t = new Date(since)
+    t.setUTCDate(t.getUTCDate() + d)
+    const key = t.toISOString().slice(0, 10)
+    dayMap[key] = { day: key, shifts_completed: 0, no_shows: 0 }
+  }
+  completedByDay.rows.forEach((r) => {
+    const key = r.day ? new Date(r.day).toISOString().slice(0, 10) : null
+    if (key && dayMap[key]) dayMap[key].shifts_completed = r.count
+  })
+  noShowsByDay.rows.forEach((r) => {
+    const key = r.day ? new Date(r.day).toISOString().slice(0, 10) : null
+    if (key && dayMap[key]) dayMap[key].no_shows = r.count
+  })
+
+  const series = Object.keys(dayMap)
+    .sort()
+    .map((k) => dayMap[k])
+
+  return res.json({ series, days })
 }))
 
 // --- Enterprise: Departments CRUD ---

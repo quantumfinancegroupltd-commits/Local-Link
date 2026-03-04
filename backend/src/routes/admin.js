@@ -13,6 +13,7 @@ import { creditWalletTx } from '../services/walletLedger.js'
 import { recordPolicyEvent } from '../services/policy.js'
 import { listOpsAlerts, resolveOpsAlert } from '../services/opsAlerts.js'
 import { computeStuckMoneySignals } from '../services/opsDetectors.js'
+import { sendEmail } from '../services/mailer.js'
 
 export const adminRouter = Router()
 
@@ -182,6 +183,168 @@ adminRouter.delete('/news/:id', requireAuth, requireRole(['admin']), asyncHandle
   )
   if (!r.rows[0]) return res.status(404).json({ message: 'News post not found' })
   return res.json({ ok: true })
+}))
+
+// --- Affiliates ---
+adminRouter.get('/affiliates', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const status = String(req.query.status || 'all')
+  const whereStatus = status === 'pending' || status === 'approved' || status === 'rejected' ? status : null
+  const r = await pool.query(
+    `select id, user_id, status, tier_level, commission_rate, total_earned,
+            full_name, email, phone, location_city, instagram_handle, tiktok_handle, youtube_channel,
+            website, whatsapp_group_size, why_affiliate, how_promote, estimated_audience_size, admin_notes,
+            created_at, updated_at, approved_at, rejected_at
+     from affiliates
+     where ($1::text is null or status = $1)
+     order by created_at desc
+     limit 200`,
+    [whereStatus],
+  )
+  return res.json(r.rows)
+}))
+
+adminRouter.get('/affiliates/:id', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `select * from affiliates where id = $1`,
+    [req.params.id],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Affiliate not found' })
+  return res.json(r.rows[0])
+}))
+
+adminRouter.patch('/affiliates/:id/approve', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `update affiliates
+     set status = 'approved', approved_at = now(), updated_at = now(), rejected_at = null
+     where id = $1 and status = 'pending'
+     returning id, email, full_name, status`,
+    [req.params.id],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Affiliate not found or not pending' })
+  const row = r.rows[0]
+  await sendEmail({
+    to: row.email,
+    subject: 'Your LocalLink affiliate account is now active',
+    text: `Hi ${row.full_name},\n\nYour LocalLink affiliate account has been approved. You can now log in and access your dashboard to create promo codes and referral links.\n\nLog in at: ${env.APP_BASE_URL || 'https://locallink.agency'}/login\nThen go to: /affiliates/dashboard\n\nThanks,\nThe LocalLink Team`,
+  }).catch(() => {})
+  await auditAdminAction({ adminUserId: req.user.sub, action: 'affiliate_approve', meta: { affiliate_id: row.id } })
+  return res.json(row)
+}))
+
+adminRouter.patch('/affiliates/:id/reject', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const note = typeof req.body?.admin_notes === 'string' ? req.body.admin_notes.trim().slice(0, 500) : null
+  const r = await pool.query(
+    `update affiliates
+     set status = 'rejected', rejected_at = now(), updated_at = now(), approved_at = null${note != null ? ', admin_notes = $2' : ''}
+     where id = $1 and status = 'pending'
+     returning id, status`,
+    note != null ? [req.params.id, note] : [req.params.id],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Affiliate not found or not pending' })
+  await auditAdminAction({ adminUserId: req.user.sub, action: 'affiliate_reject', meta: { affiliate_id: r.rows[0].id } })
+  return res.json(r.rows[0])
+}))
+
+adminRouter.put('/affiliates/:id/notes', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const note = typeof req.body?.admin_notes === 'string' ? req.body.admin_notes.trim().slice(0, 2000) : null
+  await pool.query('update affiliates set admin_notes = $1, updated_at = now() where id = $2', [note, req.params.id])
+  const r = await pool.query('select id, admin_notes from affiliates where id = $1', [req.params.id])
+  if (!r.rows[0]) return res.status(404).json({ message: 'Affiliate not found' })
+  return res.json(r.rows[0])
+}))
+
+adminRouter.get('/payouts', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const status = String(req.query.status || 'all')
+  const whereStatus = status === 'requested' || status === 'processing' || status === 'paid' ? status : null
+  const r = await pool.query(
+    `select p.*, a.full_name as affiliate_name, a.email as affiliate_email
+     from payouts p
+     join affiliates a on a.id = p.affiliate_id
+     where ($1::text is null or p.status = $1)
+     order by p.requested_at desc
+     limit 200`,
+    [whereStatus],
+  )
+  return res.json(r.rows)
+}))
+
+adminRouter.patch('/payouts/:id/pay', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const client = await pool.connect()
+  try {
+    await client.query('begin')
+    const p = await client.query('select * from payouts where id = $1 for update', [req.params.id])
+    const payout = p.rows[0]
+    if (!payout) {
+      await client.query('rollback')
+      return res.status(404).json({ message: 'Payout not found' })
+    }
+    if (payout.status === 'paid') {
+      await client.query('commit')
+      return res.json(payout)
+    }
+    if (payout.status !== 'requested' && payout.status !== 'processing') {
+      await client.query('rollback')
+      return res.status(400).json({ message: `Payout in status '${payout.status}' cannot be marked paid` })
+    }
+
+    const approved = await client.query(
+      `select id, amount from commissions
+       where affiliate_id = $1 and status = 'approved' and payout_id is null
+       order by created_at asc`,
+      [payout.affiliate_id],
+    )
+    let allocated = 0
+    const ids = []
+    const target = Number(payout.amount)
+    for (const row of approved.rows) {
+      if (allocated >= target) break
+      ids.push(row.id)
+      allocated += Number(row.amount)
+    }
+    if (allocated < target * 0.99) {
+      await client.query('rollback')
+      return res.status(400).json({
+        message: `Insufficient approved commission: need $${payout.amount}, available ~$${allocated.toFixed(2)}. Approve more commissions or reduce payout.`,
+      })
+    }
+
+    if (ids.length > 0) {
+      await client.query(
+        `update commissions set status = 'paid', paid_at = now(), payout_id = $1 where id = any($2::uuid[])`,
+        [payout.id, ids],
+      )
+    }
+    await client.query(
+      `update payouts set status = 'paid', paid_at = now() where id = $1`,
+      [payout.id],
+    )
+    const updated = await client.query('select * from payouts where id = $1', [payout.id])
+    await client.query('commit')
+
+    await auditAdminAction({
+      adminUserId: req.user.sub,
+      action: 'affiliate_payout_paid',
+      targetType: 'payout',
+      targetId: payout.id,
+      meta: { affiliate_id: payout.affiliate_id, amount: payout.amount, commissions_count: ids.length },
+    }).catch(() => {})
+
+    return res.json(updated.rows[0])
+  } catch (e) {
+    try { await client.query('rollback') } catch {}
+    throw e
+  } finally {
+    client.release()
+  }
+}))
+
+adminRouter.patch('/payouts/:id/processing', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `update payouts set status = 'processing' where id = $1 and status = 'requested' returning *`,
+    [req.params.id],
+  )
+  if (!r.rows[0]) return res.status(404).json({ message: 'Payout not found or not in requested status' })
+  return res.json(r.rows[0])
 }))
 
 // --- Reliability / queues (internal ops) ---
@@ -1890,6 +2053,12 @@ adminRouter.post('/disputes/:id/resolve', requireAuth, requireRole(['admin']), a
         idempotencyKey: `escrow_release:${escrow.id}`,
         meta: { dispute_id: dispute.id, resolved_by: req.user.sub, platform_fee: platformFee, gross_amount: sellerAmount },
       })
+      const { tryAffiliateCommissionOnRelease } = await import('../services/affiliateCommission.js')
+      await tryAffiliateCommissionOnRelease(client, {
+        counterpartyUserId: escrow.counterparty_user_id,
+        platformFee,
+        escrowId: escrow.id,
+      })
     }
     if (buyerAmount > 0 && escrow.buyer_id) {
       await creditWalletTx(client, {
@@ -2322,6 +2491,12 @@ adminRouter.post('/escrows/:id/release', requireAuth, requireRole(['admin']), as
         },
       })
     }
+    const { tryAffiliateCommissionOnRelease } = await import('../services/affiliateCommission.js')
+    await tryAffiliateCommissionOnRelease(client, {
+      counterpartyUserId: escrow.counterparty_user_id,
+      platformFee,
+      escrowId: escrow.id,
+    })
 
     const updated = await client.query(
       `update escrow_transactions

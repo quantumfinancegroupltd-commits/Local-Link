@@ -52,11 +52,11 @@ export function ProfileCompletionWidget({ artisanProfile, className = '' }) {
     <Card className={`border-slate-200 ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Profile completion</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Profile completion</div>
           <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{pct}%</span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white">{pct}%</span>
             {!isComplete && missing.length > 0 ? (
-              <span className="text-sm text-slate-600">— add {missing[0].label.toLowerCase()} to get more matches</span>
+              <span className="text-sm text-slate-600 dark:text-slate-300">— add {missing[0].label.toLowerCase()} to get more matches</span>
             ) : null}
           </div>
           <div className="mt-2 h-2 w-full max-w-[200px] overflow-hidden rounded-full bg-slate-200">
@@ -66,7 +66,7 @@ export function ProfileCompletionWidget({ artisanProfile, className = '' }) {
             />
           </div>
         </div>
-        <Link to="/profile" className="shrink-0 text-sm font-medium text-emerald-700 hover:underline">
+        <Link to="/profile" className="shrink-0 text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-300">
           {isComplete ? 'View profile' : 'Complete profile'}
         </Link>
       </div>

@@ -39,7 +39,7 @@ function renderArticleBody(body) {
     paragraph = []
     if (!p) return
     out.push(
-      <p key={`p-${out.length}`} className="mt-3 text-sm leading-relaxed text-slate-800">
+      <p key={`p-${out.length}`} className="mt-3 text-sm leading-relaxed text-slate-800 dark:text-slate-300">
         {p}
       </p>,
     )
@@ -50,7 +50,7 @@ function renderArticleBody(body) {
     list = []
     if (!items.length) return
     out.push(
-      <ul key={`ul-${out.length}`} className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-800">
+      <ul key={`ul-${out.length}`} className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-800 dark:text-slate-300">
         {items.map((x, idx) => (
           <li key={idx}>{x}</li>
         ))}
@@ -74,7 +74,7 @@ function renderArticleBody(body) {
       flushParagraph()
       const h = trimmed.replace(/^##\s+/, '').trim()
       out.push(
-        <div key={`h2-${out.length}`} className="mt-6 text-base font-bold text-slate-900">
+        <div key={`h2-${out.length}`} className="mt-6 text-base font-bold text-slate-900 dark:text-white">
           {h}
         </div>,
       )
@@ -86,7 +86,7 @@ function renderArticleBody(body) {
       flushList()
       flushParagraph()
       out.push(
-        <div key={`cta-${out.length}`} className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3 text-sm font-bold italic text-slate-900">
+        <div key={`cta-${out.length}`} className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3 text-sm font-bold italic text-slate-900 dark:border-emerald-500/30 dark:bg-emerald-900/20 dark:text-white">
           {trimmed}
         </div>,
       )
@@ -108,7 +108,7 @@ function renderArticleBody(body) {
   flushList()
   flushParagraph()
 
-  return out.length ? out : <div className="text-sm text-slate-700 whitespace-pre-wrap">{text}</div>
+  return out.length ? out : <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{text}</div>
 }
 
 export function NewsPost() {
@@ -158,16 +158,16 @@ export function NewsPost() {
         <Card>Loading…</Card>
       ) : error ? (
         <Card>
-          <div className="text-sm text-red-700">{error}</div>
+          <div className="text-sm text-red-700 dark:text-red-400">{error}</div>
         </Card>
       ) : !post ? (
         <Card>
-          <div className="text-sm text-slate-600">Not found.</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400">Not found.</div>
         </Card>
       ) : (
         <Card className="p-5">
           {post.hero_image_url ? (
-            <figure className="mb-5 overflow-hidden rounded-2xl border bg-slate-50">
+            <figure className="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
               <img
                 src={proxiedImage(post.hero_image_url)}
                 alt={post.hero_image_alt ?? post.title ?? 'News cover'}
@@ -178,17 +178,14 @@ export function NewsPost() {
                   e.currentTarget.style.display = 'none'
                 }}
               />
-              {post.hero_image_credit ? (
-                <figcaption className="border-t bg-white px-4 py-2 text-xs text-slate-500">{post.hero_image_credit}</figcaption>
-              ) : null}
             </figure>
           ) : null}
           {post.category ? (
             <div className="mb-3">
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{post.category}</span>
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-white/10 dark:text-slate-300">{post.category}</span>
             </div>
           ) : null}
-          <div className="prose prose-slate max-w-none">
+          <div className="prose prose-slate max-w-none dark:prose-invert">
             {renderArticleBody(post.body)}
           </div>
         </Card>

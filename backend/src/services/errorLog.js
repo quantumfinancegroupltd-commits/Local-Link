@@ -21,8 +21,9 @@ export function logErrorToDb(err, req = null) {
          values ($1, $2, $3, $4, $5, $6, $7)`,
         [message.slice(0, 2000), (stack || '').slice(0, 10000), code, method, path, reqId, userId],
       )
-      .catch(() => {
-        // Silently ignore DB errors (e.g. table not yet migrated)
+      .catch((dbErr) => {
+        // eslint-disable-next-line no-console
+        console.error('[errorLog] Failed to persist error to DB:', dbErr?.message)
       })
   })
 }

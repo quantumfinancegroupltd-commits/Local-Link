@@ -4,6 +4,7 @@ import { http } from '../api/http.js'
 import { Button, Card } from '../components/ui/FormControls.jsx'
 import { PageHeader } from '../components/ui/PageHeader.jsx'
 import { EmptyState } from '../components/ui/EmptyState.jsx'
+import { Skeleton } from '../components/ui/Skeleton.jsx'
 import { enablePushNotifications, isPushSupported } from '../lib/push.js'
 
 function timeAgo(ts) {
@@ -133,7 +134,17 @@ export function Notifications() {
       )}
 
       {loading ? (
-        <Card>Loading…</Card>
+        <Card className="space-y-4">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-start gap-3">
+              <Skeleton variant="circle" className="h-9 w-9 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-3/4" />
+                <Skeleton className="h-2.5 w-1/3" />
+              </div>
+            </div>
+          ))}
+        </Card>
       ) : error ? (
         <EmptyState title="Couldn’t load notifications" description={error} actions={<Button onClick={load}>Try again</Button>} />
       ) : items.length === 0 ? (

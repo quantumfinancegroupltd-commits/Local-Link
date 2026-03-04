@@ -10,6 +10,7 @@ import { ProductCard } from '../components/marketplace/ProductCard.jsx'
 import { ServiceCard } from '../components/marketplace/ServiceCard.jsx'
 import { ui } from '../components/ui/tokens.js'
 
+
 function ComingSoonTile({ title, description, imageUrl, onClick }) {
   return (
     <button
@@ -32,8 +33,8 @@ function ComingSoonTile({ title, description, imageUrl, onClick }) {
         </div>
       </div>
       <div className="p-5">
-        <div className="text-base font-semibold text-slate-900">{title}</div>
-        <div className="mt-1 text-sm text-slate-600">{description}</div>
+        <div className="text-base font-semibold text-slate-900 dark:text-white">{title}</div>
+        <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</div>
       </div>
     </button>
   )
@@ -185,23 +186,23 @@ export function Home() {
     <div className="space-y-10" data-build="locallink-2026-02-feed-boost">
       <ComingSoonModal open={comingOpen} onClose={() => setComingOpen(false)} item={comingKey ? comingSoonItems[comingKey] : null} />
       {/* HERO */}
-      <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-soft md:p-12">
+      <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-white p-8 shadow-soft md:p-12 dark:border-white/10 dark:bg-white/5">
         <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gradient-to-br from-brand-emerald/25 via-brand-lime/15 to-brand-orange/20 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-gradient-to-tr from-brand-orange/20 via-brand-lime/15 to-brand-emerald/20 blur-2xl" />
 
         <div className="relative max-w-2xl">
-          <div className="text-sm font-semibold text-slate-700">Trusted local services & supplies — Ghana-ready</div>
-          <h1 className="mt-4 text-3xl font-bold leading-[1.08] tracking-tight text-slate-900 md:text-5xl">
+          <div className={ui.kicker}>Trusted local services & supplies — Ghana-ready</div>
+          <h1 className={['mt-4 text-balance', ui.display].join(' ')}>
             Hire a professional. Buy fresh produce. Find employees.
           </h1>
-          <p className="mt-5 text-base leading-relaxed text-slate-600">
+          <p className="mt-5 text-base leading-relaxed text-slate-600 dark:text-slate-400">
             LocalLink is a trust + payment + coordination layer: verification tiers, escrow-style payments (Trust Wallet), delivery,
             and real reviews.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link to="/register?role=buyer&intent=fix">
-              <Button className="px-5 py-2.5">Hire a professional</Button>
+              <Button className="shadow-md ring-2 ring-emerald-200/60 px-5 py-2.5">Hire a professional</Button>
             </Link>
             <Link to="/register?role=buyer&intent=produce">
               <Button variant="secondary" className="px-5 py-2.5">
@@ -224,21 +225,21 @@ export function Home() {
 
       {/* STATS ROW */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">2,400+</div>
-          <div className="mt-1 text-sm font-medium text-slate-500">Verified providers</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center dark:border-white/10 dark:bg-white/5">
+          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-white">2,400+</div>
+          <div className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Verified providers</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">GHS 1.2M+</div>
-          <div className="mt-1 text-sm font-medium text-slate-500">Paid to artisans</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center dark:border-white/10 dark:bg-white/5">
+          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-white">GHS 1.2M+</div>
+          <div className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Paid to artisans</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">8,000+</div>
-          <div className="mt-1 text-sm font-medium text-slate-500">Jobs completed</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center dark:border-white/10 dark:bg-white/5">
+          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-white">8,000+</div>
+          <div className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Jobs completed</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">12 cities</div>
-          <div className="mt-1 text-sm font-medium text-slate-500">Across Ghana</div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-5 text-center dark:border-white/10 dark:bg-white/5">
+          <div className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl dark:text-white">12 cities</div>
+          <div className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Across Ghana</div>
         </div>
       </div>
 
@@ -246,10 +247,10 @@ export function Home() {
       <div>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+            <h2 className={ui.h1}>
               Hire, buy, employ — plus events & domestic.
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               Skilled labour, produce & flowers, and employers. Events & Catering and Domestic (cleaners, laundry) are live with scheduling and escrow. More verticals unlock later.
             </p>
           </div>
@@ -280,8 +281,8 @@ export function Home() {
         </div>
 
         <div className="mt-6">
-          <div className="text-sm font-semibold text-slate-900">Events, domestic services & more</div>
-          <div className="mt-1 text-xs text-slate-500">Caterers and equipment, cleaners and laundry — scheduling + escrow. Care givers coming later.</div>
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">Events, domestic services & more</div>
+          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">Caterers and equipment, cleaners and laundry — scheduling + escrow. Care givers coming later.</div>
           <div className="mt-3 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {showEvents ? (
               <UseCaseTile
@@ -372,8 +373,8 @@ export function Home() {
       <div className="space-y-8">
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-slate-900">Provider services</h2>
-            <Link to="/marketplace?tab=services" className="text-sm font-semibold text-brand-emerald hover:underline">
+            <h2 className={ui.h2}>Provider services</h2>
+            <Link to="/marketplace?tab=services" className="text-sm font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline">
               See all →
             </Link>
           </div>
@@ -400,8 +401,8 @@ export function Home() {
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-slate-900">{FARMER_FLORIST_MARKETPLACE_LABEL}</h2>
-            <Link to="/marketplace" className="text-sm font-semibold text-brand-emerald hover:underline">
+            <h2 className={ui.h2}>{FARMER_FLORIST_MARKETPLACE_LABEL}</h2>
+            <Link to="/marketplace" className="text-sm font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline">
               See all →
             </Link>
           </div>
@@ -428,8 +429,8 @@ export function Home() {
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-slate-900">Employers — open roles</h2>
-            <Link to="/jobs" className="text-sm font-semibold text-brand-emerald hover:underline">
+            <h2 className={ui.h2}>Employers — open roles</h2>
+            <Link to="/jobs" className="text-sm font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline">
               See all →
             </Link>
           </div>
@@ -460,7 +461,7 @@ export function Home() {
                   <Link
                     key={j.id}
                     to={`/jobs/${j.id}`}
-                    className={['flex-shrink-0 w-80 snap-start overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-brand-emerald/50 hover:shadow-md', ui.cardHover].join(' ')}
+                    className={['flex-shrink-0 w-80 snap-start overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-orange-400/50 hover:shadow-md', ui.cardHover].join(' ')}
                   >
                     <div className="relative h-36 w-full min-h-[9rem] bg-slate-200">
                       <img
@@ -480,7 +481,7 @@ export function Home() {
                         {j.location ? ` · ${j.location}` : ''}
                       </div>
                       {moneyRange(j) ? <div className="mt-2 text-sm font-semibold text-emerald-700">{moneyRange(j)}</div> : null}
-                      <div className="mt-3 text-xs font-medium text-brand-emerald">View role →</div>
+                      <div className="mt-3 text-xs font-medium text-orange-600 dark:text-orange-400">View role →</div>
                     </div>
                   </Link>
                   )
@@ -492,9 +493,9 @@ export function Home() {
       </div>
 
       {/* HOW IT WORKS */}
-      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <h2 className="text-xl font-bold text-slate-900 md:text-2xl">How it works</h2>
-        <p className="mt-2 text-slate-600">
+      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10 dark:border-white/10 dark:bg-white/5">
+        <h2 className={ui.h1}>How it works</h2>
+        <p className="mt-2 text-slate-600 dark:text-slate-400">
           Every transaction is protected. Nobody pays until the job is done right.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -509,7 +510,7 @@ export function Home() {
               key={id}
               type="button"
               onClick={() => setHowItWorksTab(id)}
-              className={['rounded-full px-4 py-2 text-sm font-medium transition', howItWorksTab === id ? 'bg-brand-emerald text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'].join(' ')}
+              className={['rounded-full px-4 py-2 text-sm font-medium transition', howItWorksTab === id ? 'bg-brand-green text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/20'].join(' ')}
             >
               {label}
             </button>
@@ -553,10 +554,10 @@ export function Home() {
           return (
             <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {steps.map(({ step, title, body }) => (
-                <div key={step} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5">
-                  <div className="text-2xl font-bold tabular-nums text-brand-emerald">{step}</div>
-                  <div className="mt-2 font-semibold text-slate-900">{title}</div>
-                  <p className="mt-2 text-sm text-slate-600">{body}</p>
+                <div key={step} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-5 dark:border-white/10 dark:bg-white/5">
+                  <div className="text-2xl font-bold tabular-nums text-brand-green">{step}</div>
+                  <div className="mt-2 font-semibold text-slate-900 dark:text-white">{title}</div>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{body}</p>
                 </div>
               ))}
             </div>
@@ -566,77 +567,77 @@ export function Home() {
 
       {/* TRUST STRIP — enhanced */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm', ui.cardHover].join(' ')}>
-          <div className="text-sm font-semibold text-slate-900">Verified providers, farmers & florists</div>
-          <p className="mt-1 text-sm text-slate-600">Bronze / Silver / Gold trust tiers. Ghana Card + selfie verification gives buyers real confidence before hiring.</p>
-          <Link to="/trust/verification" className="mt-3 inline-block text-sm font-medium text-brand-emerald hover:underline">Verification tiers →</Link>
+        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">Verified providers, farmers & florists</div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Bronze / Silver / Gold trust tiers. Ghana Card + selfie verification gives buyers real confidence before hiring.</p>
+          <Link to="/trust/verification" className="mt-3 inline-block text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 hover:underline">Verification tiers →</Link>
         </div>
-        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm', ui.cardHover].join(' ')}>
-          <div className="text-sm font-semibold text-slate-900">Secure escrow payments</div>
-          <p className="mt-1 text-sm text-slate-600">Funds held until completion/delivery. Auto-release after 72h. Full dispute resolution if anything goes wrong.</p>
-          <span className="mt-3 inline-block text-sm font-medium text-brand-emerald">How escrow works</span>
+        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">Secure escrow payments</div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Funds held until completion/delivery. Auto-release after 72h. Full dispute resolution if anything goes wrong.</p>
+          <span className="mt-3 inline-block text-sm font-medium text-orange-600 dark:text-orange-400">How escrow works</span>
         </div>
-        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm', ui.cardHover].join(' ')}>
-          <div className="text-sm font-semibold text-slate-900">Real reviews</div>
-          <p className="mt-1 text-sm text-slate-600">Reputation that can’t be faked. Every review is tied to a real completed transaction — no anonymous ratings.</p>
-          <span className="mt-3 inline-block text-sm font-medium text-brand-emerald">How reviews work</span>
+        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">Real reviews</div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Reputation that can’t be faked. Every review is tied to a real completed transaction — no anonymous ratings.</p>
+          <span className="mt-3 inline-block text-sm font-medium text-orange-600 dark:text-orange-400">How reviews work</span>
         </div>
-        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm', ui.cardHover].join(' ')}>
-          <div className="text-sm font-semibold text-slate-900">Local support</div>
-          <p className="mt-1 text-sm text-slate-600">Help via WhatsApp and phone (coming next). Real humans who understand the Ghanaian market.</p>
-          <Link to="/support" className="mt-3 inline-block text-sm font-medium text-brand-emerald hover:underline">Contact us →</Link>
+        <div className={['rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+          <div className="text-sm font-semibold text-slate-900 dark:text-white">Local support</div>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Help via WhatsApp and phone (coming next). Real humans who understand the Ghanaian market.</p>
+          <Link to="/support" className="mt-3 inline-block text-sm font-medium text-orange-600 hover:text-orange-700 dark:text-orange-400 hover:underline">Contact us →</Link>
         </div>
       </div>
 
       {/* EARLY USERS */}
-      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <h2 className="text-xl font-bold text-slate-900">Early users</h2>
+      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10 dark:border-white/10 dark:bg-white/5">
+        <h2 className={ui.h2}>Early users</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           {[
             { quote: '“I hired a plumber and ordered vegetables in one place. No stress.”', author: 'Early user, Accra' },
             { quote: '“The verification badges make it easy to trust who I\'m paying.”', author: 'SME owner, Kumasi' },
             { quote: '“Escrow is exactly what Ghana needs for work and deliveries.”', author: 'Landlord, Tema' },
           ].map(({ quote, author }, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div key={i} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-white/10 dark:bg-white/5">
               <div className="text-amber-500 text-sm tracking-wide">★★★★★</div>
-              <div className="mt-3 text-sm text-slate-800">{quote}</div>
-              <div className="mt-3 text-xs font-semibold text-slate-600">— {author}</div>
+              <div className="mt-3 text-sm text-slate-800 dark:text-slate-200">{quote}</div>
+              <div className="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-400">— {author}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* FOR PROVIDERS */}
-      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <h2 className="text-2xl font-bold text-slate-900">For providers</h2>
-        <p className="mt-2 text-lg font-medium text-slate-700">Your skills. Your hours. Your money.</p>
-        <p className="mt-3 text-slate-600">
+      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10 dark:border-white/10 dark:bg-white/5">
+        <h2 className={ui.h1}>For providers</h2>
+        <p className="mt-2 text-lg font-medium text-slate-700 dark:text-slate-300">Your skills. Your hours. Your money.</p>
+        <p className="mt-3 text-slate-600 dark:text-slate-400">
           Thousands of buyers across Ghana are looking for exactly what you offer. Join as a verified provider and start earning — on your schedule, in your area.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <Link to="/register?role=artisan" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition', ui.cardHover].join(' ')}>
-            <div className="font-semibold text-slate-900">Artisan / Skilled Professional</div>
-            <p className="mt-1 text-sm text-slate-600">Electrician, plumber, cleaner, caterer, builder…</p>
+          <Link to="/register?role=artisan" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+            <div className="font-semibold text-slate-900 dark:text-white">Artisan / Skilled Professional</div>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Electrician, plumber, cleaner, caterer, builder…</p>
           </Link>
-          <Link to="/register?role=farmer" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition', ui.cardHover].join(' ')}>
-            <div className="font-semibold text-slate-900">Farmer / Florist</div>
-            <p className="mt-1 text-sm text-slate-600">Sell produce and flowers directly to local buyers</p>
+          <Link to="/register?role=farmer" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+            <div className="font-semibold text-slate-900 dark:text-white">Farmer / Florist</div>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Sell produce and flowers directly to local buyers</p>
           </Link>
-          <Link to="/register?role=driver" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition', ui.cardHover].join(' ')}>
-            <div className="font-semibold text-slate-900">Delivery Driver</div>
-            <p className="mt-1 text-sm text-slate-600">Claim deliveries near you, earn per trip</p>
+          <Link to="/register?role=driver" className={['rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition dark:border-white/10 dark:bg-white/5', ui.cardHover].join(' ')}>
+            <div className="font-semibold text-slate-900 dark:text-white">Delivery Driver</div>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Claim deliveries near you, earn per trip</p>
           </Link>
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-6">
           <Link to="/register?role=artisan">
             <Button className="px-5 py-2.5">Start earning today</Button>
           </Link>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm min-w-[280px]">
-            <div className="text-xs font-semibold text-slate-500">Your Earnings</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">Dec 2024</div>
-            <div className="mt-0.5 text-lg font-semibold text-brand-emerald">GHS 4,820</div>
-            <div className="mt-2 text-xs text-slate-500">31% from last month</div>
-            <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-700">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm min-w-[280px] dark:border-white/10 dark:bg-white/5">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Your Earnings</div>
+            <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">Dec 2024</div>
+            <div className="mt-0.5 text-lg font-semibold text-orange-600 dark:text-orange-400">GHS 4,820</div>
+            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">31% from last month</div>
+            <ul className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-sm text-slate-700 dark:border-white/10 dark:text-slate-300">
               <li>Deep clean — East Legon · GHS 280</li>
               <li>Electrical repair — Airport Hills · GHS 450</li>
               <li>Catering — Cantonments · GHS 1,200</li>
@@ -647,15 +648,15 @@ export function Home() {
       </div>
 
       {/* FOR BUSINESSES */}
-      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10">
-        <h2 className="text-2xl font-bold text-slate-900">For businesses</h2>
-        <p className="mt-2 text-lg font-medium text-slate-700">Run your workforce from one place.</p>
-        <p className="mt-3 text-slate-600">
+      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10 dark:border-white/10 dark:bg-white/5">
+        <h2 className={ui.h1}>For businesses</h2>
+        <p className="mt-2 text-lg font-medium text-slate-700 dark:text-slate-300">Run your workforce from one place.</p>
+        <p className="mt-3 text-slate-600 dark:text-slate-400">
           Post jobs, create shifts, track attendance, and manage your casual and permanent workforce — without the spreadsheets.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {['Geo-fenced check-in', 'Recurring shifts', 'Workforce lists', 'Post to jobs board', 'Attendance tracking', 'No-show auto-flag'].map((feature) => (
-            <span key={feature} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700">
+            <span key={feature} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 dark:bg-white/10 dark:text-slate-200">
               {feature}
             </span>
           ))}
@@ -671,11 +672,11 @@ export function Home() {
       </div>
 
       {/* OFFLINE FIRST */}
-      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10">
+      <div className="rounded-[32px] border border-slate-200 bg-white p-7 shadow-sm md:p-10 dark:border-white/10 dark:bg-white/5">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="max-w-2xl">
-            <div className="text-sm font-semibold text-slate-900">Offline-first</div>
-            <div className="mt-2 text-base text-slate-600">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white">Offline-first</div>
+            <div className="mt-2 text-base text-slate-600 dark:text-slate-400">
               No smartphone? No problem. Post jobs or orders via WhatsApp or call us (coming next).
             </div>
           </div>

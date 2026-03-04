@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { http } from '../../api/http.js'
+import { http, resolveUploadUrl } from '../../api/http.js'
 import { Button, Card, Input } from '../../components/ui/FormControls.jsx'
 import { Tabs } from '../../components/ui/Tabs.jsx'
 import { useAuth } from '../../auth/useAuth.js'
@@ -17,6 +17,38 @@ import { WorkHistoryCard } from '../../components/profile/WorkHistory.jsx'
 import { SkillEndorsementsCard } from '../../components/profile/SkillEndorsements.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
 import { ExperienceBadgesModal } from '../../components/profile/ExperienceBadgesModal.jsx'
+
+function ProfilePostMediaItem({ media }) {
+  const [imgError, setImgError] = useState(false)
+  const url = resolveUploadUrl(media?.url)
+  const isVideo = media?.kind === 'video'
+  if (!url) {
+    return (
+      <div className="flex h-56 items-center justify-center overflow-hidden rounded-2xl border bg-stone-100">
+        <span className="text-xs font-medium text-stone-400">Image unavailable</span>
+      </div>
+    )
+  }
+  if (isVideo) {
+    return (
+      <div className="overflow-hidden rounded-2xl border bg-white">
+        <video src={url} controls className="h-56 w-full object-cover" />
+      </div>
+    )
+  }
+  if (imgError) {
+    return (
+      <div className="flex h-56 items-center justify-center overflow-hidden rounded-2xl border bg-stone-100">
+        <span className="text-xs font-medium text-stone-400">Image unavailable</span>
+      </div>
+    )
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border bg-white">
+      <img src={url} alt="" className="h-56 w-full object-cover" loading="lazy" onError={() => setImgError(true)} />
+    </div>
+  )
+}
 
 function kindLabel(kind) {
   if (kind === 'experience') return 'Experience'
@@ -543,13 +575,7 @@ function PostCard({ post, canDelete, canInteract, onRefresh, viewerId }) {
       {media.length ? (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {media.slice(0, 6).map((m) => (
-            <div key={m.url} className="overflow-hidden rounded-2xl border bg-white">
-              {m.kind === 'video' ? (
-                <video src={m.url} controls className="h-56 w-full object-cover" />
-              ) : (
-                <img src={m.url} alt="post media" className="h-56 w-full object-cover" loading="lazy" />
-              )}
-            </div>
+            <ProfilePostMediaItem key={m.url} media={m} />
           ))}
         </div>
       ) : null}

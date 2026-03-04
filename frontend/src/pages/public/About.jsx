@@ -5,9 +5,9 @@ export function About() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Card>
-        <div className="text-sm font-semibold text-slate-700">Company</div>
-        <h1 className="mt-2 text-2xl font-bold">About LocalLink</h1>
-        <p className="mt-3 text-sm text-slate-700">
+        <div className="text-sm font-semibold text-slate-700 dark:text-slate-400">Company</div>
+        <h1 className="mt-2 text-2xl font-bold text-slate-900 dark:text-white">About LocalLink</h1>
+        <p className="mt-3 text-sm text-slate-700 dark:text-slate-400">
           LocalLink is a trust + payment + coordination layer for local work and supply in Ghana. We help{' '}
           <span className="font-medium">employers</span> post jobs and hire skilled workers at scale;{' '}
           <span className="font-medium">buyers</span> hire professionals and buy fresh produce; and{' '}

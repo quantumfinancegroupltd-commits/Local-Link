@@ -93,7 +93,7 @@ export function JobDetail() {
     return (
       <div className="mx-auto max-w-3xl">
         <Card className="p-5">
-          <div className="text-sm text-red-700">{error || 'Job not found'}</div>
+          <div className="text-sm text-red-700 dark:text-red-400">{error || 'Job not found'}</div>
           <div className="mt-3">
             <Link to="/jobs">
               <Button variant="secondary">Back to jobs</Button>
@@ -125,7 +125,7 @@ export function JobDetail() {
       />
 
       {(job.image_url || true) && (
-        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-100">
+        <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
           {job.image_url ? (
             <img
               src={job.image_url.startsWith('/') ? `${typeof window !== 'undefined' ? window.location.origin : ''}${job.image_url}` : job.image_url}
@@ -146,63 +146,82 @@ export function JobDetail() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              {job.company_logo_url ? <img src={job.company_logo_url} alt="logo" className="h-12 w-12 rounded-2xl border object-cover" /> : null}
+              {job.company_logo_url ? <img src={job.company_logo_url} alt="logo" className="h-12 w-12 rounded-2xl border border-slate-200 object-cover dark:border-white/10" /> : null}
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-slate-900">{job.company_name || 'Company'}</div>
-                <div className="mt-0.5 text-xs text-slate-600">
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">{job.company_name || 'Company'}</div>
+                <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
                   {job.location || job.company_location || ''}
                   {job.work_mode ? ` • ${job.work_mode}` : ''}
                 </div>
               </div>
             </div>
 
-            {moneyRange(job) ? <div className="mt-3 text-base font-bold text-emerald-700">{moneyRange(job)}</div> : null}
-            {humanJobType(job) ? <div className="mt-1 text-sm font-semibold text-slate-700">{humanJobType(job)}</div> : null}
-            {job.schedule_text ? <div className="mt-1 text-sm text-slate-700">{job.schedule_text}</div> : null}
+            {moneyRange(job) ? <div className="mt-3 text-base font-bold text-emerald-700 dark:text-emerald-400">{moneyRange(job)}</div> : null}
+            {humanJobType(job) ? <div className="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-300">{humanJobType(job)}</div> : null}
+            {job.schedule_text ? <div className="mt-1 text-sm text-slate-700 dark:text-slate-400">{job.schedule_text}</div> : null}
           </div>
         </div>
       </Card>
 
       <Card className="p-5">
-        <div className="text-sm font-semibold text-slate-900">Job details</div>
+        <div className="text-sm font-semibold text-slate-900 dark:text-white">Job details</div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <div className="text-xs font-semibold text-slate-700">Pay</div>
-            <div className="mt-1 text-sm text-slate-800">{moneyRange(job) || 'Not specified'}</div>
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-400">Pay</div>
+            <div className="mt-1 text-sm text-slate-800 dark:text-slate-200">{moneyRange(job) || 'Not specified'}</div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-700">Job type</div>
-            <div className="mt-1 text-sm text-slate-800">{humanJobType(job) || 'Not specified'}</div>
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-400">Job type</div>
+            <div className="mt-1 text-sm text-slate-800 dark:text-slate-200">{humanJobType(job) || 'Not specified'}</div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-700">Shift and schedule</div>
-            <div className="mt-1 text-sm text-slate-800">{job.schedule_text || 'Not specified'}</div>
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-400">Shift and schedule</div>
+            <div className="mt-1 text-sm text-slate-800 dark:text-slate-200">{job.schedule_text || 'Not specified'}</div>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-700">Location</div>
-            <div className="mt-1 text-sm text-slate-800">{job.location || job.company_location || 'Not specified'}</div>
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-400">Location</div>
+            <div className="mt-1 text-sm text-slate-800 dark:text-slate-200">{job.location || job.company_location || 'Not specified'}</div>
           </div>
           <div className="md:col-span-2">
-            <div className="text-xs font-semibold text-slate-700">Benefits</div>
+            <div className="text-xs font-semibold text-slate-700 dark:text-slate-400">Benefits</div>
             {Array.isArray(job.benefits) && job.benefits.length ? (
               <ul className="mt-2 grid gap-2 md:grid-cols-2">
                 {job.benefits.slice(0, 12).map((b) => (
-                  <li key={b} className="flex gap-2 text-sm text-slate-800">
-                    <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">✓</span>
+                  <li key={b} className="flex gap-2 text-sm text-slate-800 dark:text-slate-200">
+                    <span className="mt-[2px] inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400">✓</span>
                     <span>{b}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <div className="mt-1 text-sm text-slate-800">Not specified</div>
+              <div className="mt-1 text-sm text-slate-800 dark:text-slate-300">Not specified</div>
             )}
           </div>
         </div>
       </Card>
 
+      {(job.location_lat != null && job.location_lng != null) || job.location ? (
+        <Card className="p-5">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Map</h2>
+          <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
+            <iframe
+              title="Job location"
+              src={
+                job.location_lat != null && job.location_lng != null
+                  ? `https://www.google.com/maps?q=${encodeURIComponent(`${job.location_lat},${job.location_lng}`)}&output=embed`
+                  : `https://www.google.com/maps?q=${encodeURIComponent(job.location || '')}&output=embed`
+              }
+              className="h-56 w-full"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+        </Card>
+      ) : null}
+
       <Card className="p-5">
-        <div className="text-sm font-semibold text-slate-900">Full job description</div>
-        <div className="mt-4 whitespace-pre-wrap text-sm text-slate-800">{job.description}</div>
+        <div className="text-sm font-semibold text-slate-900 dark:text-white">Full job description</div>
+        <div className="mt-4 whitespace-pre-wrap text-sm text-slate-800 dark:text-slate-200">{job.description}</div>
       </Card>
 
       <Card className="p-5">
@@ -217,7 +236,7 @@ export function JobDetail() {
           <div className="mt-2 text-sm text-slate-700">Admin accounts can’t apply to jobs.</div>
         ) : submitted ? (
           <div className="mt-3 space-y-3">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">Application submitted.</div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-900/20 dark:text-emerald-200">Application submitted.</div>
             <div className="flex flex-wrap gap-2">
               <Link to={`/messages/jobpost/${id}`}>
                 <Button>Open chat with company</Button>
@@ -246,7 +265,7 @@ export function JobDetail() {
             <div>
               <Label>Cover letter</Label>
               <textarea
-                className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:focus:ring-white/20"
                 rows={6}
                 value={cover}
                 onChange={(e) => setCover(e.target.value)}

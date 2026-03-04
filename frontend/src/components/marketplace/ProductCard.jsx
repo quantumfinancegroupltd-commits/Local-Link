@@ -80,27 +80,27 @@ export function ProductCard({ product }) {
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-slate-900">
+              <div className="truncate text-sm font-semibold text-slate-900 dark:text-white">
                 {product?.name || 'Produce'}
               </div>
-              <div className="mt-1 truncate text-xs text-slate-600">{loc}</div>
+              <div className="mt-1 truncate text-xs text-slate-600 dark:text-slate-400">{loc}</div>
             </div>
             <div className="text-right">
-              <div className="text-sm font-semibold text-slate-900">GHS {price}</div>
-              <div className="mt-1 text-xs text-slate-600">
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">GHS {price}</div>
+              <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                 {qty} {unit}
               </div>
             </div>
           </div>
-          {product?.meta?.why ? <div className="mt-3 text-xs font-medium text-slate-600">{product.meta.why}</div> : null}
+          {product?.meta?.why ? <div className="mt-3 text-xs font-medium text-slate-600 dark:text-slate-400">{product.meta.why}</div> : null}
         </div>
       </Link>
       {farmer?.id ? (
-        <div className="border-t border-slate-100 px-4 py-2">
-          <span className="text-xs text-slate-500">Sold by </span>
+        <div className="border-t border-slate-100 px-4 py-2 dark:border-white/10">
+          <span className="text-xs text-slate-500 dark:text-slate-400">Sold by </span>
           <Link
             to={`/u/${encodeURIComponent(farmer.id)}`}
-            className="text-xs font-medium text-slate-700 hover:text-slate-900 hover:underline"
+            className="text-xs font-medium text-slate-700 hover:text-slate-900 hover:underline dark:text-slate-300 dark:hover:text-white"
             onClick={(e) => e.stopPropagation()}
           >
             {farmer.name}

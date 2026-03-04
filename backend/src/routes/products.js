@@ -166,8 +166,20 @@ productsRouter.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Product not found' })
   }
 
+  const reviewSummaryRes = await pool.query(
+    `select coalesce(avg(rating),0)::numeric(3,2) as avg_rating, count(*)::int as review_count
+     from product_reviews where product_id = $1`,
+    [req.params.id],
+  )
+  const rs = reviewSummaryRes.rows[0]
+  const review_summary = {
+    avg_rating: rs ? Math.round(Number(rs.avg_rating) * 10) / 10 : 0,
+    review_count: Number(rs?.review_count ?? 0),
+  }
+
   return res.json({
     ...row,
+    review_summary,
     location: row.farm_location,
     farm_place_id: row.farm_place_id ?? null,
     farm_lat: row.farm_lat ?? null,

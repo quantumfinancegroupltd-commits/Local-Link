@@ -55,6 +55,12 @@ const MarketplaceBrowse = lazy(() => import('./pages/marketplace/MarketplaceBrow
 const MarketplaceProductDetail = lazy(() =>
   import('./pages/marketplace/MarketplaceProductDetail.jsx').then((m) => ({ default: m.MarketplaceProductDetail })),
 )
+const MarketplaceServiceDetail = lazy(() =>
+  import('./pages/marketplace/MarketplaceServiceDetail.jsx').then((m) => ({ default: m.MarketplaceServiceDetail })),
+)
+const ServicesBrowse = lazy(() =>
+  import('./pages/marketplace/ServicesBrowse.jsx').then((m) => ({ default: m.ServicesBrowse })),
+)
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx').then((m) => ({ default: m.AdminDashboard })))
 const AdminGate = lazy(() => import('./pages/admin/AdminGate.jsx').then((m) => ({ default: m.AdminGate })))
@@ -87,6 +93,12 @@ const MyShifts = lazy(() => import('./pages/work/MyShifts.jsx').then((m) => ({ d
 const TrustEscrow = lazy(() => import('./pages/trust/Escrow.jsx').then((m) => ({ default: m.TrustEscrow })))
 const TrustVerification = lazy(() => import('./pages/trust/Verification.jsx').then((m) => ({ default: m.TrustVerification })))
 const TrustReviews = lazy(() => import('./pages/trust/Reviews.jsx').then((m) => ({ default: m.TrustReviews })))
+const TrustReturns = lazy(() => import('./pages/trust/Returns.jsx').then((m) => ({ default: m.TrustReturns })))
+
+const AffiliatesLanding = lazy(() => import('./pages/affiliates/AffiliatesLanding.jsx').then((m) => ({ default: m.AffiliatesLanding })))
+const AffiliateRegister = lazy(() => import('./pages/affiliates/AffiliateRegister.jsx').then((m) => ({ default: m.AffiliateRegister })))
+const AffiliateTerms = lazy(() => import('./pages/affiliates/AffiliateTerms.jsx').then((m) => ({ default: m.AffiliateTerms })))
+const AffiliateDashboard = lazy(() => import('./pages/affiliates/AffiliateDashboard.jsx').then((m) => ({ default: m.AffiliateDashboard })))
 
 function RouteLoading() {
   return (
@@ -190,7 +202,19 @@ export default function App() {
             <Route path="/trust/escrow" element={<TrustEscrow />} />
             <Route path="/trust/verification" element={<TrustVerification />} />
             <Route path="/trust/reviews" element={<TrustReviews />} />
+            <Route path="/trust/returns" element={<TrustReturns />} />
             <Route path="/providers" element={<BuyerProviders />} />
+            <Route path="/affiliates" element={<AffiliatesLanding />} />
+            <Route path="/affiliates/register" element={<AffiliateRegister />} />
+            <Route path="/affiliate-terms" element={<AffiliateTerms />} />
+            <Route
+              path="/affiliates/dashboard"
+              element={
+                <RequireAuth roles={['buyer', 'artisan', 'farmer', 'driver', 'company', 'admin']}>
+                  <AffiliateDashboard />
+                </RequireAuth>
+              }
+            />
 
           <Route
             path="/buyer"
@@ -436,6 +460,14 @@ export default function App() {
           <Route
             path="/marketplace/products/:id"
             element={<MarketplaceProductDetail />}
+          />
+          <Route
+            path="/marketplace/services/:id"
+            element={<MarketplaceServiceDetail />}
+          />
+          <Route
+            path="/services"
+            element={<ServicesBrowse />}
           />
 
           <Route

@@ -320,6 +320,14 @@ export function AdminDashboard() {
   const [commentCtxLoading, setCommentCtxLoading] = useState(false)
   const [commentModBusy, setCommentModBusy] = useState(false)
 
+  const [affiliates, setAffiliates] = useState([])
+  const [affiliatesLoading, setAffiliatesLoading] = useState(false)
+  const [affiliatesStatusFilter, setAffiliatesStatusFilter] = useState('pending')
+  const [affiliateBusyId, setAffiliateBusyId] = useState(null)
+  const [affiliatePayouts, setAffiliatePayouts] = useState([])
+  const [affiliatePayoutsLoading, setAffiliatePayoutsLoading] = useState(false)
+  const [affiliatePayoutBusyId, setAffiliatePayoutBusyId] = useState(null)
+
   // Moderation queue (reported/flagged comments) + keyword filters
   const [modStatus, setModStatus] = useState('visible') // visible | hidden | all
   const [modRange, setModRange] = useState('all') // all | 7d | 30d
@@ -526,6 +534,7 @@ export function AdminDashboard() {
       { label: `Dispatch${ops?.deliveries_unassigned_paid ? ` (${ops.deliveries_unassigned_paid})` : ''}`, value: 'dispatch' },
       { label: `Payouts${ops?.payouts_pending ? ` (${ops.payouts_pending})` : ''}`, value: 'payouts' },
       { label: 'Users', value: 'users' },
+      { label: 'Affiliates', value: 'affiliates' },
       { label: 'Flags', value: 'flags' },
     ],
     [ops?.deliveries_unassigned_paid, ops?.disputes_active, ops?.verification_requests_pending, ops?.payouts_pending],
@@ -595,6 +604,33 @@ export function AdminDashboard() {
       cancelled = true
     }
   }, [tab])
+
+  useEffect(() => {
+    let cancelled = false
+    if (tab !== 'affiliates') return
+    setAffiliatesLoading(true)
+    setAffiliatePayoutsLoading(true)
+    Promise.all([
+      http.get('/admin/affiliates', { params: { status: affiliatesStatusFilter } }).then((r) => r.data),
+      http.get('/admin/payouts').then((r) => r.data),
+    ])
+      .then(([affList, payoutList]) => {
+        if (!cancelled) {
+          setAffiliates(Array.isArray(affList) ? affList : [])
+          setAffiliatePayouts(Array.isArray(payoutList) ? payoutList : [])
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setAffiliates([])
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setAffiliatesLoading(false)
+          setAffiliatePayoutsLoading(false)
+        }
+      })
+    return () => { cancelled = true }
+  }, [tab, affiliatesStatusFilter])
 
   // If a support ticket is about a post comment, fetch comment context for moderation actions.
   useEffect(() => {
@@ -3779,6 +3815,143 @@ export function AdminDashboard() {
             )}
           </div>
         </Card>
+      ) : null}
+
+      {tab === 'affiliates' ? (
+      <Card>
+        <div className="text-sm font-semibold">Affiliate applications</div>
+        <div className="mt-2 flex items-center gap-2">
+          <Label className="mb-0">Status</Label>
+          <Select
+            value={affiliatesStatusFilter}
+            onChange={(e) => setAffiliatesStatusFilter(e.target.value)}
+            className="w-auto"
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </Select>
+        </div>
+        {affiliatesLoading ? (
+          <div className="mt-3 text-sm text-slate-600">Loading…</div>
+        ) : affiliates.length === 0 ? (
+          <div className="mt-3 text-sm text-slate-600">No affiliates found.</div>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-slate-500">
+                  <th className="pb-2 pr-4">Name</th>
+                  <th className="pb-2 pr-4">Email</th>
+                  <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2 pr-4">Created</th>
+                  <th className="pb-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {affiliates.map((a) => (
+                  <tr key={a.id} className="border-b border-slate-100">
+                    <td className="py-2 pr-4">{a.full_name}</td>
+                    <td className="py-2 pr-4">{a.email}</td>
+                    <td className="py-2 pr-4">{a.status}</td>
+                    <td className="py-2 pr-4">{new Date(a.created_at).toLocaleDateString()}</td>
+                    <td className="py-2">
+                      {a.status === 'pending' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            disabled={affiliateBusyId === a.id}
+                            onClick={async () => {
+                              setAffiliateBusyId(a.id)
+                              try {
+                                await http.patch(`/admin/affiliates/${a.id}/approve`)
+                                const r = await http.get('/admin/affiliates', { params: { status: affiliatesStatusFilter } })
+                                setAffiliates(Array.isArray(r.data) ? r.data : [])
+                              } finally {
+                                setAffiliateBusyId(null)
+                              }
+                            }}
+                          >
+                            {affiliateBusyId === a.id ? '…' : 'Approve'}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            className="ml-2"
+                            disabled={affiliateBusyId === a.id}
+                            onClick={async () => {
+                              setAffiliateBusyId(a.id)
+                              try {
+                                await http.patch(`/admin/affiliates/${a.id}/reject`)
+                                const r = await http.get('/admin/affiliates', { params: { status: affiliatesStatusFilter } })
+                                setAffiliates(Array.isArray(r.data) ? r.data : [])
+                              } finally {
+                                setAffiliateBusyId(null)
+                              }
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="mt-6 text-sm font-semibold">Affiliate payout requests</div>
+        {affiliatePayoutsLoading ? (
+          <div className="mt-2 text-sm text-slate-600">Loading…</div>
+        ) : affiliatePayouts.length === 0 ? (
+          <div className="mt-2 text-sm text-slate-600">No payout requests.</div>
+        ) : (
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-slate-500">
+                  <th className="pb-2 pr-4">Affiliate</th>
+                  <th className="pb-2 pr-4">Amount</th>
+                  <th className="pb-2 pr-4">Method</th>
+                  <th className="pb-2 pr-4">Status</th>
+                  <th className="pb-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {affiliatePayouts.map((p) => (
+                  <tr key={p.id} className="border-b border-slate-100">
+                    <td className="py-2 pr-4">{p.affiliate_name || p.affiliate_email}</td>
+                    <td className="py-2 pr-4">${Number(p.amount).toFixed(2)}</td>
+                    <td className="py-2 pr-4">{p.method}</td>
+                    <td className="py-2 pr-4">{p.status}</td>
+                    <td className="py-2">
+                      {(p.status === 'requested' || p.status === 'processing') ? (
+                        <Button
+                          size="sm"
+                          disabled={affiliatePayoutBusyId === p.id}
+                          onClick={async () => {
+                            setAffiliatePayoutBusyId(p.id)
+                            try {
+                              await http.patch(`/admin/payouts/${p.id}/pay`)
+                              setAffiliatePayouts((prev) => prev.map((x) => (x.id === p.id ? { ...x, status: 'paid', paid_at: new Date().toISOString() } : x)))
+                            } finally {
+                              setAffiliatePayoutBusyId(null)
+                            }
+                          }}
+                        >
+                          {affiliatePayoutBusyId === p.id ? '…' : 'Mark paid'}
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
       ) : null}
 
       {tab === 'users' ? (

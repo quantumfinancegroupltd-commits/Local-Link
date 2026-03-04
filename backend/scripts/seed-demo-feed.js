@@ -19,15 +19,9 @@ const DEMO_EMAILS = [
   'kwabena.mensah@demo.locallink.agency',
 ]
 
-// Free images (Unsplash/Wikimedia) for post media – skills-related
-const POST_IMAGES = {
-  driver: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&h=500&fit=crop',
-  tomatoes: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Tomato.jpg/800px-Tomato.jpg',
-  furniture: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&h=500&fit=crop',
-  cleaning: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&h=500&fit=crop',
-  carpenter: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&h=500&fit=crop',
-  catering: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Ghana_Jollof_Rice_with_Chicken.jpg/800px-Ghana_Jollof_Rice_with_Chicken.jpg',
-}
+// Local placeholder so post media always loads (no external URL dependency).
+// Served from frontend public: /images/avatar-placeholder.jpeg (or add post-placeholder.jpeg).
+const POST_MEDIA_PLACEHOLDER = '/images/avatar-placeholder.jpeg'
 
 async function run() {
   const usersByEmail = {}
@@ -96,7 +90,7 @@ async function run() {
     await insertPost({
       userId: yaw.id,
       body: "Early morning deliveries in Accra. Let's go! #OnTheMove",
-      media: [{ url: POST_IMAGES.driver, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
     })
   }
 
@@ -105,7 +99,7 @@ async function run() {
     await insertPost({
       userId: abena.id,
       body: 'Fresh tomatoes ready for sale! 🍅 Who needs some?',
-      media: [{ url: POST_IMAGES.tomatoes, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
     })
   }
 
@@ -114,7 +108,7 @@ async function run() {
     await insertPost({
       userId: kwame.id,
       body: 'New furniture set finished today. What do you think?',
-      media: [{ url: POST_IMAGES.furniture, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
     })
   }
 
@@ -123,7 +117,7 @@ async function run() {
     await insertPost({
       userId: afia.id,
       body: 'Using LocalLink has really boosted my business! #gratitude',
-      media: [{ url: POST_IMAGES.cleaning, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
     })
   }
 
@@ -132,7 +126,7 @@ async function run() {
     await insertPost({
       userId: kofi.id,
       body: 'Jollof and chicken ready for your next event. Catering bookings open! 🍛',
-      media: [{ url: POST_IMAGES.catering, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
     })
   }
 
@@ -141,7 +135,7 @@ async function run() {
     await insertPost({
       userId: ama.id,
       body: 'Looking for skilled carpenters! Hiring now! 🛠️ Apply today!',
-      media: [{ url: POST_IMAGES.carpenter, kind: 'image' }],
+      media: [{ url: POST_MEDIA_PLACEHOLDER, kind: 'image' }],
       type: 'job_post',
       relatedType: 'job_post',
       relatedId: carpenterJobPostId,

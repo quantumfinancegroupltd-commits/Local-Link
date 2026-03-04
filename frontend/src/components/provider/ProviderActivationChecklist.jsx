@@ -5,7 +5,7 @@ import { Card } from '../ui/FormControls.jsx'
 const ARTISAN_STEPS = [
   { key: 'photo', label: 'Upload profile photo', to: '/profile', done: (ctx) => !!ctx.user?.profile_pic },
   { key: 'service', label: 'Add a service', to: '/artisan/services', done: (ctx) => (ctx.servicesCount ?? 0) > 0 },
-  { key: 'location', label: 'Set your service area', to: '/profile', done: (ctx) => !!String(ctx.profile?.service_area ?? '').trim() },
+  { key: 'location', label: 'Set your service area', to: '/profile', done: (ctx) => !!String(ctx.profile?.service_area ?? '').trim() || (ctx.profile?.service_lat != null && ctx.profile?.service_lng != null) },
   { key: 'quote', label: 'Submit your first quote', to: '/artisan', done: (ctx) => (ctx.quotesCount ?? 0) > 0 },
 ]
 
@@ -30,18 +30,18 @@ export function ProviderActivationChecklist({ role, user, profile, servicesCount
     const pct = total > 0 ? Math.round((completedList.length / total) * 100) : 0
     return { completed: completedList, total, pct, missing: missingList }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, user?.profile_pic, profile?.service_area, profile?.farm_location, profile?.farm_lat, profile?.farm_lng, servicesCount, productsCount, quotesCount])
+  }, [role, user?.profile_pic, profile?.service_area, profile?.service_lat, profile?.service_lng, profile?.farm_location, profile?.farm_lat, profile?.farm_lng, servicesCount, productsCount, quotesCount])
 
   if (total === 0) return null
   if (completed.length === total) return null
 
   return (
-    <Card className={`border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white ${className}`}>
+    <Card className={`border-emerald-200 bg-gradient-to-br from-emerald-50/80 to-white dark:border-white/10 dark:from-emerald-900/20 dark:to-black/95 ${className}`}>
       <div className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Profile strength</div>
-            <div className="mt-1 text-xl font-bold text-slate-900">{pct}%</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Profile strength</div>
+            <div className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{pct}%</div>
           </div>
           <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200">
             <div
@@ -63,9 +63,9 @@ export function ProviderActivationChecklist({ role, user, profile, servicesCount
                   {done ? '✓' : ''}
                 </span>
                 {done ? (
-                  <span className="text-slate-600 line-through">{s.label}</span>
+                  <span className="text-slate-600 line-through dark:text-slate-400">{s.label}</span>
                 ) : (
-                  <Link to={s.to} className="font-medium text-emerald-700 hover:underline">
+                  <Link to={s.to} className="font-medium text-emerald-700 hover:underline dark:text-emerald-300">
                     {s.label}
                   </Link>
                 )}
@@ -74,7 +74,7 @@ export function ProviderActivationChecklist({ role, user, profile, servicesCount
           })}
         </ul>
         {missing.length > 0 ? (
-          <p className="mt-2 text-xs text-slate-600">
+          <p className="mt-2 text-xs text-slate-600 dark:text-slate-400">
             Complete these to get more visibility and bookings.
           </p>
         ) : null}

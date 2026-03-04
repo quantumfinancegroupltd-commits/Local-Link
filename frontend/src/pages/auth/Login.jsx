@@ -46,9 +46,23 @@ export function Login() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
+  const [fieldErrors, setFieldErrors] = useState({})
+
+  function validate() {
+    const errs = {}
+    const e = email.trim()
+    if (!e) errs.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) errs.email = 'Enter a valid email address'
+    if (!password.trim()) errs.password = 'Password is required'
+    return errs
+  }
+
   async function onSubmit(e) {
     e.preventDefault()
     setError(null)
+    const errs = validate()
+    setFieldErrors(errs)
+    if (Object.keys(errs).length > 0) return
     setBusy(true)
     try {
       const u = await login({ email: email.trim(), password: password.trim() })
@@ -101,25 +115,31 @@ export function Login() {
             <Input
               id="login-email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })) }}
               type="email"
               inputMode="email"
               autoComplete="email"
               required
+              aria-invalid={!!fieldErrors.email}
+              aria-describedby={fieldErrors.email ? 'login-email-err' : undefined}
               className="text-base min-h-[48px]"
             />
+            {fieldErrors.email ? <p id="login-email-err" className="mt-1 text-xs text-red-600">{fieldErrors.email}</p> : null}
           </div>
           <div>
             <Label htmlFor="login-password">Password</Label>
             <Input
               id="login-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: undefined })) }}
               type="password"
               autoComplete="current-password"
               required
+              aria-invalid={!!fieldErrors.password}
+              aria-describedby={fieldErrors.password ? 'login-password-err' : undefined}
               className="text-base min-h-[48px]"
             />
+            {fieldErrors.password ? <p id="login-password-err" className="mt-1 text-xs text-red-600">{fieldErrors.password}</p> : null}
             <div className="mt-2 text-xs">
               <Link to="/forgot-password" className="font-semibold text-emerald-700 hover:underline">
                 Forgot password?

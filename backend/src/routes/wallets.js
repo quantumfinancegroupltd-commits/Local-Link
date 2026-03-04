@@ -53,6 +53,52 @@ walletsRouter.get('/summary', requireAuth, asyncHandler(async (req, res) => {
   })
 }))
 
+// Time-series for dashboard charts: earnings and jobs released by day (artisan/farmer/driver)
+walletsRouter.get('/analytics', requireAuth, asyncHandler(async (req, res) => {
+  const days = Math.min(90, Math.max(7, Number(req.query.days) || 30))
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  const userId = req.user.sub
+
+  const [earningsByDay, jobsByDay] = await Promise.all([
+    pool.query(
+      `select date_trunc('day', created_at at time zone 'UTC')::date as day, coalesce(sum(amount), 0)::numeric(12,2) as amount
+       from wallet_ledger_entries
+       where user_id = $1 and direction = 'credit' and kind = 'escrow_release' and created_at >= $2
+       group by 1 order by 1`,
+      [userId, since],
+    ),
+    pool.query(
+      `select date_trunc('day', updated_at at time zone 'UTC')::date as day, count(*)::int as count
+       from escrow_transactions
+       where counterparty_user_id = $1 and status = 'released' and updated_at >= $2
+       group by 1 order by 1`,
+      [userId, since],
+    ),
+  ])
+
+  const dayMap = {}
+  for (let d = 0; d < days; d++) {
+    const t = new Date(since)
+    t.setUTCDate(t.getUTCDate() + d)
+    const key = t.toISOString().slice(0, 10)
+    dayMap[key] = { day: key, earnings: 0, jobs: 0 }
+  }
+  earningsByDay.rows.forEach((r) => {
+    const key = r.day ? new Date(r.day).toISOString().slice(0, 10) : null
+    if (key && dayMap[key]) dayMap[key].earnings = Number(r.amount ?? 0)
+  })
+  jobsByDay.rows.forEach((r) => {
+    const key = r.day ? new Date(r.day).toISOString().slice(0, 10) : null
+    if (key && dayMap[key]) dayMap[key].jobs = r.count ?? 0
+  })
+
+  const series = Object.keys(dayMap)
+    .sort()
+    .map((k) => dayMap[k])
+
+  return res.json({ series, days })
+}))
+
 // Wallet "transactions" (for now: escrow movements; later: payouts/fees/disputes ledger)
 walletsRouter.get('/transactions', requireAuth, asyncHandler(async (req, res) => {
   const r = await pool.query(

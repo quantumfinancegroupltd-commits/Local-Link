@@ -63,6 +63,8 @@ npm run migrate
 cd ~/LocalLink
 
 # Frontend deps and build (same-origin /api; do not set VITE_API_BASE_URL to localhost)
+# Optional: for the map on Marketplace and Jobs, set Google Maps key before building:
+#   echo 'VITE_GOOGLE_MAPS_API_KEY=your_key' >> ~/LocalLink/frontend/.env
 cd ~/LocalLink/frontend
 npm ci
 npm run build
@@ -133,7 +135,32 @@ If it reports 0 artisan_services (or 0 products / 0 job_posts), run the seed com
 
 ---
 
-## 5. Verify
+## 5. Post images (“Image unavailable” on feed)
+
+User-uploaded post images are stored on the server under an **uploads** directory. If feed posts show “Image unavailable”, the image request is failing—usually because files aren’t there.
+
+**Without Docker (npm + pm2):**
+
+- Uploads go to `~/LocalLink/backend/uploads` by default (or `UPLOAD_DIR` if set in backend `.env`).
+- That directory is **not** synced by rsync/git, so it only exists on the server. After a **fresh deploy** into an empty app dir, the folder is created on first upload but is empty, so **existing** posts that referenced images from a previous run will 404 until users upload again.
+- To keep uploads across deploys, use a **persistent path** and point the API at it. On the server, in `~/LocalLink/backend/.env`, set for example:
+  ```bash
+  UPLOAD_DIR=/home/ubuntu/locallink-uploads
+  ```
+  Then create the dir once and restart the API:
+  ```bash
+  mkdir -p /home/ubuntu/locallink-uploads
+  pm2 restart locallink-api
+  ```
+  New uploads will go there and survive redeploys.
+
+**With Docker:** Use a **volume** for the uploads directory so it persists across container restarts; see your compose file and set `UPLOAD_DIR` inside the container to that mounted path.
+
+For production at scale, use object storage (S3/R2) and set `STORAGE_DRIVER=s3` and the required env vars (see ENV_VARS.md).
+
+---
+
+## 6. Verify
 
 - Open **https://locallink.agency/** and do a hard refresh (Cmd+Shift+R).
 - Check API: **https://locallink.agency/api/health** (should return `{"ok":true}`).

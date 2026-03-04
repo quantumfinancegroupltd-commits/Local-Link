@@ -4,9 +4,8 @@ import multer from 'multer'
 import rateLimit from 'express-rate-limit'
 import { optionalAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
-import { ASSISTANT_KNOWLEDGE } from '../lib/assistantKnowledge.js'
-import { searchForAssistant, formatListingContext } from '../lib/assistantSearch.js'
-import { detectIntent, getIntentGuidance, getIntentActions } from '../lib/assistantIntent.js'
+import { TOOL_DEFINITIONS, executeTool } from '../lib/assistantTools.js'
+import { pool } from '../db/pool.js'
 
 export const assistantRouter = Router()
 
@@ -27,147 +26,345 @@ const multerMemory = multer({
   },
 })
 
-const SYSTEM_PROMPT_BASE = `You are YAO, the LocalLink Platform Guide. You are friendly, professional, local, and helpful. Your role is to help users get things done on LocalLink.
+/** Collapse repeated phrases (e.g. "To list yourTo list your...") to avoid model repetition bugs. */
+function collapseRepeatedPhrase(text, minLen = 10) {
+  if (!text || typeof text !== 'string') return text
+  const t = text.trim()
+  if (t.length < minLen * 2) return t
+  for (let len = minLen; len <= Math.min(50, t.length / 2); len++) {
+    const candidate = t.slice(0, len)
+    let pos = len
+    while (pos + len <= t.length && t.slice(pos, pos + len) === candidate) pos += len
+    if (pos > len) return (candidate + t.slice(pos)).trim()
+  }
+  return t
+}
 
-Voice: Always reply in first person as YAO (e.g. "I can help you with that", "Here are some options I found"). Keep a warm, professional tone. When it fits, you may use local flavour (e.g. "you're welcome", "no wahala") but stay clear and helpful.
-Example tone: "Hi, I'm YAO. I can help you find workers, post jobs, track orders, or answer questions about escrow and payments. What do you need today?"
+const DEFAULT_REPLY = "I'm YAO, your LocalLink guide. You can ask me how to list produce, find services or jobs, how payments and escrow work, or anything about the platform. What would you like to know?"
+
+/** If reply is truncated or placeholder, append or replace with a sensible fallback. */
+function ensureCompleteReply(reply, userMessage, collectedResults) {
+  if (reply === undefined || reply === null) return DEFAULT_REPLY
+  if (typeof reply !== 'string') return DEFAULT_REPLY
+  const r = reply.trim()
+  if (!r) return DEFAULT_REPLY
+  const q = (userMessage || '').toLowerCase()
+  const hasServices = collectedResults?.services?.length > 0
+  const hasProducts = collectedResults?.products?.length > 0
+  const hasJobs = collectedResults?.jobs?.length > 0
+  const hasProviders = collectedResults?.providers?.length > 0
+
+  if (/^\?\?|^\.\.\.$|^\.\.\.\s*$/.test(r)) {
+    if (hasServices) return 'Here are some services that match. Tap a card to view details and book.'
+    if (hasProducts) return 'Here are some products I found. Tap a card to view and order.'
+    if (hasJobs) return 'Here are some open jobs. Tap a card to view details and apply.'
+    if (hasProviders) return 'Here are some providers. Tap a card to view their profile.'
+    return "Here's what I found. Tap any card below for more details, or ask me something else."
+  }
+
+  if (r.length < 60 && /list\s*produce|listing\s*produce|how\s*do\s*i\s*list/.test(q)) {
+    return 'Go to **My Produce** from the main menu (Farmer dashboard) to add your products. You need at least Bronze verification (Ghana Card) to list produce.'
+  }
+  if (r.length < 40 && /service|services\s*available/.test(q) && hasServices) {
+    return (r || 'Here are some services.') + ' Tap a card below to view details and book.'
+  }
+  if (r.length < 40 && /job|jobs|open\s*position/.test(q) && hasJobs) {
+    return (r || 'Here are some open jobs.') + ' Tap a card below to view and apply.'
+  }
+  if (r.length < 60 && hasProducts && /grocer|produce|food|buy|vegetable|fruit|market/.test(q)) {
+    return 'Here are some produce and groceries from the marketplace. Tap a card to view details and order.'
+  }
+
+  // Catch-all: reply looks truncated (short and doesn't end a sentence)
+  const looksComplete = /[.!?]\s*$|\n\s*$/.test(r) || r.length >= 80
+  if (r.length < 25 && !looksComplete) {
+    return DEFAULT_REPLY
+  }
+  if (r.length >= 25 && r.length < 50 && !looksComplete) {
+    return r + ' I\'m YAO, your LocalLink guide — ask me about listing produce, services, jobs, or payments.'
+  }
+
+  return r
+}
+
+const SYSTEM_PROMPT = `You are YAO, the LocalLink Platform Guide. You are friendly, professional, local, and helpful.
+
+Voice: Always reply in first person as YAO. Keep a warm, professional tone. When it fits, use local flavour ("no wahala", "you're welcome") but stay clear and helpful.
 
 You help users in Ghana with:
-- How escrow and payments work
-- Verification tiers (Bronze, Silver, Gold)
-- How to post jobs and hire workers
-- Disputes and withdrawals
-- General platform questions
-- Suggesting real products (produce), services (artisans), and job roles (employers) so all user types get relevant results: buyers (produce + services), job seekers (open jobs), farmers/artisans (visibility), companies (their roles surface when users search).
+- Finding services, products, providers, and jobs on the platform
+- Explaining how escrow, payments, verification, and disputes work
+- Guiding them through hiring, posting jobs, placing orders
+- Checking their orders, jobs, quotes, and wallet balance
 
-You support a continuous conversation: the user can go back and forth from initial idea (e.g. "I need a plasterer") through every step—finding providers, posting a job, getting quotes, accepting a quote, funding escrow, work done, releasing payment. Use the conversation history to remember what they said and guide them to the next step. If they asked for plasterers earlier and now ask "how do I hire one?", explain posting a job or contacting from the cards. If they say they accepted a quote, explain funding escrow and what happens when work is done.
+You have tools available. USE THEM:
+- When a user wants to find/hire someone → call search_services
+- When a user wants to buy produce/food → call search_products
+- When a user asks about jobs/hiring/work → call search_jobs
+- When they ask "how does X work?" or "how do I list produce?" → call get_platform_info (use topic listing_produce for listing produce)
+- When they ask about "my orders/jobs/wallet" → call the appropriate user data tool
+- You can call MULTIPLE tools in one turn if needed
 
-Rules:
-1. Use ONLY the platform knowledge and any listing data provided below. Do not invent listings or features.
-2. When LIVE LISTINGS are provided below (produce, service offerings, providers, or jobs): your reply must be plain text only, 1–2 short sentences. Example: "Here are some cleaning services on the platform. Tap a card to view details and book." Do NOT list any individual items (no service names, prices, or provider names in your message). Do NOT use markdown links (no [View Profile](url) or [text](url)). Do NOT use bullet points or asterisks for the listings—the frontend already shows the real cards with links under your message. Only when NO listings are provided should you suggest browsing Marketplace, posting a job, or the Jobs board.
-3. Keep answers short. When cards will appear, 1–2 sentences only. Use bullet points only for step-by-step instructions (e.g. how to post a job), never for listings.
-4. If the user asks something outside platform support (e.g. weather, other sites), politely say you only help with LocalLink.
-5. Never suggest paying or sharing contact details outside the platform before work is done and escrow is released.
-6. For account-specific or sensitive issues, suggest opening a support ticket.
+CRITICAL RULES:
+1. When tools return listings (services, products, jobs, providers): your text reply must be 1-2 SHORT sentences only. Do NOT list individual items in your text — the frontend renders cards automatically from the tool results. Example: "Here are some cleaning services I found. Tap a card to view details and book."
+2. When tools return user data (orders, jobs, wallet): summarize the data conversationally. Example: "You have 3 recent orders. Your latest is for tomatoes, currently being delivered."
+3. Never invent listings or features not returned by tools.
+4. For issues you can't resolve, suggest opening a support ticket.
+5. Never suggest paying or sharing contact details outside the platform.
+6. If asked something outside LocalLink support, politely say you only help with LocalLink.
+7. Support multi-turn: remember what was discussed and guide to next steps.
+8. Never repeat the same phrase or sentence multiple times in a row. Give one clear, concise answer.`
 
-Platform knowledge:
-${ASSISTANT_KNOWLEDGE}`
+const MAX_TOOL_ROUNDS = 3
 
 assistantRouter.post(
   '/chat',
-  rateLimit({
-    windowMs: 60_000,
-    limit: 20,
-    standardHeaders: 'draft-7',
-    legacyHeaders: false,
-  }),
+  rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false }),
   optionalAuth,
   asyncHandler(async (req, res) => {
+    const wantsStream = String(req.headers.accept || '').includes('text/event-stream')
     const body = req.body ?? {}
     const message = typeof body.message === 'string' ? body.message.trim() : ''
     if (!message) return res.status(400).json({ message: 'message is required' })
     if (message.length > 2000) return res.status(400).json({ message: 'message too long' })
 
-    // Optional conversation history for multi-turn (from conception through process)
     const rawHistory = Array.isArray(body.history) ? body.history : []
-    const MAX_HISTORY = 20
-    const MAX_CONTENT_LEN = 800
     const history = rawHistory
-      .slice(-MAX_HISTORY)
+      .slice(-20)
       .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
-      .map((m) => ({ role: m.role, content: String(m.content).slice(0, MAX_CONTENT_LEN) }))
+      .map((m) => ({ role: m.role, content: String(m.content).slice(0, 800) }))
 
     const apiKey = process.env.OPENAI_API_KEY?.trim()
     if (!apiKey) {
       return res.json({
-        reply: "The assistant isn't configured right now. Please use the Support page to open a ticket, or email/contact LocalLink directly.",
+        reply: "The assistant isn't configured right now. Please use the Support page to open a ticket.",
         conversation_id: body.conversation_id ?? null,
       })
     }
 
     const openai = new OpenAI({ apiKey })
+    const userId = req.user?.sub ?? null
     const userRole = req.user?.role ?? 'guest'
+    const toolContext = { userId, userRole }
 
-    // Merge with last user message from history so follow-ups like "how do I hire one?" keep showing relevant cards (e.g. plasterer)
-    const lastUserFromHistory = history.filter((m) => m.role === 'user').pop()?.content ?? ''
-    const searchQuery = [lastUserFromHistory, message].filter(Boolean).join(' ').trim() || message
+    const roleNote = {
+      buyer: 'User is a buyer. They hire services and buy produce.',
+      artisan: 'User is an artisan/provider. They offer services and quote on jobs.',
+      farmer: 'User is a farmer. They sell produce and manage orders.',
+      driver: 'User is a driver. They claim and complete deliveries.',
+      company: 'User is a company. They post job roles and manage staff.',
+      admin: 'User is an admin. They manage disputes, users, and platform health.',
+    }[userRole] || 'User is a guest (not logged in).'
 
-    // Intent detection: route to the right knowledge and actions (PAYMENT, DISPUTE, HIRING, etc.)
-    const { intent } = detectIntent(message, lastUserFromHistory)
+    const systemContent = SYSTEM_PROMPT + `\n\n[${roleNote}]`
 
-    // Fetch live products, providers, services (artisan_services), and jobs so the assistant can suggest for all user types
-    const { products, providers, services, jobs } = await searchForAssistant(searchQuery, {
-      productsLimit: 8,
-      providersLimit: 5,
-      servicesLimit: 8,
-      jobsLimit: 6,
-    })
-    const listingBlob = formatListingContext(products, providers, services ?? [], jobs ?? [])
-    const hasNoListings = !listingBlob || listingBlob.trim() === ''
-    const roleGuidance =
-      userRole === 'buyer'
-        ? 'User is a buyer: prefer suggesting services and produce (marketplace); mention Jobs board only if they ask about hiring or posting work.'
-        : userRole === 'artisan' || userRole === 'farmer'
-          ? 'User is a provider (artisan/farmer): they may want to find work (jobs) or see their own services; suggest Marketplace services and Jobs board when relevant.'
-          : userRole === 'driver'
-            ? 'User is a driver: they care about claiming deliveries, getting paid for delivery, and delivery flows; suggest delivery-related help and Jobs board for transport roles when relevant.'
-          : userRole === 'admin'
-            ? 'User is an admin: they may need to resolve disputes, view metrics, or handle support. Suggest opening the Admin dashboard for disputes and metrics; explain that only admins can release escrow in disputes.'
-          : userRole === 'employer' || userRole === 'company'
-            ? 'User is employer/company: prefer job listings, posting jobs, and hiring flows when relevant; mention how to manage applicants and escrow for employers.'
-            : 'User is a guest: suggest services, produce, and jobs as relevant.'
-    const intentGuidance = getIntentGuidance(intent)
-    const systemContent =
-      SYSTEM_PROMPT_BASE +
-      `\n\n[${roleGuidance} Answer in a helpful, neutral tone.]` +
-      (intentGuidance ? `\n\n[Intent: ${intent}. ${intentGuidance}]` : '') +
-      (listingBlob
-        ? `\n\n--- LIVE LISTINGS (use these to suggest when the user wants to buy or hire) ---\n${listingBlob}\n---`
-        : '') +
-      (hasNoListings
-        ? '\n\n[No live listings matched this query. Tell the user you don\'t have any matching results right now. Suggest they try the Marketplace or Jobs board, or try different keywords.]'
-        : '')
-
-    const apiMessages = [
+    const messages = [
       { role: 'system', content: systemContent },
-      ...history.map((m) => ({ role: m.role, content: m.content })),
+      ...history,
       { role: 'user', content: message },
     ]
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: apiMessages,
-      max_tokens: 600,
-      temperature: 0.3,
-    })
 
-    let reply = completion.choices?.[0]?.message?.content?.trim() ?? "I couldn't generate a reply. Please try rephrasing or use Support."
-    // Strip markdown links so the message is plain text (cards are shown below)
+    const collectedResults = {
+      services: [],
+      products: [],
+      jobs: [],
+      providers: [],
+      actions: [],
+      followUps: [],
+    }
+
+    async function runToolLoop() {
+      let completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages,
+        tools: TOOL_DEFINITIONS,
+        tool_choice: 'auto',
+        max_tokens: 800,
+        temperature: 0.3,
+      })
+
+      let choice = completion.choices?.[0]
+      let rounds = 0
+
+      while (choice?.finish_reason === 'tool_calls' && choice.message?.tool_calls?.length && rounds < MAX_TOOL_ROUNDS) {
+        rounds++
+        const assistantMsg = choice.message
+        messages.push(assistantMsg)
+
+        const toolResults = await Promise.all(
+          assistantMsg.tool_calls.map(async (tc) => {
+            const args = (() => {
+              try { return JSON.parse(tc.function.arguments) } catch { return {} }
+            })()
+            const result = await executeTool(tc.function.name, args, toolContext)
+
+          if (result.services?.length) collectedResults.services.push(...result.services)
+          if (result.products?.length) collectedResults.products.push(...result.products)
+          if (result.jobs?.length) collectedResults.jobs.push(...result.jobs)
+          if (result.providers?.length) collectedResults.providers.push(...result.providers)
+          if (result.action) collectedResults.actions.push(result.action)
+          if (result.follow_ups?.length) collectedResults.followUps.push(...result.follow_ups)
+
+            return { role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) }
+          }),
+        )
+        messages.push(...toolResults)
+
+        completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages,
+          tools: TOOL_DEFINITIONS,
+          tool_choice: 'auto',
+          max_tokens: 800,
+          temperature: 0.3,
+        })
+        choice = completion.choices?.[0]
+      }
+
+      return choice
+    }
+
+    // --- Streaming path ---
+    if (wantsStream) {
+      res.setHeader('Content-Type', 'text/event-stream')
+      res.setHeader('Cache-Control', 'no-cache')
+      res.setHeader('Connection', 'keep-alive')
+      res.flushHeaders()
+
+      const sendSSE = (event, data) => {
+        res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+        if (typeof res.flush === 'function') res.flush()
+      }
+
+      sendSSE('status', { status: 'thinking' })
+
+      // Run tool loop (non-streamed — tools are fast)
+      const lastChoice = await runToolLoop()
+      let streamedPathFullReply = ''
+
+      // Now stream the final text reply
+      const finalMessages = [...messages]
+      if (lastChoice?.message?.content) {
+        // Non-streaming already got the reply via tool loop
+        let reply = lastChoice.message.content.trim()
+        reply = reply.replace(/\s*\[[^\]]*\]\([^)]*\)/g, '').replace(/\n{3,}/g, '\n\n').trim()
+        reply = collapseRepeatedPhrase(reply)
+        reply = ensureCompleteReply(reply, message, collectedResults)
+
+        for (let i = 0; i < reply.length; i += 12) {
+          sendSSE('token', { text: reply.slice(i, i + 12) })
+        }
+      } else {
+        // Stream the final completion; buffer so we can fix truncated/placeholder replies
+        const stream = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: finalMessages,
+          max_tokens: 800,
+          temperature: 0.3,
+          stream: true,
+        })
+        let streamedBuffer = ''
+        for await (const chunk of stream) {
+          const text = chunk.choices?.[0]?.delta?.content
+          if (text) {
+            streamedBuffer += text
+            sendSSE('token', { text })
+          }
+        }
+        // If streamed reply is truncated or placeholder, send fallback as extra tokens
+        const fixed = ensureCompleteReply(collapseRepeatedPhrase(streamedBuffer.trim()), message, collectedResults)
+        streamedPathFullReply = fixed || streamedBuffer.trim()
+        if (fixed && fixed.length > streamedBuffer.trim().length) {
+          const suffix = fixed.slice(streamedBuffer.trim().length)
+          for (let i = 0; i < suffix.length; i += 12) {
+            sendSSE('token', { text: suffix.slice(i, i + 12) })
+          }
+        }
+      }
+
+      // Send cards and metadata
+      const metadata = buildResponseMetadata(collectedResults)
+
+      // Collect full streamed reply for persistence
+      let fullReply = ''
+      if (lastChoice?.message?.content) {
+        fullReply = lastChoice.message.content.trim().replace(/\s*\[[^\]]*\]\([^)]*\)/g, '').replace(/\n{3,}/g, '\n\n').trim()
+        fullReply = collapseRepeatedPhrase(fullReply)
+        fullReply = ensureCompleteReply(fullReply, message, collectedResults)
+      } else {
+        fullReply = streamedPathFullReply
+      }
+
+      const conversationId = await persistConversation(userId, body.conversation_id, message, fullReply, metadata)
+      metadata.conversation_id = conversationId
+
+      sendSSE('metadata', metadata)
+      sendSSE('done', {})
+      return res.end()
+    }
+
+    // --- Non-streaming path ---
+    const choice = await runToolLoop()
+
+    let reply = choice?.message?.content?.trim() ?? "I couldn't generate a reply. Please try rephrasing or use Support."
     reply = reply.replace(/\s*\[[^\]]*\]\([^)]*\)/g, '').replace(/\n{3,}/g, '\n\n').trim()
+    reply = collapseRepeatedPhrase(reply)
+    reply = ensureCompleteReply(reply, message, collectedResults)
 
-    // Return structured suggestions so the frontend can render product/provider cards
-    const suggested_products = products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      price: p.price,
-      unit: p.unit,
-      quantity: p.quantity,
-      image_url: p.image_url ?? null,
-      farm_location: p.farm_location ?? null,
-      farmer_user_id: p.farmer_user_id ?? null,
-      farmer_name: p.farmer_name ?? null,
-    }))
-    // When we have service cards or job cards, show only those (no provider name cards)
-    const suggested_providers =
-      (services ?? []).length > 0 || (jobs ?? []).length > 0
-        ? []
-        : providers.map((p) => ({
-            user_id: p.user_id,
-            name: p.name,
-            verification_tier: p.verification_tier ?? 'unverified',
-            service_area: p.service_area ?? null,
-          }))
-    const suggested_services = (services ?? []).map((s) => ({
+    const metadata = buildResponseMetadata(collectedResults)
+
+    const conversationId = await persistConversation(userId, body.conversation_id, message, reply, metadata)
+
+    return res.json({
+      reply,
+      conversation_id: conversationId,
+      ...metadata,
+    })
+  }),
+)
+
+async function persistConversation(userId, existingConvoId, userMessage, assistantReply, metadata) {
+  try {
+    let convoId = existingConvoId
+    if (!convoId) {
+      const { rows } = await pool.query(
+        'insert into assistant_conversations (user_id) values ($1) returning id',
+        [userId],
+      )
+      convoId = rows[0]?.id
+    } else {
+      await pool.query(
+        'update assistant_conversations set updated_at = now() where id = $1',
+        [convoId],
+      ).catch(() => {})
+    }
+    if (!convoId) return null
+    await pool.query(
+      `insert into assistant_messages (conversation_id, role, content) values ($1, 'user', $2)`,
+      [convoId, userMessage],
+    )
+    await pool.query(
+      `insert into assistant_messages (conversation_id, role, content, metadata) values ($1, 'assistant', $2, $3)`,
+      [convoId, assistantReply, JSON.stringify(metadata ?? {})],
+    )
+    return convoId
+  } catch {
+    return existingConvoId ?? null
+  }
+}
+
+function buildResponseMetadata(collectedResults) {
+    const dedup = (arr, key) => {
+      const seen = new Set()
+      return arr.filter((item) => {
+        const k = item[key]
+        if (!k || seen.has(k)) return false
+        seen.add(k)
+        return true
+      })
+    }
+
+    const suggested_services = dedup(collectedResults.services, 'id').slice(0, 8).map((s) => ({
       id: s.id,
       artisan_user_id: s.artisan_user_id,
       title: s.title,
@@ -181,8 +378,21 @@ assistantRouter.post(
       service_area: s.service_area ?? null,
       verification_tier: s.verification_tier ?? 'unverified',
     }))
-    // When we have matching service cards, show only those (no job cards) so "I need a caterer" shows catering services not job listings
-    const suggested_jobs = (services ?? []).length > 0 ? [] : (jobs ?? []).map((j) => ({
+
+    const suggested_products = dedup(collectedResults.products, 'id').slice(0, 8).map((p) => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      unit: p.unit,
+      quantity: p.quantity,
+      image_url: p.image_url ?? null,
+      farm_location: p.farm_location ?? null,
+      farmer_user_id: p.farmer_user_id ?? null,
+      farmer_name: p.farmer_name ?? null,
+    }))
+
+    const suggested_jobs = dedup(collectedResults.jobs, 'id').slice(0, 6).map((j) => ({
       id: j.id,
       title: j.title,
       company_name: j.company_name,
@@ -197,72 +407,55 @@ assistantRouter.post(
       image_url: j.image_url ?? null,
     }))
 
-    // P2: Deep links and next-step chips when we showed cards (or when no results, so user can try Marketplace/Jobs)
-    const hasProvidersOrProducts = providers.length > 0 || products.length > 0 || (services ?? []).length > 0
+    const suggested_providers = dedup(collectedResults.providers, 'user_id').slice(0, 5).map((p) => ({
+      user_id: p.user_id,
+      name: p.name,
+      verification_tier: p.verification_tier ?? 'unverified',
+      service_area: p.service_area ?? null,
+    }))
+
+    const suggested_actions = dedup(collectedResults.actions, 'url')
+
+    const hasServices = suggested_services.length > 0
+    const hasProducts = suggested_products.length > 0
     const hasJobs = suggested_jobs.length > 0
-    const suggested_actions = []
-    if (hasProvidersOrProducts) {
-      suggested_actions.push({ label: 'Post a job', url: '/buyer/jobs/new' }, { label: 'Marketplace', url: '/marketplace' })
-    }
-    if (hasJobs && !suggested_actions.some((a) => a.url === '/jobs')) {
-      suggested_actions.push({ label: 'Jobs board', url: '/jobs' })
-    }
-    if (hasNoListings && suggested_actions.length === 0) {
-      suggested_actions.push({ label: 'Marketplace', url: '/marketplace' }, { label: 'Jobs board', url: '/jobs' })
-    }
-    // Role-based deep links so users can jump to the right place
-    const roleLinks = {
-      buyer: [{ label: 'Find providers', url: '/buyer/providers' }, { label: 'My orders', url: '/buyer/orders' }],
-      artisan: [{ label: 'My services', url: '/artisan/services' }, { label: 'Jobs I can quote', url: '/artisan' }],
-      farmer: [{ label: 'My produce', url: '/farmer' }, { label: 'Orders', url: '/farmer/orders' }],
-      driver: [{ label: 'Open deliveries', url: '/driver' }],
-      company: [{ label: 'Company dashboard', url: '/company' }, { label: 'Post a job', url: '/jobs' }],
-      admin: [{ label: 'Admin dashboard', url: '/admin' }],
-    }
-    const addRoleLinks = roleLinks[userRole]
-    if (addRoleLinks) {
-      for (const a of addRoleLinks) {
-        if (!suggested_actions.some((x) => x.url === a.url)) suggested_actions.push(a)
+
+    const card_order = hasServices
+      ? ['services', 'products', 'jobs', 'providers']
+      : hasProducts
+        ? ['products', 'services', 'jobs', 'providers']
+        : hasJobs
+          ? ['jobs', 'services', 'products', 'providers']
+          : ['services', 'products', 'jobs', 'providers']
+
+    // Prefer model-generated contextual follow-ups over static ones
+    let suggested_replies = collectedResults.followUps?.length
+      ? collectedResults.followUps
+      : []
+
+    if (!suggested_replies.length) {
+      if (hasServices || hasProducts) {
+        suggested_replies.push('How do I post a job?', 'How does escrow work?')
+      }
+      if (hasJobs) {
+        suggested_replies.push('How do I apply?', 'How does escrow work?')
+      }
+      if (!hasServices && !hasProducts && !hasJobs) {
+        suggested_replies.push('What services are available?', 'Show me open jobs')
       }
     }
-    const intentActions = getIntentActions(intent, userRole)
-    for (const a of intentActions) {
-      if (!suggested_actions.some((x) => x.url === a.url)) suggested_actions.push(a)
-    }
-    const suggested_replies = []
-    if (hasProvidersOrProducts) suggested_replies.push('How do I post a job?', 'How does escrow work?')
-    if (hasJobs) {
-      suggested_replies.push('How does escrow work?', 'How do I apply for a job?')
-    }
-    const uniqueReplies = [...new Set(suggested_replies)]
 
-    // Role-based card order: show most relevant section first for this user type
-    const cardOrder =
-      userRole === 'buyer'
-        ? ['services', 'products', 'jobs', 'providers']
-        : userRole === 'artisan' || userRole === 'farmer'
-          ? ['services', 'jobs', 'products', 'providers']
-          : userRole === 'driver'
-            ? ['jobs', 'services', 'products', 'providers']
-            : userRole === 'employer' || userRole === 'company'
-              ? ['jobs', 'services', 'products', 'providers']
-              : ['services', 'products', 'jobs', 'providers']
-
-    return res.json({
-      reply,
-      conversation_id: body.conversation_id ?? null,
-      suggested_products,
-      suggested_providers,
-      suggested_services,
-      suggested_jobs,
-      card_order: cardOrder,
+    return {
+      suggested_products: suggested_products.length ? suggested_products : undefined,
+      suggested_providers: suggested_providers.length ? suggested_providers : undefined,
+      suggested_services: suggested_services.length ? suggested_services : undefined,
+      suggested_jobs: suggested_jobs.length ? suggested_jobs : undefined,
+      card_order,
       suggested_actions: suggested_actions.length ? suggested_actions : undefined,
-      suggested_replies: uniqueReplies.length ? uniqueReplies : undefined,
-    })
-  }),
-)
+      suggested_replies: [...new Set(suggested_replies)].slice(0, 4),
+    }
+}
 
-// Voice: speech-to-text (Whisper) — multipart form with "audio" file
 assistantRouter.post(
   '/transcribe',
   voiceRateLimit,
@@ -281,12 +474,10 @@ assistantRouter.post(
     const ext = (req.file.originalname?.match(/\.\w+$/) || [''])[0] || '.webm'
     const file = await toFile(req.file.buffer, `audio${ext}`)
     const transcription = await openai.audio.transcriptions.create({ file, model: 'whisper-1' })
-    const text = (transcription?.text || '').trim()
-    return res.json({ text: text || '' })
+    return res.json({ text: (transcription?.text || '').trim() })
   }),
 )
 
-// Voice: text-to-speech (TTS) — JSON body { text }, returns audio/mpeg
 const TTS_MAX_LEN = 4096
 assistantRouter.post(
   '/speak',
@@ -298,11 +489,7 @@ assistantRouter.post(
     const apiKey = process.env.OPENAI_API_KEY?.trim()
     if (!apiKey) return res.status(503).json({ message: 'Voice is not configured' })
     const openai = new OpenAI({ apiKey })
-    const speech = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: 'onyx',
-      input: text,
-    })
+    const speech = await openai.audio.speech.create({ model: 'tts-1', voice: 'onyx', input: text })
     const buffer = Buffer.from(await speech.arrayBuffer())
     res.setHeader('Content-Type', 'audio/mpeg')
     res.setHeader('Cache-Control', 'no-store')

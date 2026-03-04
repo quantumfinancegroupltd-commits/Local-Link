@@ -617,6 +617,12 @@ escrowRouter.post('/jobs/:jobId/release', requireAuth, requireRole(['buyer', 'ad
       })
       const { tryReferralCreditOnJobRelease } = await import('../services/referralCredit.js')
       await tryReferralCreditOnJobRelease(client, { refereeUserId: escrow.counterparty_user_id })
+      const { tryAffiliateCommissionOnRelease } = await import('../services/affiliateCommission.js')
+      await tryAffiliateCommissionOnRelease(client, {
+        counterpartyUserId: escrow.counterparty_user_id,
+        platformFee,
+        escrowId: escrow.id,
+      })
     }
 
     const updated = await client.query(
@@ -628,9 +634,17 @@ escrowRouter.post('/jobs/:jobId/release', requireAuth, requireRole(['buyer', 'ad
        returning *`,
       [escrow.id, platformFee],
     )
+    const releasedRow = updated.rows[0]
 
     await client.query('commit')
-    return res.json(updated.rows[0])
+    const { sendEscrowReleasedEmail } = await import('../services/transactionalEmail.js')
+    sendEscrowReleasedEmail({
+      counterpartyUserId: escrow.counterparty_user_id,
+      jobId: escrow.job_id,
+      amount: releasedRow?.amount ?? escrow.amount,
+      currency: releasedRow?.currency ?? escrow.currency ?? 'GHS',
+    }).catch(() => {})
+    return res.json(releasedRow)
   } catch (e) {
     try {
       await client.query('rollback')

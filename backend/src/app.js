@@ -44,6 +44,7 @@ import { trustRouter } from './routes/trust.js'
 import { idVerificationRouter } from './routes/idVerification.js'
 import { corporateRouter } from './routes/corporate.js'
 import { newsRouter } from './routes/news.js'
+import { eventsRouter } from './routes/events.js'
 import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
 import { analyticsRouter } from './routes/analytics.js'
@@ -51,6 +52,7 @@ import { assistantRouter } from './routes/assistant.js'
 import { searchRouter } from './routes/search.js'
 import { marketplaceRouter } from './routes/marketplace.js'
 import { statsRouter } from './routes/stats.js'
+import { affiliatesRouter } from './routes/affiliates.js'
 import { logErrorToDb } from './services/errorLog.js'
 
 export function createApp() {
@@ -123,6 +125,17 @@ export function createApp() {
   app.use('/api/bootstrap', bootstrapRouter)
 
   app.get('/api/health', (req, res) => res.json({ ok: true }))
+  // Optional: trigger a test Sentry event to verify SENTRY_DSN. Only sends when DSN is set.
+  app.get('/api/health/sentry-test', (req, res) => {
+    if (!env.SENTRY_DSN?.trim()) {
+      return res.status(503).json({ ok: false, message: 'Sentry not configured (SENTRY_DSN unset)' })
+    }
+    Sentry.captureMessage('LocalLink Sentry verification test', 'info')
+    return res.json({
+      ok: true,
+      message: 'Test event sent; check your Sentry project for "LocalLink Sentry verification test"',
+    })
+  })
   app.get('/api/ready', async (req, res) => {
     try {
       await pool.query('select 1')
@@ -169,9 +182,11 @@ export function createApp() {
   app.use('/api/analytics', analyticsRouter)
   app.use('/api/assistant', assistantRouter)
   app.use('/api/news', newsRouter)
+  app.use('/api/events', eventsRouter)
   app.use('/api/match', matchRouter)
   app.use('/api/search', searchRouter)
   app.use('/api/stats', statsRouter)
+  app.use('/api/affiliates', affiliatesRouter)
   app.use('/api/verification', verificationRouter)
   app.use('/api/id-verification', idVerificationRouter)
   app.use('/api/corporate', corporateRouter)

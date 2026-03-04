@@ -220,13 +220,44 @@ postsRouter.get('/feed', requireAuth, asyncHandler(async (req, res) => {
   const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20))
   const cursor = decodeFeedCursor(req.query.cursor)
   const topic = typeof req.query.topic === 'string' ? req.query.topic.trim() : null
-  // topic is accepted for future filtering by tag/category; not yet applied (user_posts has no tags)
+  const sort = (typeof req.query.sort === 'string' ? req.query.sort.trim().toLowerCase() : '') || 'top'
+  const sortNewest = sort === 'newest'
 
   // Normalize to string so UUID comparison is consistent (node-pg may pass UUID objects)
   const viewerId = userId != null ? String(userId) : null
   if (!viewerId) return res.status(401).json({ message: 'Unauthorized' })
 
-  const r = await pool.query(
+  const r = sortNewest
+    ? await pool.query(
+    `
+    select
+      p.id, p.user_id, p.body, p.media, p.created_at,
+      coalesce(p.type, 'update') as type, p.related_type, p.related_id, coalesce(p.sponsored, false) as sponsored,
+      coalesce(
+        (select json_build_object('id', pr.id, 'name', pr.name, 'price', pr.price, 'image_url', pr.image_url, 'category', pr.category) from products pr where pr.id = p.related_id and p.related_type = 'product' limit 1),
+        (select json_build_object('id', j.id, 'title', j.title, 'budget', j.budget, 'category', j.category) from jobs j where j.id = p.related_id and p.related_type = 'job' and j.deleted_at is null limit 1),
+        (select json_build_object('id', s.id, 'title', s.title, 'price', s.price, 'category', s.category) from artisan_services s where s.id = p.related_id and p.related_type = 'artisan_service' limit 1),
+        (select json_build_object('id', jp.id, 'title', jp.title, 'pay_min', jp.pay_min, 'pay_max', jp.pay_max, 'pay_period', jp.pay_period, 'currency', jp.currency, 'location', jp.location) from job_posts jp where jp.id = p.related_id and p.related_type = 'job_post' and jp.status = 'open' limit 1)
+      ) as related,
+      coalesce(c.name, u.name) as author_name,
+      coalesce(c.logo_url, u.profile_pic) as author_profile_pic,
+      u.role as author_role,
+      c.slug as author_company_slug,
+      (select count(*)::int from user_post_likes l where l.post_id = p.id) as like_count,
+      (select count(*)::int from user_post_comments cc where cc.post_id = p.id and cc.deleted_at is null) as comment_count,
+      exists(select 1 from user_post_likes l where l.post_id = p.id and l.user_id = $1::uuid) as viewer_liked
+    from user_posts p
+    join users u on u.id = p.user_id and u.deleted_at is null and (u.suspended_until is null or u.suspended_until <= now())
+    left join companies c on c.owner_user_id = u.id
+    where
+      (p.user_id = $1::uuid or p.user_id in (select following_id from user_follows where follower_id = $1::uuid and status = 'accepted'))
+      and ($2::timestamptz is null or (p.created_at, p.id) < ($2::timestamptz, $3::uuid))
+    order by p.created_at desc, p.id desc
+    limit $4
+    `,
+    [viewerId, cursor?.created_at ?? null, cursor?.id ?? null, limit],
+  )
+    : await pool.query(
     `
     with feed_base as (
       select

@@ -58,13 +58,13 @@ export function EarningsGoalWidget({ thisMonthEarnings = 0, currency = 'GHS', lo
     <Card className={`border-slate-200 bg-slate-50/50 ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Earnings this month</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Earnings this month</div>
           <div className="mt-1 flex flex-wrap items-baseline gap-2">
-            <span className={`text-2xl font-bold ${overGoal ? 'text-emerald-700' : 'text-slate-900'}`}>
+            <span className={`text-2xl font-bold ${overGoal ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-900 dark:text-white'}`}>
               {CURRENCY_SYMBOL}{loading ? '—' : formatAmount(earned)}
             </span>
             {goalAmount != null && goalAmount > 0 ? (
-              <span className="text-slate-600">of {CURRENCY_SYMBOL}{formatAmount(goalAmount)} goal</span>
+              <span className="text-slate-600 dark:text-slate-300">of {CURRENCY_SYMBOL}{formatAmount(goalAmount)} goal</span>
             ) : null}
           </div>
           {pct != null && !loading ? (
@@ -79,7 +79,7 @@ export function EarningsGoalWidget({ thisMonthEarnings = 0, currency = 'GHS', lo
         <button
           type="button"
           onClick={setGoalPrompt}
-          className="text-left text-xs text-slate-500 hover:text-slate-700"
+          className="text-left text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
         >
           {goalAmount != null ? 'Edit goal' : 'Set goal'}
         </button>

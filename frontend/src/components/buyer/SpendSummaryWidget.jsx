@@ -68,7 +68,7 @@ export function SpendSummaryWidget({ className = '', compact = false }) {
   if (loading && !summary) {
     return (
       <Card className={`border-slate-200 ${className}`}>
-        <div className="text-sm text-slate-500">Loading spend…</div>
+        <div className="text-sm text-slate-500 dark:text-slate-400">Loading spend…</div>
       </Card>
     )
   }
@@ -82,10 +82,10 @@ export function SpendSummaryWidget({ className = '', compact = false }) {
   if (compact) {
     return (
       <div className={`flex flex-wrap items-center gap-2 text-sm ${className}`}>
-        <span className="font-semibold text-slate-900">
+        <span className="font-semibold text-slate-900 dark:text-white">
           {CURRENCY_SYMBOL}{formatAmount(thisMonth)} this month
           {budget != null && budget > 0 ? (
-            <span className="ml-1 font-normal text-slate-600">
+            <span className="ml-1 font-normal text-slate-600 dark:text-slate-300">
               / {CURRENCY_SYMBOL}{formatAmount(budget)}
               {overBudget ? <span className="ml-1 text-amber-600">(over)</span> : null}
             </span>
@@ -103,13 +103,13 @@ export function SpendSummaryWidget({ className = '', compact = false }) {
     <Card className={`border-slate-200 bg-slate-50/50 ${className}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Spend this month</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Spend this month</div>
           <div className="mt-1 flex flex-wrap items-baseline gap-2">
-            <span className={`text-2xl font-bold ${overBudget ? 'text-amber-700' : 'text-slate-900'}`}>
+            <span className={`text-2xl font-bold ${overBudget ? 'text-amber-700 dark:text-amber-300' : 'text-slate-900 dark:text-white'}`}>
               {CURRENCY_SYMBOL}{formatAmount(thisMonth)}
             </span>
             {budget != null && budget > 0 ? (
-              <span className="text-slate-600">of {CURRENCY_SYMBOL}{formatAmount(budget)}</span>
+              <span className="text-slate-600 dark:text-slate-300">of {CURRENCY_SYMBOL}{formatAmount(budget)}</span>
             ) : null}
           </div>
           {pct != null ? (
@@ -120,13 +120,13 @@ export function SpendSummaryWidget({ className = '', compact = false }) {
               />
             </div>
           ) : null}
-          <div className="mt-2 text-xs text-slate-500">Total all time: {CURRENCY_SYMBOL}{formatAmount(totalSpend)}</div>
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">Total all time: {CURRENCY_SYMBOL}{formatAmount(totalSpend)}</div>
         </div>
         <div className="flex shrink-0 flex-col gap-1">
           <Link to="/buyer/history" className="text-sm font-medium text-emerald-700 hover:underline">
             View history
           </Link>
-          <button type="button" onClick={setBudget} className="text-left text-xs text-slate-500 hover:text-slate-700">
+          <button type="button" onClick={setBudget} className="text-left text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
             {budget != null ? 'Edit monthly budget' : 'Set monthly budget'}
           </button>
         </div>

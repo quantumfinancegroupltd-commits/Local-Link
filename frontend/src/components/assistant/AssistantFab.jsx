@@ -46,7 +46,7 @@ export function AssistantFab() {
         <button
           type="button"
           onClick={toggleOpen}
-          className="flex h-full w-full shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-emerald-600 shadow-lg ring-2 ring-emerald-500/30 transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          className="flex h-full w-full shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-brand-green shadow-lg ring-2 ring-brand-green/30 transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-brand-green focus:ring-offset-2 dark:border-white/30 dark:ring-white/20"
           aria-label={open ? 'Close YAO' : 'Open YAO — Your LocalLink Guide'}
         >
           {open ? (
@@ -90,7 +90,7 @@ export function AssistantFab() {
             onClick={() => setOpen(false)}
             aria-label="Close assistant panel"
           />
-          <div className="relative z-10 flex h-[min(85vh,560px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+          <div className="relative z-10 flex h-[min(85vh,560px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-black/95 dark:shadow-none">
             <AssistantChat onClose={() => setOpen(false)} />
           </div>
         </div>

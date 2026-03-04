@@ -506,6 +506,7 @@ export function BuyerOrders() {
 
                       if (deliveryStatus === 'confirmed') {
                         const farmerReviewed = o?.farmer_reviewed === true
+                        const returnRefundUrl = `/support?category=orders&subject=${encodeURIComponent(`Return/refund request - Order ${o.id}`)}&related_type=order&related_id=${encodeURIComponent(o.id)}`
                         return (
                           <NextStepBanner
                             className="mt-3"
@@ -513,15 +514,20 @@ export function BuyerOrders() {
                             title="Next: leave a review"
                             description="Reviews build trust for farmers and drivers."
                             actions={
-                              farmerReviewed ? (
-                                <Button variant="secondary" disabled title="Already reviewed">
-                                  Farmer reviewed
-                                </Button>
-                              ) : (
-                                <Link to={`/reviews/leave?kind=order&id=${encodeURIComponent(o.id)}&target=farmer`}>
-                                  <Button variant="secondary">Rate farmer</Button>
+                              <>
+                                {farmerReviewed ? (
+                                  <Button variant="secondary" disabled title="Already reviewed">
+                                    Farmer reviewed
+                                  </Button>
+                                ) : (
+                                  <Link to={`/reviews/leave?kind=order&id=${encodeURIComponent(o.id)}&target=farmer`}>
+                                    <Button variant="secondary">Rate farmer</Button>
+                                  </Link>
+                                )}
+                                <Link to={returnRefundUrl}>
+                                  <Button variant="secondary">Request return/refund</Button>
                                 </Link>
-                              )
+                              </>
                             }
                           />
                         )

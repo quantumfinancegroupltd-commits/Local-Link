@@ -807,7 +807,7 @@ jobsRouter.post('/:id/quote', requireAuth, requireRole(['artisan']), requireIdVe
       parsed.data.includes_materials ?? null,
     ],
   )
-  // Notify buyer that a quote arrived (in-app + optional SMS)
+  // Notify buyer that a quote arrived (in-app + optional SMS + email)
   const { notifyWithSms } = await import('../services/messaging/index.js')
   notifyWithSms(job.buyer_id ?? null, {
     type: 'quote_received',
@@ -816,6 +816,10 @@ jobsRouter.post('/:id/quote', requireAuth, requireRole(['artisan']), requireIdVe
     meta: { url: `/buyer/jobs/${job.id}`, job_id: job.id, quote_id: r.rows[0]?.id ?? null },
     dedupeKey: `job:${job.id}:quote`,
   }).catch(() => {})
+  const artisanUserRes = await pool.query('select u.name from artisans a join users u on u.id = a.user_id where a.id = $1 limit 1', [artisanId])
+  const artisanName = artisanUserRes.rows[0]?.name ?? null
+  const { sendQuoteReceivedEmail } = await import('../services/transactionalEmail.js')
+  sendQuoteReceivedEmail({ buyerId: job.buyer_id, jobId: job.id, artisanName }).catch(() => {})
 
   return res.status(201).json(r.rows[0])
 }))

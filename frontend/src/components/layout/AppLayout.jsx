@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { roleHomePath } from '../../lib/roles.js'
@@ -6,8 +6,10 @@ import { http } from '../../api/http.js'
 import { Button } from '../ui/FormControls.jsx'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
 import { useAnalytics } from '../../lib/useAnalytics.js'
+import { useReferralTracking } from '../../lib/referralTracking.js'
 import { CookieConsentBanner } from '../CookieConsentBanner.jsx'
 import { AssistantFab } from '../assistant/AssistantFab.jsx'
+import { ThemeToggle } from '../ui/ThemeToggle.jsx'
 
 function NavItem({ to, children, isActive: isActiveFn }) {
   return (
@@ -17,7 +19,7 @@ function NavItem({ to, children, isActive: isActiveFn }) {
         const active = isActiveFn ? isActiveFn({ isActive, location }) : isActive
         return [
           'rounded-lg px-3 py-2 text-sm font-medium',
-          active ? 'bg-slate-900 text-white' : 'text-slate-700 hover:bg-slate-100',
+          active ? 'bg-slate-900 text-white dark:bg-emerald-600 dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10',
         ].join(' ')
       }}
       isActive={typeof isActiveFn === 'function' ? isActiveFn : undefined}
@@ -39,13 +41,19 @@ function initialsFromName(name) {
 
 function Avatar({ src, name, size = 36 }) {
   const s = Number(size)
-  if (src) {
+  const [imgError, setImgError] = useState(false)
+  useEffect(() => {
+    setImgError(false)
+  }, [src])
+  const showImg = src && !imgError
+  if (showImg) {
     return (
       <img
         src={src}
         alt={name ? `${name} avatar` : 'Avatar'}
         className="rounded-full border border-slate-200 object-cover"
         style={{ width: s, height: s }}
+        onError={() => setImgError(true)}
       />
     )
   }
@@ -64,19 +72,49 @@ export function AppLayout() {
   const navigate = useNavigate()
   const { isAuthed, user, logout } = useAuth()
   useAnalytics()
+  useReferralTracking()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [accountOpen, setAccountOpen] = useState(false)
   const [servicesOpen, setServicesOpen] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ll_recent_searches') || '[]').slice(0, 5) } catch { return [] }
+  })
+  const searchRef = useRef(null)
   const { online } = useOnlineStatus()
+
+  const saveRecentSearch = useCallback((q) => {
+    const trimmed = String(q ?? '').trim()
+    if (!trimmed) return
+    setRecentSearches((prev) => {
+      const next = [trimmed, ...prev.filter((s) => s.toLowerCase() !== trimmed.toLowerCase())].slice(0, 5)
+      try { localStorage.setItem('ll_recent_searches', JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
+  }, [])
+
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([])
+    try { localStorage.removeItem('ll_recent_searches') } catch { /* ignore */ }
+  }, [])
 
   function handleSearchSubmit(e) {
     e.preventDefault()
     const q = String(searchQuery ?? '').trim()
-    if (q) navigate(`/discover?q=${encodeURIComponent(q)}`)
-    else navigate('/discover')
+    if (q) {
+      saveRecentSearch(q)
+      navigate(`/discover?q=${encodeURIComponent(q)}`)
+    } else {
+      navigate('/discover')
+    }
+    setSearchFocused(false)
+    searchRef.current?.blur()
   }
+
+  const QUICK_SUGGESTIONS = ['Plumber', 'Electrician', 'Tomatoes', 'Driver', 'Carpenter', 'Hairdresser']
+  const showSearchDropdown = searchFocused && !searchQuery.trim() && (recentSearches.length > 0 || true)
 
   const commonLinks = useMemo(() => [{ to: '/feed', label: 'Feed' }, { to: '/people', label: 'People' }, { to: '/news', label: 'News' }], [])
   const navLinks = useMemo(() => {
@@ -101,14 +139,14 @@ export function AppLayout() {
   const servicesLinks = useMemo(() => {
     const servicesActive = (ctx) => {
       const loc = ctx?.location
-      return loc ? loc.pathname === '/marketplace' && String(loc.search || '').includes('tab=services') : false
+      return loc ? loc.pathname === '/services' : false
     }
     const marketplaceActive = (ctx) => {
       const loc = ctx?.location
-      return loc ? loc.pathname === '/marketplace' && !String(loc.search || '').includes('tab=services') : false
+      return loc ? loc.pathname === '/marketplace' : false
     }
     return [
-      { to: '/marketplace?tab=services', label: 'Services', isActive: servicesActive },
+      { to: '/services', label: 'Services', isActive: servicesActive },
       { to: '/marketplace', label: 'Marketplace', isActive: marketplaceActive },
       { to: '/jobs', label: 'Employers' },
     ]
@@ -157,36 +195,87 @@ export function AppLayout() {
   }, [isAuthed])
 
   return (
-    <div className="min-h-full">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
+    <div className="min-h-full overflow-x-hidden">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
+        Skip to main content
+      </a>
+      <header className="border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="mx-auto flex min-w-0 max-w-6xl flex-nowrap items-stretch justify-between gap-3 px-4 py-4">
           <Link to="/" className="flex shrink-0 items-center gap-3">
-            <img
-              src="/locallink-logo.png"
-              alt="LocalLink"
-              className="h-11 w-11 shrink-0 rounded-2xl object-cover md:h-12 md:w-12"
-              loading="eager"
-            />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
+              <img
+                src="/locallink-logo.png"
+                alt="LocalLink"
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
             <div className="flex flex-col justify-center min-w-0">
-              <div className="text-base font-semibold text-slate-900">LocalLink</div>
-              <div className="hidden whitespace-nowrap text-slate-500 lg:block lg:text-xs xl:text-sm">
+              <div className="text-base font-semibold text-slate-900 dark:text-white">LocalLink</div>
+              <div className="hidden whitespace-nowrap text-slate-500 lg:block lg:text-[11px] xl:text-xs dark:text-slate-400">
                 Trusted local services & supplies — delivered safely
               </div>
             </div>
           </Link>
 
-          <form onSubmit={handleSearchSubmit} className="hidden min-w-0 max-w-xs flex-1 md:block lg:max-w-sm">
-            <input
-              type="search"
-              placeholder="Search services, jobs or produce…"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              aria-label="Search"
-            />
-          </form>
+          <div className="relative hidden min-w-0 flex-1 md:block md:min-w-[8rem] md:max-w-[18rem] lg:max-w-md">
+            <form onSubmit={handleSearchSubmit} className="block min-w-0">
+              <input
+                ref={searchRef}
+                type="search"
+                placeholder="Search services, jobs or produce…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
+                className="min-w-0 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pl-9 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 dark:border-white/20 dark:bg-white/10 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-orange-400 dark:focus:ring-orange-500/50"
+                aria-label="Search"
+              />
+              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </form>
+            {showSearchDropdown && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 w-full min-w-0 animate-scale-in overflow-hidden rounded-xl border border-stone-200 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-black/95">
+                {recentSearches.length > 0 && (
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between px-2 py-1">
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-slate-400">Recent</span>
+                      <button type="button" onMouseDown={(e) => { e.preventDefault(); clearRecentSearches() }} className="text-[11px] text-stone-400 hover:text-stone-600 dark:text-slate-400 dark:hover:text-slate-200">Clear</button>
+                    </div>
+                    {recentSearches.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); saveRecentSearch(s); navigate(`/discover?q=${encodeURIComponent(s)}`); setSearchFocused(false) }}
+                        className="flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-stone-700 hover:bg-stone-50 dark:text-slate-200 dark:hover:bg-white/10"
+                      >
+                        <svg className="h-3.5 w-3.5 shrink-0 text-stone-300 dark:text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                        <span className="min-w-0 truncate">{s}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-stone-400 dark:text-slate-400">Quick search</div>
+                  <div className="flex min-w-0 flex-wrap gap-1 px-2 py-1">
+                    {QUICK_SUGGESTIONS.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); saveRecentSearch(s); navigate(`/discover?q=${encodeURIComponent(s)}`); setSearchFocused(false) }}
+                        className="shrink-0 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-medium text-stone-600 transition hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 dark:border-white/20 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-emerald-500/20 dark:hover:border-emerald-500/30 dark:hover:text-emerald-300"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
-          <nav className="hidden flex-wrap items-center justify-end gap-2 md:flex">
+          <nav className="hidden shrink-0 items-center justify-end gap-2 md:flex">
             {!isAuthed ? (
               <>
                 {servicesLinks.map((l) => (
@@ -205,7 +294,7 @@ export function AppLayout() {
                   <button
                     type="button"
                     onClick={() => setServicesOpen((v) => !v)}
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10"
                     aria-haspopup="menu"
                     aria-expanded={servicesOpen ? 'true' : 'false'}
                   >
@@ -221,13 +310,13 @@ export function AppLayout() {
                         onClick={() => setServicesOpen(false)}
                         aria-label="Close services menu"
                       />
-                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
                         {servicesLinks.map((l) => (
                           <NavLink
                             key={l.to}
                             to={l.to}
                             isActive={l.isActive}
-                            className={({ isActive }) => `block px-4 py-3 text-sm font-medium ${isActive ? 'bg-slate-100 text-slate-900' : 'text-slate-800 hover:bg-slate-50'}`}
+                            className={({ isActive }) => `block px-4 py-3 text-sm font-medium ${isActive ? 'bg-slate-100 text-slate-900 dark:bg-white/10 dark:text-white' : 'text-slate-800 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/10'}`}
                             onClick={() => setServicesOpen(false)}
                           >
                             {l.label}
@@ -247,7 +336,13 @@ export function AppLayout() {
             )}
           </nav>
 
-          <div className="flex flex-shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
+            {!isAuthed && (
+              <Link to="/onboarding" className="hidden md:block">
+                <Button>Get started</Button>
+              </Link>
+            )}
+            <ThemeToggle className="hidden sm:inline-flex" />
             {isAuthed ? (
               <>
                 <button
@@ -281,7 +376,7 @@ export function AppLayout() {
                   <button
                     type="button"
                     onClick={() => setAccountOpen((v) => !v)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15"
                     aria-haspopup="menu"
                     aria-expanded={accountOpen ? 'true' : 'false'}
                   >
@@ -299,17 +394,17 @@ export function AppLayout() {
                         onClick={() => setAccountOpen(false)}
                         aria-label="Close account menu"
                       />
-                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
+                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
                         <Link
                           to={roleHomePath(user?.role)}
-                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                           onClick={() => setAccountOpen(false)}
                         >
                           {user?.role === 'company' ? 'Company dashboard' : 'Dashboard'}
                         </Link>
                         <Link
                           to="/notifications"
-                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                           onClick={() => setAccountOpen(false)}
                         >
                           Notifications{unreadNotifications > 0 ? ` (${unreadNotifications})` : ''}
@@ -318,14 +413,14 @@ export function AppLayout() {
                           <>
                             <Link
                               to="/company/public"
-                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                               onClick={() => setAccountOpen(false)}
                             >
                               Public company page
                             </Link>
                             <Link
                               to="/profile"
-                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                              className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                               onClick={() => setAccountOpen(false)}
                             >
                               Owner profile
@@ -334,7 +429,7 @@ export function AppLayout() {
                         ) : (
                           <Link
                             to="/profile"
-                            className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                            className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                             onClick={() => setAccountOpen(false)}
                           >
                             Profile
@@ -342,7 +437,7 @@ export function AppLayout() {
                         )}
                         <Link
                           to="/support"
-                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                          className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                           onClick={() => setAccountOpen(false)}
                         >
                           Support
@@ -353,7 +448,7 @@ export function AppLayout() {
                             setAccountOpen(false)
                             logout()
                           }}
-                          className="block w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50"
+                          className="block w-full px-4 py-3 text-left text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                         >
                           Logout
                         </button>
@@ -364,19 +459,12 @@ export function AppLayout() {
 
                 <button
                   onClick={logout}
-                  className="hidden rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 md:inline-flex"
+                  className="hidden rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10 md:inline-flex"
                 >
                   Logout
                 </button>
               </>
-            ) : (
-              <Link
-                to="/onboarding"
-                className="hidden md:block"
-              >
-                <Button>Get started</Button>
-              </Link>
-            )}
+            ) : null}
 
             {!isAuthed ? (
               <button
@@ -406,13 +494,13 @@ export function AppLayout() {
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
           <button className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} aria-label="Close menu" />
-          <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm bg-white shadow-soft">
-            <div className="flex items-center justify-between border-b p-4">
+          <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm bg-white shadow-soft dark:bg-black dark:text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-white/10">
               <div className="flex items-center gap-3">
                 {isAuthed ? <Avatar src={user?.profile_pic || null} name={user?.name} size={36} /> : null}
                 <div className="leading-tight">
-                  <div className="text-sm font-semibold text-slate-900">{isAuthed ? user?.name ?? 'Account' : 'LocalLink'}</div>
-                  <div className="text-xs text-slate-500">{isAuthed ? user?.role : 'Welcome'}</div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">{isAuthed ? user?.name ?? 'Account' : 'LocalLink'}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{isAuthed ? user?.role : 'Welcome'}</div>
                 </div>
               </div>
               <button
@@ -428,6 +516,10 @@ export function AppLayout() {
             </div>
 
             <div className="p-4">
+              <div className="mb-4 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Appearance</span>
+                <ThemeToggle className="sm:hidden" />
+              </div>
               {!isAuthed ? (
                 <div className="space-y-2">
                   <div className="space-y-2">
@@ -436,7 +528,7 @@ export function AppLayout() {
                         Search
                       </Button>
                     </Link>
-                    <Link to="/marketplace?tab=services" onClick={() => setMobileOpen(false)} className="block">
+                    <Link to="/services" onClick={() => setMobileOpen(false)} className="block">
                       <Button className="w-full" variant="secondary">
                         Browse services
                       </Button>
@@ -577,7 +669,7 @@ export function AppLayout() {
                       setMobileOpen(false)
                       logout()
                     }}
-                    className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="block w-full rounded-xl px-3 py-2 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"
                   >
                     Logout
                   </button>
@@ -588,22 +680,22 @@ export function AppLayout() {
         </div>
       ) : null}
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main id="main-content" className="mx-auto max-w-6xl px-4 py-8" role="main">
         <Outlet />
       </main>
 
-      <footer className="border-t bg-white">
+      <footer className="border-t bg-white dark:border-white/10 dark:bg-black" role="contentinfo">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-8 md:grid-cols-5">
             <div>
-              <div className="text-sm font-semibold text-slate-900">LocalLink</div>
-              <div className="mt-2 text-sm text-slate-600">
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">LocalLink</div>
+              <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                 The trusted operating system for local work & supply.
               </div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-900">Company</div>
-              <div className="mt-2 space-y-2 text-sm text-slate-600">
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">Company</div>
+              <div className="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <Link className="block hover:underline" to="/about">
                   About
                 </Link>
@@ -616,8 +708,8 @@ export function AppLayout() {
               </div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-900">Trust</div>
-              <div className="mt-2 space-y-2 text-sm text-slate-600">
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">Trust</div>
+              <div className="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <Link className="block hover:underline" to="/trust/escrow">
                   How escrow works
                 </Link>
@@ -627,11 +719,28 @@ export function AppLayout() {
                 <Link className="block hover:underline" to="/trust/reviews">
                   Reviews
                 </Link>
+                <Link className="block hover:underline" to="/trust/returns">
+                  Returns & refunds
+                </Link>
               </div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-slate-900">Get started</div>
-              <div className="mt-2 space-y-2 text-sm text-slate-600">
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">Partners</div>
+              <div className="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                <Link className="block hover:underline" to="/affiliates">
+                  Affiliates
+                </Link>
+                <Link className="block hover:underline" to="/affiliates#ambassadors">
+                  Brand ambassadors
+                </Link>
+                <Link className="block hover:underline" to="/contact?subject=enterprise">
+                  Enterprise partnerships
+                </Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-900 dark:text-white">Get started</div>
+              <div className="mt-2 space-y-2 text-sm text-slate-600 dark:text-slate-400">
                 <Link className="block hover:underline" to="/register?role=artisan">
                   Become an artisan
                 </Link>

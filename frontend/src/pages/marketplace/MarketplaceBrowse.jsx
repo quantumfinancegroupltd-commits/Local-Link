@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { ProductCard } from '../../components/marketplace/ProductCard.jsx'
@@ -6,35 +6,19 @@ import { ServiceCard } from '../../components/marketplace/ServiceCard.jsx'
 import { Button, Card, Input, Select } from '../../components/ui/FormControls.jsx'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
+import { BrowseLayout } from '../../components/layout/BrowseLayout.jsx'
 import { Skeleton } from '../../components/ui/Skeleton.jsx'
 import { LocationInput } from '../../components/maps/LocationInput.jsx'
+import { BrowseMap } from '../../components/maps/BrowseMap.jsx'
 import { haversineKm, formatKm } from '../../lib/geo.js'
+import { imageProxySrc } from '../../lib/imageProxy.js'
 import { getVerificationTier, tierRank } from '../../lib/verification.js'
 import { ui } from '../../components/ui/tokens.js'
 import { FARMER_FLORIST_MARKETPLACE_LABEL } from '../../lib/roles.js'
 import { PRODUCT_CATEGORIES } from '../../lib/productCategories.js'
 
-const TAB_PRODUCTS = 'products'
-const TAB_SERVICES = 'services'
-
 export function MarketplaceBrowse() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const tabParam = searchParams.get('tab')
-  const initialTab = tabParam === 'services' ? TAB_SERVICES : TAB_PRODUCTS
-  const [tab, setTab] = useState(initialTab)
-
-  useEffect(() => {
-    if (tabParam === 'services') setTab(TAB_SERVICES)
-    else setTab(TAB_PRODUCTS) // default to products when tab is missing or 'products'
-  }, [tabParam])
-
-  function switchTab(newTab) {
-    setTab(newTab)
-    const next = new URLSearchParams(searchParams)
-    if (newTab === TAB_SERVICES) next.set('tab', 'services')
-    else next.delete('tab')
-    setSearchParams(next, { replace: true })
-  }
 
   const [products, setProducts] = useState([])
   const [searchProducts, setSearchProducts] = useState(null) // when q is set, results from GET /search
@@ -46,21 +30,59 @@ export function MarketplaceBrowse() {
   const [servicesLoading, setServicesLoading] = useState(false)
   const [servicesError, setServicesError] = useState(null)
 
-  const [q, setQ] = useState('')
-  const [category, setCategory] = useState('all')
-  const [location, setLocation] = useState('all')
-  const [tier, setTier] = useState('all')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort, setSort] = useState('best')
+  const [q, setQ] = useState(() => searchParams.get('q') ?? '')
+  const [category, setCategory] = useState(() => searchParams.get('category') ?? 'all')
+  const [location, setLocation] = useState(() => searchParams.get('location') ?? 'all')
+  const [tier, setTier] = useState(() => searchParams.get('tier') ?? 'all')
+  const [minPrice, setMinPrice] = useState(() => searchParams.get('minPrice') ?? '')
+  const [maxPrice, setMaxPrice] = useState(() => searchParams.get('maxPrice') ?? '')
+  const [sort, setSort] = useState(() => searchParams.get('sort') ?? 'best')
 
   const [near, setNear] = useState('')
   const [nearLat, setNearLat] = useState(null)
   const [nearLng, setNearLng] = useState(null)
-  const [radiusKm, setRadiusKm] = useState('all')
+  const [radiusKm, setRadiusKm] = useState(() => searchParams.get('radiusKm') ?? 'all')
 
-  const [serviceCategory, setServiceCategory] = useState('all')
-  const [serviceSort, setServiceSort] = useState('price_asc')
+  const [serviceCategory, setServiceCategory] = useState(() => searchParams.get('serviceCategory') ?? 'all')
+  const [serviceSort, setServiceSort] = useState(() => searchParams.get('serviceSort') ?? 'price_asc')
+
+  const prevParamsRef = useRef(searchParams.toString())
+  useEffect(() => {
+    const current = searchParams.toString()
+    if (current === prevParamsRef.current) return
+    prevParamsRef.current = current
+    setQ(searchParams.get('q') ?? '')
+    setCategory(searchParams.get('category') ?? 'all')
+    setLocation(searchParams.get('location') ?? 'all')
+    setTier(searchParams.get('tier') ?? 'all')
+    setMinPrice(searchParams.get('minPrice') ?? '')
+    setMaxPrice(searchParams.get('maxPrice') ?? '')
+    setSort(searchParams.get('sort') ?? 'best')
+    setRadiusKm(searchParams.get('radiusKm') ?? 'all')
+    }, [searchParams])
+
+  function updateProductUrl(updates) {
+    const next = new URLSearchParams(searchParams)
+    const keys = ['q', 'category', 'location', 'tier', 'minPrice', 'maxPrice', 'sort', 'radiusKm']
+    keys.forEach((k) => {
+      const v = updates[k] !== undefined ? updates[k] : (k === 'q' ? q : k === 'category' ? category : k === 'location' ? location : k === 'tier' ? tier : k === 'minPrice' ? minPrice : k === 'maxPrice' ? maxPrice : k === 'sort' ? sort : radiusKm)
+      if (v != null && String(v).trim() !== '' && String(v) !== 'all') next.set(k, String(v))
+      else next.delete(k)
+    })
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
+  function updateServiceUrl(updates) {
+    const next = new URLSearchParams(searchParams)
+    const keys = ['serviceCategory', 'serviceSort']
+    keys.forEach((k) => {
+      const v = updates[k] !== undefined ? updates[k] : (k === 'serviceCategory' ? serviceCategory : serviceSort)
+      if (v != null && String(v).trim() !== '' && String(v) !== 'all') next.set(k, String(v))
+      else next.delete(k)
+    })
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -227,12 +249,76 @@ export function MarketplaceBrowse() {
 
   const results = useMemo(() => filtered.map((x) => ({ ...x.product, meta: { why: x.why } })), [filtered])
 
+  const productMapPins = useMemo(() => {
+    return results
+      .filter((p) => {
+        const rawLat = p?.farm_lat ?? p?.farmLat ?? p?.farmer?.farm_lat ?? null
+        const rawLng = p?.farm_lng ?? p?.farmLng ?? p?.farmer?.farm_lng ?? null
+        const lat = rawLat != null ? Number(rawLat) : NaN
+        const lng = rawLng != null ? Number(rawLng) : NaN
+        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      })
+      .map((p) => {
+        const rawLat = p?.farm_lat ?? p?.farmLat ?? p?.farmer?.farm_lat ?? 0
+        const rawLng = p?.farm_lng ?? p?.farmLng ?? p?.farmer?.farm_lng ?? 0
+        const lat = Number(rawLat) || 0
+        const lng = Number(rawLng) || 0
+        const loc =
+          p?.location ??
+          p?.farm_location ??
+          p?.farmLocation ??
+          p?.farmer_location ??
+          p?.farmerLocation ??
+          ''
+        const mediaFirst = Array.isArray(p?.media) && p.media.length ? p.media.find((m) => m?.kind === 'image' && m?.url) : null
+        const imgUrl = mediaFirst?.url || p?.image_url || p?.imageUrl || p?.photo_url || p?.photoUrl || null
+        const priceLabel = p?.price != null ? `GHS ${Number(p.price).toFixed(0)}` : undefined
+        return {
+          id: p.id,
+          lat,
+          lng,
+          title: p?.name ?? 'Product',
+          subtitle: String(loc).trim() || undefined,
+          href: `/marketplace/products/${p.id}`,
+          imageUrl: imgUrl ? (imageProxySrc(imgUrl) || imgUrl) : undefined,
+          priceLabel,
+        }
+      })
+  }, [results])
+
   const canUseRadius = nearLat != null && nearLng != null
   const radiusLabel = useMemo(() => {
     if (!canUseRadius) return 'Pick a location to enable radius'
     if (radiusKm === 'all') return 'Any distance'
     return `Within ${radiusKm} km`
   }, [canUseRadius, radiusKm])
+
+  function clearProductFilters() {
+    setQ('')
+    setCategory('all')
+    setLocation('all')
+    setTier('all')
+    setMinPrice('')
+    setMaxPrice('')
+    setSort('best')
+    setNear('')
+    setNearLat(null)
+    setNearLng(null)
+    setRadiusKm('all')
+    const next = new URLSearchParams(searchParams)
+    ;['q', 'category', 'location', 'tier', 'minPrice', 'maxPrice', 'sort', 'radiusKm'].forEach((k) => next.delete(k))
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
+  function clearServiceFilters() {
+    setServiceCategory('all')
+    setServiceSort('price_asc')
+    const next = new URLSearchParams(searchParams)
+    next.delete('serviceCategory')
+    next.delete('serviceSort')
+    prevParamsRef.current = next.toString()
+    setSearchParams(next, { replace: true })
+  }
 
   const serviceCategories = useMemo(() => {
     const set = new Set()
@@ -272,192 +358,161 @@ export function MarketplaceBrowse() {
     return ordered
   }, [filteredServices])
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title={tab === TAB_SERVICES ? 'Services' : 'Marketplace'}
-        subtitle={
-          tab === TAB_SERVICES
-            ? 'Book plumbers, electricians, caterers, cleaners, masons and more from verified artisans.'
-            : 'Produce, flowers & plants from local farmers and florists.'
+  const serviceMapPins = useMemo(() => {
+    return filteredServices
+      .filter((s) => {
+        const rawLat = s?.service_lat ?? s?.serviceLat ?? null
+        const rawLng = s?.service_lng ?? s?.serviceLng ?? null
+        const lat = rawLat != null ? Number(rawLat) : NaN
+        const lng = rawLng != null ? Number(rawLng) : NaN
+        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      })
+      .map((s) => {
+        const rawLat = s?.service_lat ?? s?.serviceLat ?? 0
+        const rawLng = s?.service_lng ?? s?.serviceLng ?? 0
+        const lat = Number(rawLat) || 0
+        const lng = Number(rawLng) || 0
+        const subtitle = [s?.artisan_name, s?.service_area].filter(Boolean).join(' · ') || undefined
+        const serviceImg = s?.image_url || s?.imageUrl || s?.photo_url || null
+        const artisanPic = s?.artisan?.profile_pic ?? s?.artisan_profile_pic ?? s?.user?.profile_pic ?? null
+        const imgUrl = serviceImg || artisanPic || null
+        const currency = s?.currency ?? 'GHS'
+        const price = s?.price ?? 0
+        const durMin = s?.duration_minutes ?? s?.durationMinutes
+        const durationStr = durMin != null && durMin > 0
+          ? (durMin < 60 ? `${durMin} min` : `${Math.floor(durMin / 60)}h${durMin % 60 ? ` ${durMin % 60}m` : ''}`)
+          : ''
+        const priceLabel = price != null || durationStr
+          ? `${currency} ${Number(price).toFixed(0)}${durationStr ? ` · ${durationStr}` : ''}`
+          : undefined
+        return {
+          id: s.id,
+          lat,
+          lng,
+          title: s?.title ?? 'Service',
+          subtitle: subtitle || undefined,
+          href: `/profile/${s.artisan_user_id}`,
+          imageUrl: imgUrl || undefined,
+          priceLabel,
         }
-        actions={
-          <div className="text-sm font-semibold text-slate-700">
-            {tab === TAB_PRODUCTS
-              ? (loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`)
-              : (servicesLoading ? 'Loading…' : `${filteredServices.length} service${filteredServices.length === 1 ? '' : 's'}`)}
-          </div>
-        }
-      />
+      })
+  }, [filteredServices])
 
-      {tab === TAB_SERVICES ? (
-        <div className="space-y-8">
-          {servicesLoading ? (
-            <>
-              {[1, 2, 3].map((i) => (
-                <div key={i}>
-                  <div className="mb-4 h-7 w-48 rounded bg-slate-200" />
-                  <div className="relative -mx-2">
-                    <div className="flex gap-4 overflow-x-auto pb-2">
-                      {Array.from({ length: 4 }).map((_, j) => (
-                        <div key={j} className="flex-shrink-0 w-72 h-64 rounded-2xl border border-slate-200 bg-slate-50 animate-pulse" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : servicesError ? (
-            <Card>
-              <div className="text-sm text-red-700">{servicesError}</div>
-            </Card>
-          ) : servicesByCategory.length === 0 ? (
-            <EmptyState
-              title="No services yet"
-              description="Artisans add services from their dashboard. Check back soon."
-            />
-          ) : (
-            servicesByCategory.map(({ category, services: catServices }) => (
-              <div key={category}>
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <h2 className="text-xl font-bold text-slate-900">{category}</h2>
-                  <span className="text-sm text-slate-500">{catServices.length} service{catServices.length !== 1 ? 's' : ''}</span>
-                </div>
-                <div className="relative -mx-2">
-                  <div className="flex gap-4 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory scrollbar-thin" style={{ scrollbarGutter: 'stable' }}>
-                    {catServices.map((s) => (
-                      <div key={s.id} className="flex-shrink-0 w-72 snap-start">
-                        <ServiceCard service={s} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+  const filtersSidebar = (
+      <div className="space-y-4">
+        <div className="text-sm font-semibold text-slate-800 dark:text-white">Filters</div>
+        <div>
+          <div className={ui.label}>Search</div>
+          <Input value={q} onChange={(e) => { const v = e.target.value; setQ(v); updateProductUrl({ q: v }) }} placeholder="Produce, flowers, plants…" className="mt-1" />
         </div>
-      ) : (
-        <>
-      <Card>
-        <div className="grid gap-3 md:grid-cols-12 md:items-end">
-          <div className="md:col-span-4">
-            <div className={ui.label}>Search</div>
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search produce, flowers, plants…" />
-          </div>
-          <div className="md:col-span-2">
-            <div className={ui.label}>Category</div>
-            <Select value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="all">All</option>
-              {PRODUCT_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="md:col-span-3">
-            <div className={ui.label}>Location</div>
-            <Select value={location} onChange={(e) => setLocation(e.target.value)}>
-              <option value="all">All</option>
-              {locations.map((loc) => (
-                <option key={loc} value={loc.toLowerCase()}>
-                  {loc}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="md:col-span-2">
-            <div className={ui.label}>Verification</div>
-            <Select value={tier} onChange={(e) => setTier(e.target.value)}>
-              <option value="all">All</option>
-              <option value="verified">Verified (any)</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="bronze">Bronze</option>
-              <option value="unverified">Unverified</option>
-            </Select>
-          </div>
-          <div className="md:col-span-1">
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              onClick={() => {
-                setQ('')
-                setCategory('all')
-                setLocation('all')
-                setTier('all')
-                setMinPrice('')
-                setMaxPrice('')
-                setSort('best')
-                setNear('')
-                setNearLat(null)
-                setNearLng(null)
-                setRadiusKm('all')
-              }}
-            >
-              Clear
-            </Button>
-          </div>
+        <div>
+          <div className={ui.label}>Category</div>
+          <Select value={category} onChange={(e) => { const v = e.target.value; setCategory(v); updateProductUrl({ category: v }) }} className="mt-1">
+            <option value="all">All</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </Select>
         </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-12 md:items-end">
-          <div className="md:col-span-6">
-            <div className={ui.label}>Near (radius filter)</div>
-            <LocationInput
-              value={near}
-              onChange={(v) => {
-                setNear(v)
-                setNearLat(null)
-                setNearLng(null)
-              }}
-              onPick={({ formatted, lat, lng }) => {
-                setNear(formatted || near)
-                setNearLat(typeof lat === 'number' ? lat : null)
-                setNearLng(typeof lng === 'number' ? lng : null)
-              }}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <div className={ui.label}>Radius</div>
-            <Select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} disabled={!canUseRadius}>
-              <option value="all">{radiusLabel}</option>
-              <option value="5">5 km</option>
-              <option value="10">10 km</option>
-              <option value="25">25 km</option>
-              <option value="50">50 km</option>
-            </Select>
-          </div>
-          <div className="md:col-span-2">
+        <div>
+          <div className={ui.label}>Location</div>
+          <Select value={location} onChange={(e) => { const v = e.target.value; setLocation(v); updateProductUrl({ location: v }) }} className="mt-1">
+            <option value="all">All</option>
+            {locations.map((loc) => (
+              <option key={loc} value={loc.toLowerCase()}>{loc}</option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <div className={ui.label}>Verification</div>
+          <Select value={tier} onChange={(e) => { const v = e.target.value; setTier(v); updateProductUrl({ tier: v }) }} className="mt-1">
+            <option value="all">All</option>
+            <option value="verified">Verified (any)</option>
+            <option value="gold">Gold</option>
+            <option value="silver">Silver</option>
+            <option value="bronze">Bronze</option>
+            <option value="unverified">Unverified</option>
+          </Select>
+        </div>
+        <div>
+          <div className={ui.label}>Near (radius)</div>
+          <LocationInput
+            value={near}
+            onChange={(v) => {
+              setNear(v)
+              setNearLat(null)
+              setNearLng(null)
+            }}
+            onPick={({ formatted, lat, lng }) => {
+              setNear(formatted || near)
+              setNearLat(typeof lat === 'number' ? lat : null)
+              setNearLng(typeof lng === 'number' ? lng : null)
+            }}
+          />
+        </div>
+        <div>
+          <div className={ui.label}>Radius</div>
+          <Select value={radiusKm} onChange={(e) => { const v = e.target.value; setRadiusKm(v); updateProductUrl({ radiusKm: v }) }} disabled={!canUseRadius} className="mt-1">
+            <option value="all">{radiusLabel}</option>
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50">50 km</option>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
             <div className={ui.label}>Min price (GHS)</div>
-            <Input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" min="0" placeholder="e.g. 20" />
+            <Input value={minPrice} onChange={(e) => { const v = e.target.value; setMinPrice(v); updateProductUrl({ minPrice: v }) }} type="number" min="0" placeholder="Min" className="mt-1" />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <div className={ui.label}>Max price (GHS)</div>
-            <Input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" min="0" placeholder="e.g. 150" />
+            <Input value={maxPrice} onChange={(e) => { const v = e.target.value; setMaxPrice(v); updateProductUrl({ maxPrice: v }) }} type="number" min="0" placeholder="Max" className="mt-1" />
           </div>
         </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-12 md:items-end">
-          <div className="md:col-span-4">
-            <div className={ui.label}>Sort</div>
-            <Select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="best">Best (fresh + near + trust)</option>
-              <option value="nearest" disabled={!canUseRadius}>
-                Nearest
-              </option>
-              <option value="freshest">Freshest</option>
-              <option value="cheapest">Cheapest</option>
-            </Select>
-          </div>
-          <div className="md:col-span-8">
-            <div className="text-xs text-slate-500">
-              “Best” is a transparent score: freshness + near you + verification + match to your search.
-            </div>
-          </div>
+        <div>
+          <div className={ui.label}>Sort</div>
+          <Select value={sort} onChange={(e) => { const v = e.target.value; setSort(v); updateProductUrl({ sort: v }) }} className="mt-1">
+            <option value="best">Best (fresh + near + trust)</option>
+            <option value="nearest" disabled={!canUseRadius}>Nearest</option>
+            <option value="freshest">Freshest</option>
+            <option value="cheapest">Cheapest</option>
+          </Select>
         </div>
-      </Card>
+        <Button variant="secondary" className="w-full" onClick={clearProductFilters}>
+          Clear filters
+        </Button>
+      </div>
+  )
 
+  const mapCard = (
+    <div className="space-y-2">
+      <h2 className="text-sm font-semibold text-slate-800 dark:text-white">Map</h2>
+      <BrowseMap
+        pins={productMapPins}
+        defaultCenter={
+          nearLat != null && nearLng != null ? { lat: nearLat, lng: nearLng } : undefined
+        }
+        defaultZoom={productMapPins.length > 0 ? undefined : 6}
+        emptyMessage="Farmers with a set farm location will show as pins. Pick a location or browse to see listings."
+      />
+    </div>
+  )
+
+  return (
+    <BrowseLayout sidebar={filtersSidebar} sidebarBottom={mapCard}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Marketplace"
+          subtitle="Produce, flowers & plants from local farmers and florists."
+          actions={
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {loading || searchLoading ? 'Loading…' : `${results.length} item${results.length === 1 ? '' : 's'}${searchProducts !== null ? ' (search)' : ''}`}
+            </span>
+          }
+        />
+
+      <>
       <div>
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -518,9 +573,9 @@ export function MarketplaceBrowse() {
           </div>
         )}
       </div>
-        </>
-      )}
-    </div>
+      </>
+      </div>
+    </BrowseLayout>
   )
 }
 

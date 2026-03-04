@@ -9,6 +9,8 @@ import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { SpendSummaryWidget } from '../../components/buyer/SpendSummaryWidget.jsx'
 import { JobSuggestionsWidget } from '../../components/buyer/JobSuggestionsWidget.jsx'
+import { SkeletonDashboard } from '../../components/ui/Skeleton.jsx'
+import { ConfirmModal } from '../../components/ui/Modal.jsx'
 
 const POST_JOB_DRAFT_KEY = 'draft:buyer:post_job'
 
@@ -34,6 +36,8 @@ export function BuyerJobs() {
   const [exportBusy, setExportBusy] = useState(false)
   const [postJobDraft, setPostJobDraft] = useState(null) // { title, saved_at } or null
   const [draftDiscardBusy, setDraftDiscardBusy] = useState(false)
+  const [confirmDiscardDraft, setConfirmDiscardDraft] = useState(false)
+  const [confirmDeleteJobId, setConfirmDeleteJobId] = useState(null)
 
   const refreshDraft = useCallback(() => {
     const d = readDraft(POST_JOB_DRAFT_KEY)
@@ -181,10 +185,8 @@ export function BuyerJobs() {
     }
   }
 
-  function discardPostJobDraft() {
+  function doDiscardDraft() {
     if (draftDiscardBusy) return
-    const ok = window.confirm('Discard this draft? You can’t undo this.')
-    if (!ok) return
     setDraftDiscardBusy(true)
     try {
       clearDraft(POST_JOB_DRAFT_KEY)
@@ -192,14 +194,11 @@ export function BuyerJobs() {
       toast.success('Draft discarded.')
     } finally {
       setDraftDiscardBusy(false)
+      setConfirmDiscardDraft(false)
     }
   }
 
-  async function deleteJob(jobId) {
-    const ok = window.confirm(
-      'Delete this job? This removes it from your list.\n\nYou can only delete jobs that are not in progress (e.g. open, cancelled, or completed).',
-    )
-    if (!ok) return
+  async function doDeleteJob(jobId) {
     setDeleteBusyId(jobId)
     setError(null)
     try {
@@ -210,6 +209,7 @@ export function BuyerJobs() {
       setError(err?.response?.data?.message ?? err?.message ?? 'Failed to delete job')
     } finally {
       setDeleteBusyId(null)
+      setConfirmDeleteJobId(null)
     }
   }
 
@@ -256,7 +256,7 @@ export function BuyerJobs() {
                 variant="secondary"
                 className="border-amber-300 text-amber-800 hover:bg-amber-100"
                 disabled={draftDiscardBusy}
-                onClick={discardPostJobDraft}
+                onClick={() => setConfirmDiscardDraft(true)}
               >
                 {draftDiscardBusy ? 'Discarding…' : 'Discard draft'}
               </Button>
@@ -315,9 +315,7 @@ export function BuyerJobs() {
       </Card>
 
       {loading ? (
-        <Card>
-          <div className="text-sm text-slate-600">Loading…</div>
-        </Card>
+        <SkeletonDashboard cards={3} />
       ) : error ? (
         <Card>
           <div className="text-sm text-red-700">{error}</div>
@@ -361,7 +359,7 @@ export function BuyerJobs() {
                         variant="secondary"
                         className="border-red-200 text-red-700 hover:bg-red-50"
                         disabled={deleteBusyId === j.id}
-                        onClick={() => deleteJob(j.id)}
+                        onClick={() => setConfirmDeleteJobId(j.id)}
                       >
                         {deleteBusyId === j.id ? 'Deleting…' : 'Delete'}
                       </Button>
@@ -373,8 +371,25 @@ export function BuyerJobs() {
           </div>
         </Card>
       )}
+
+      <ConfirmModal
+        open={confirmDiscardDraft}
+        onClose={() => setConfirmDiscardDraft(false)}
+        onConfirm={doDiscardDraft}
+        title="Discard draft?"
+        description="This will permanently remove your saved draft. You can't undo this."
+        confirmLabel="Discard"
+        loading={draftDiscardBusy}
+      />
+      <ConfirmModal
+        open={!!confirmDeleteJobId}
+        onClose={() => setConfirmDeleteJobId(null)}
+        onConfirm={() => doDeleteJob(confirmDeleteJobId)}
+        title="Delete job?"
+        description="This removes the job from your list. You can only delete jobs that are open, cancelled, or completed."
+        confirmLabel="Delete"
+        loading={!!deleteBusyId}
+      />
     </div>
   )
 }
-
-

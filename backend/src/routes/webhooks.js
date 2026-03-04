@@ -109,6 +109,7 @@ webhooksRouter.post('/paystack', asyncHandler(async (req, res) => {
       }
       // Notify farmers: order placed and paid (in-app + optional SMS)
       const { notifyWithSms } = await import('../services/messaging/index.js')
+      const { sendOrderConfirmedEmail } = await import('../services/transactionalEmail.js')
       for (const orderId of orderIds) {
         const o = await pool.query(
           `select o.id, o.buyer_id, f.user_id as farmer_user_id
@@ -117,7 +118,8 @@ webhooksRouter.post('/paystack', asyncHandler(async (req, res) => {
            where o.id = $1`,
           [orderId],
         )
-        const farmerUserId = o.rows[0]?.farmer_user_id ?? null
+        const row = o.rows[0]
+        const farmerUserId = row?.farmer_user_id ?? null
         if (farmerUserId) {
           notifyWithSms(farmerUserId, {
             type: 'order_placed',
@@ -126,6 +128,9 @@ webhooksRouter.post('/paystack', asyncHandler(async (req, res) => {
             meta: { url: '/farmer/orders', order_id: orderId },
             dedupeKey: `order:${orderId}:placed`,
           }).catch(() => {})
+        }
+        if (row?.buyer_id) {
+          sendOrderConfirmedEmail({ orderId, buyerId: row.buyer_id }).catch(() => {})
         }
       }
     }

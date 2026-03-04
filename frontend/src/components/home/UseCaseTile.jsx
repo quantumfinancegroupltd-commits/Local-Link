@@ -30,9 +30,9 @@ export function UseCaseTile({ title, description, to, accent = 'emerald', imageU
         </div>
 
         <div className="p-5">
-          <div className="text-base font-semibold text-slate-900">{title}</div>
-          <div className="mt-1 text-sm text-slate-600">{description}</div>
-          <div className="mt-4 text-sm font-semibold text-emerald-700 group-hover:underline">
+          <div className="text-base font-semibold text-slate-900 dark:text-white">{title}</div>
+          <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</div>
+          <div className="mt-4 text-sm font-semibold text-emerald-700 group-hover:underline dark:text-emerald-400">
             Explore →
           </div>
         </div>

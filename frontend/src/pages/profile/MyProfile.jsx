@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { http } from '../../api/http.js'
+import { http, resolveUploadUrl } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
 import { LocationInput } from '../../components/maps/LocationInput.jsx'
 import { Button, Card, Input, Label } from '../../components/ui/FormControls.jsx'
+import { ui } from '../../components/ui/tokens.js'
 import { ImageCropperModal } from '../../components/ui/ImageCropperModal.jsx'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
@@ -18,6 +19,38 @@ import { ActivityTimeline } from '../../components/profile/ActivityTimeline.jsx'
 import { ExperienceBadgesRow } from '../../components/profile/ExperienceBadges.jsx'
 import { ExperienceBadgesModal } from '../../components/profile/ExperienceBadgesModal.jsx'
 import { LikersModal } from '../../components/social/LikersModal.jsx'
+
+function ProfilePostMediaItem({ media }) {
+  const [imgError, setImgError] = useState(false)
+  const url = resolveUploadUrl(media?.url)
+  const isVideo = media?.kind === 'video'
+  if (!url) {
+    return (
+      <div className="flex h-56 items-center justify-center overflow-hidden rounded-2xl border bg-stone-100">
+        <span className="text-xs font-medium text-stone-400">Image unavailable</span>
+      </div>
+    )
+  }
+  if (isVideo) {
+    return (
+      <div className="overflow-hidden rounded-2xl border bg-white">
+        <video src={url} controls className="h-56 w-full object-cover" />
+      </div>
+    )
+  }
+  if (imgError) {
+    return (
+      <div className="flex h-56 items-center justify-center overflow-hidden rounded-2xl border bg-stone-100">
+        <span className="text-xs font-medium text-stone-400">Image unavailable</span>
+      </div>
+    )
+  }
+  return (
+    <div className="overflow-hidden rounded-2xl border bg-white">
+      <img src={url} alt="" className="h-56 w-full object-cover" loading="lazy" onError={() => setImgError(true)} />
+    </div>
+  )
+}
 
 function kindLabel(kind) {
   if (kind === 'experience') return 'Experience'
@@ -873,13 +906,7 @@ function PostCard({ post, onRefresh, viewerId }) {
       {media.length ? (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {media.slice(0, 6).map((m) => (
-            <div key={m.url} className="overflow-hidden rounded-2xl border bg-white">
-              {m.kind === 'video' ? (
-                <video src={m.url} controls className="h-56 w-full object-cover" />
-              ) : (
-                <img src={m.url} alt="post media" className="h-56 w-full object-cover" loading="lazy" />
-              )}
-            </div>
+            <ProfilePostMediaItem key={m.url} media={m} />
           ))}
         </div>
       ) : null}
@@ -968,6 +995,9 @@ export function MyProfile() {
   const [primarySkill, setPrimarySkill] = useState('')
   const [experienceYears, setExperienceYears] = useState('')
   const [serviceArea, setServiceArea] = useState('')
+  const [servicePlaceId, setServicePlaceId] = useState('')
+  const [serviceLat, setServiceLat] = useState(null)
+  const [serviceLng, setServiceLng] = useState(null)
   const [jobCategories, setJobCategories] = useState([]) // job categories I serve (Events & Catering, Domestic Services, etc.)
 
   // farmer fields
@@ -1140,6 +1170,9 @@ export function MyProfile() {
           )
           setExperienceYears(ap.data?.experience_years != null ? String(ap.data.experience_years) : '')
           setServiceArea(ap.data?.service_area ?? '')
+          setServicePlaceId(ap.data?.service_place_id ?? '')
+          setServiceLat(ap.data?.service_lat != null ? Number(ap.data.service_lat) : null)
+          setServiceLng(ap.data?.service_lng != null ? Number(ap.data.service_lng) : null)
           setJobCategories(Array.isArray(ap.data?.job_categories) ? ap.data.job_categories : [])
         }
         if (role === 'farmer') {
@@ -1445,6 +1478,9 @@ export function MyProfile() {
             .filter(Boolean),
           experience_years: experienceYears ? Number(experienceYears) : null,
           service_area: serviceArea || null,
+          service_place_id: servicePlaceId || null,
+          service_lat: serviceLat != null ? Number(serviceLat) : null,
+          service_lng: serviceLng != null ? Number(serviceLng) : null,
           job_categories: Array.isArray(jobCategories) && jobCategories.length ? jobCategories : null,
         }
         const ap = await http.post('/artisans/me', body)
@@ -1574,7 +1610,7 @@ export function MyProfile() {
                 </div>
               </button>
               <div className="rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
-                <div className="text-xl font-bold text-slate-900 md:text-2xl">{me?.name || 'My Profile'}</div>
+                <div className={ui.h1}>{me?.name || 'My Profile'}</div>
                 <div className="mt-0.5 text-sm text-slate-600">
                   <span className="font-semibold">{roleDisplay}</span>
                   <span className="mx-2">•</span>
@@ -2095,7 +2131,18 @@ export function MyProfile() {
               </div>
               <div className="mt-4">
                 <Label>Service area</Label>
-                <Input value={serviceArea} onChange={(e) => setServiceArea(e.target.value)} placeholder="e.g. Accra, Tema" />
+                <div className="mt-1 text-xs text-slate-500">Pick a location so your services appear on the Marketplace map.</div>
+                <LocationInput
+                  value={serviceArea}
+                  onChange={setServiceArea}
+                  onPick={({ formatted, lat, lng, placeId }) => {
+                    if (formatted) setServiceArea(formatted)
+                    setServicePlaceId(placeId || '')
+                    setServiceLat(lat != null ? Number(lat) : null)
+                    setServiceLng(lng != null ? Number(lng) : null)
+                  }}
+                  placeholder="e.g. Accra, Tema"
+                />
               </div>
                 <div className="mt-4">
                 <Label>Job categories I serve</Label>

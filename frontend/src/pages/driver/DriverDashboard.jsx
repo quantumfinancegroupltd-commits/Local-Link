@@ -8,6 +8,7 @@ import { StatusTimeline } from '../../components/ui/StatusTimeline.jsx'
 import { buildDeliveryTimeline } from '../../lib/statusTimelines.js'
 import { VerifyAccountBanner } from '../../components/verification/VerifyAccountBanner.jsx'
 import { StatusPill } from '../../components/ui/StatusPill.jsx'
+import { SimpleLineChart } from '../../components/ui/SimpleLineChart.jsx'
 import { useSearchParams } from 'react-router-dom'
 import { useToast } from '../../components/ui/Toast.jsx'
 
@@ -36,6 +37,8 @@ export function DriverDashboard() {
   const [exportBusy, setExportBusy] = useState(false)
 
   const [summary, setSummary] = useState(null)
+  const [walletAnalytics, setWalletAnalytics] = useState(null)
+  const [chartDays, setChartDays] = useState(30)
   const [trackingId, setTrackingId] = useState(null)
   const [trackingError, setTrackingError] = useState(null)
   const watchIdRef = useRef(null)
@@ -216,6 +219,19 @@ export function DriverDashboard() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    http
+      .get('/wallets/analytics', { params: { days: chartDays } })
+      .then((res) => {
+        if (!cancelled) setWalletAnalytics(res.data)
+      })
+      .catch(() => {
+        if (!cancelled) setWalletAnalytics(null)
+      })
+    return () => { cancelled = true }
+  }, [chartDays])
 
   async function refreshAvailable() {
     setAvailableError(null)
@@ -450,30 +466,63 @@ export function DriverDashboard() {
 
       <div className="grid gap-3 md:grid-cols-2">
         <Card>
-          <div className="text-xs text-slate-600">Available balance</div>
-          <div className="mt-1 text-2xl font-bold">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Available balance</div>
+          <div className="mt-1 text-2xl font-bold dark:text-white">
             {currency} {available.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">Withdrawals are enabled in Seller Dashboard (Wallet → Payouts).</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">Withdrawals are enabled in Seller Dashboard (Wallet → Payouts).</div>
         </Card>
         <Card>
-          <div className="text-xs text-slate-600">Pending (Escrow)</div>
-          <div className="mt-1 text-2xl font-bold">
+          <div className="text-xs text-slate-600 dark:text-slate-400">Pending (Escrow)</div>
+          <div className="mt-1 text-2xl font-bold dark:text-white">
             {currency} {pending.toFixed(0)}
           </div>
-          <div className="mt-1 text-xs text-slate-600">Delivery fees in progress</div>
+          <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">Delivery fees in progress</div>
         </Card>
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Earnings & deliveries over time</h2>
+          <select
+            value={chartDays}
+            onChange={(e) => setChartDays(Number(e.target.value))}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 dark:border-white/20 dark:bg-white/10 dark:text-slate-200"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+          </select>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="earnings"
+            title="Earnings"
+            valueLabel={currency}
+            color="#0d9488"
+            formatValue={(n) => `${currency} ${Number(n).toFixed(0)}`}
+          />
+          <SimpleLineChart
+            series={walletAnalytics?.series ?? []}
+            valueKey="jobs"
+            title="Deliveries paid"
+            valueLabel="Released to you"
+            color="#0369a1"
+            formatValue={(n) => `${n} delivery(ies)`}
+          />
+        </div>
       </div>
 
       <Card id="driver-profile">
         <div className="text-sm font-semibold">Driver profile</div>
         <div className="mt-2 text-sm text-slate-600">
           Status:{' '}
-          <span className="font-semibold text-slate-900">{profile?.status ?? 'not set (submit below)'}</span>
+          <span className="font-semibold text-slate-900 dark:text-white">{profile?.status ?? 'not set (submit below)'}</span>
         </div>
         <div className="mt-2 text-sm text-slate-600">
           Online:{' '}
-          <span className="font-semibold text-slate-900">{profile?.is_online ? 'Yes' : 'No'}</span>
+          <span className="font-semibold text-slate-900 dark:text-white">{profile?.is_online ? 'Yes' : 'No'}</span>
           {profile?.last_location_at ? (
             <span className="ml-2 text-xs text-slate-500">• last GPS: {new Date(profile.last_location_at).toLocaleTimeString()}</span>
           ) : null}
@@ -492,7 +541,7 @@ export function DriverDashboard() {
             <Input value={area} onChange={(e) => setArea(e.target.value)} placeholder="e.g. Accra (Osu, East Legon)" />
           </div>
         </div>
-        {profileMsg ? <div className="mt-3 text-sm text-slate-700">{profileMsg}</div> : null}
+        {profileMsg ? <div className="mt-3 text-sm text-slate-700 dark:text-slate-300">{profileMsg}</div> : null}
         <div className="mt-3">
           <Button variant="secondary" disabled={profileBusy} onClick={saveProfile}>
             {profileBusy ? 'Saving…' : 'Submit / Update'}
@@ -564,13 +613,13 @@ export function DriverDashboard() {
                       {d.distance_km_to_pickup != null ? (
                         <div className="mt-1 text-xs text-slate-600">
                           Distance to pickup:{' '}
-                          <span className="font-semibold text-slate-800">{Number(d.distance_km_to_pickup).toFixed(1)} km</span>
+                          <span className="font-semibold text-slate-800 dark:text-white">{Number(d.distance_km_to_pickup).toFixed(1)} km</span>
                         </div>
                       ) : null}
                       <div className="mt-2 text-xs text-slate-600">
                         {d.product_name ? (
                           <>
-                            Item: <span className="font-semibold text-slate-800">{d.product_name}</span>
+                            Item: <span className="font-semibold text-slate-800 dark:text-white">{d.product_name}</span>
                             {d.product_category ? <span className="text-slate-500"> • {d.product_category}</span> : null}
                           </>
                         ) : (
@@ -579,7 +628,7 @@ export function DriverDashboard() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-sm font-semibold text-slate-900">Fee: {currency} {Number(d.fee ?? d.delivery_fee ?? 0).toFixed(0)}</div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-white">Fee: {currency} {Number(d.fee ?? d.delivery_fee ?? 0).toFixed(0)}</div>
                       <Button disabled={claimBusyId === d.id} onClick={() => claimDelivery(d.id)}>
                         {claimBusyId === d.id ? 'Claiming…' : 'Claim'}
                       </Button>
@@ -652,7 +701,7 @@ export function DriverDashboard() {
                       {d?.delivery_dispute_status ? <StatusPill status={d.delivery_dispute_status} label={`dispute: ${d.delivery_dispute_status}`} /> : null}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-slate-900">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-white">
                     Fee: {currency} {Number(d.fee ?? d.delivery_fee ?? 0).toFixed(0)}
                   </div>
                 </div>

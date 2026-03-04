@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import rateLimit from 'express-rate-limit'
 import { pool } from '../db/pool.js'
-import { signToken } from '../auth/jwt.js'
+import { signToken, signRefreshToken, verifyToken } from '../auth/jwt.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
 import { env } from '../config.js'
@@ -72,13 +72,25 @@ authRouter.post('/register', authRateLimit, asyncHandler(async (req, res) => {
   const { name, email, phone, password, role, referral_code: referralCodeIn } = parsed.data
   const passwordHash = await bcrypt.hash(password, 10)
 
+  const refCodeTrimmed = referralCodeIn && String(referralCodeIn).trim() ? String(referralCodeIn).trim() : null
   let referrerUserId = null
-  if (referralCodeIn && String(referralCodeIn).trim()) {
-    const ref = await pool.query(
-      'select id from users where referral_code = $1 and deleted_at is null',
-      [String(referralCodeIn).trim()],
+  let affiliateId = null
+  if (refCodeTrimmed) {
+    const affiliatePromo = await pool.query(
+      `select a.id from affiliates a
+       join affiliate_promo_codes c on c.affiliate_id = a.id
+       where a.status = 'approved' and c.code = $1 limit 1`,
+      [refCodeTrimmed.toUpperCase()],
     )
-    referrerUserId = ref.rows[0]?.id ?? null
+    if (affiliatePromo.rows[0]) {
+      affiliateId = affiliatePromo.rows[0].id
+    } else {
+      const ref = await pool.query(
+        'select id from users where referral_code = $1 and deleted_at is null',
+        [refCodeTrimmed],
+      )
+      referrerUserId = ref.rows[0]?.id ?? null
+    }
   }
 
   let referralCode = generateReferralCode()
@@ -90,10 +102,10 @@ authRouter.post('/register', authRateLimit, asyncHandler(async (req, res) => {
 
   try {
     const result = await pool.query(
-      `insert into users (name, email, phone, password_hash, role, referrer_user_id, referral_code)
-       values ($1,$2,$3,$4,$5,$6,$7)
+      `insert into users (name, email, phone, password_hash, role, referrer_user_id, referral_code, affiliate_id)
+       values ($1,$2,$3,$4,$5,$6,$7,$8)
        returning id, name, email, phone, role, verified, rating, profile_pic, created_at, referral_code`,
-      [name, email.toLowerCase(), phone ?? null, passwordHash, role, referrerUserId, referralCode],
+      [name, email.toLowerCase(), phone ?? null, passwordHash, role, referrerUserId, referralCode, affiliateId],
     )
     const user = result.rows[0]
 
@@ -127,8 +139,10 @@ authRouter.post('/register', authRateLimit, asyncHandler(async (req, res) => {
       dedupeKey: `welcome:${user.id}`,
     }).catch(() => {})
 
-    const token = signToken({ sub: user.id, role: user.role })
-    return res.status(201).json({ token, user })
+    const tokenPayload = { sub: user.id, role: user.role }
+    const token = signToken(tokenPayload)
+    const refreshToken = signRefreshToken(tokenPayload)
+    return res.status(201).json({ token, refreshToken, user })
   } catch (e) {
     if (String(e?.message || '').includes('duplicate key')) {
       return res.status(409).json({ message: 'Email already exists' })
@@ -165,7 +179,9 @@ authRouter.post('/login', loginRateLimit, asyncHandler(async (req, res) => {
   const ok = await bcrypt.compare(password, user.password_hash)
   if (!ok) return res.status(401).json({ message: 'Invalid credentials' })
 
-  const token = signToken({ sub: user.id, role: user.role })
+  const tokenPayload = { sub: user.id, role: user.role }
+  const token = signToken(tokenPayload)
+  const refreshToken = signRefreshToken(tokenPayload)
   const safeUser = {
     id: user.id,
     name: user.name,
@@ -178,7 +194,7 @@ authRouter.post('/login', loginRateLimit, asyncHandler(async (req, res) => {
     must_change_password: user.must_change_password ?? false,
     created_at: user.created_at,
   }
-  return res.json({ token, user: safeUser })
+  return res.json({ token, refreshToken, user: safeUser })
 }))
 
 const ForgotPasswordSchema = z.object({
@@ -305,6 +321,31 @@ authRouter.post('/password/reset', passwordResetRequestRateLimit, asyncHandler(a
     throw e
   } finally {
     client.release()
+  }
+}))
+
+authRouter.post('/refresh', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body ?? {}
+  if (!refreshToken) return res.status(400).json({ message: 'Missing refreshToken' })
+  try {
+    const decoded = verifyToken(refreshToken)
+    if (decoded.type !== 'refresh') return res.status(401).json({ message: 'Invalid token type' })
+    const { rows } = await pool.query(
+      'select id, role, deleted_at, suspended_until from users where id = $1',
+      [decoded.sub],
+    )
+    const user = rows[0]
+    if (!user || user.deleted_at) return res.status(401).json({ message: 'Account unavailable' })
+    if (user.suspended_until && new Date(user.suspended_until).getTime() > Date.now()) {
+      return res.status(403).json({ message: 'Account temporarily suspended' })
+    }
+    const payload = { sub: user.id, role: user.role }
+    return res.json({
+      token: signToken(payload),
+      refreshToken: signRefreshToken(payload),
+    })
+  } catch {
+    return res.status(401).json({ message: 'Invalid or expired refresh token' })
   }
 }))
 

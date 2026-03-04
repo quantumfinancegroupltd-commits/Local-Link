@@ -91,6 +91,12 @@ async function runAutoReleaseJobs() {
         })
         const { tryReferralCreditOnJobRelease } = await import('./referralCredit.js')
         await tryReferralCreditOnJobRelease(client, { refereeUserId: e.counterparty_user_id })
+        const { tryAffiliateCommissionOnRelease } = await import('./affiliateCommission.js')
+        await tryAffiliateCommissionOnRelease(client, {
+          counterpartyUserId: e.counterparty_user_id,
+          platformFee,
+          escrowId: e.id,
+        })
       }
       await client.query(
         `update escrow_transactions
@@ -208,6 +214,12 @@ async function runAutoConfirmDeliveries() {
             meta: { type: 'order', order_id: e.order_id, kind: e.meta?.kind ?? null, platform_fee: platformFee, auto_confirm: true },
           })
         }
+        const { tryAffiliateCommissionOnRelease } = await import('./affiliateCommission.js')
+        await tryAffiliateCommissionOnRelease(client, {
+          counterpartyUserId: e.counterparty_user_id,
+          platformFee,
+          escrowId: e.id,
+        })
         await client.query(
           `update escrow_transactions
            set status='released', platform_fee=$2, updated_at=now(),
@@ -306,6 +318,14 @@ export function startSchedulers() {
         maxDelayMs: 60 * 60_000,
         successCooldownMs: 10 * 60_000,
       })
+
+      // Affiliate: approve commissions 30 days after period end (so payouts can proceed without dashboard load).
+      await runGuardedTask('affiliate_commission_approve', async () => {
+        const r = await pool.query(
+          `update commissions set status = 'approved' where status = 'pending' and period_end + interval '30 days' < current_date`,
+        )
+        return { updated: r.rowCount }
+      }, { baseDelayMs: 60_000, maxDelayMs: 60 * 60_000, successCooldownMs: 60 * 60_000 })
 
       // Company Ops alerts + digest (business-facing operational visibility).
       await runGuardedTask('company_ops_alerts', () => runCompanyOpsAlertsSweep({ limitCompanies: 40 }), {

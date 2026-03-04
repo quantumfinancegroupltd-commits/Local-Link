@@ -3,16 +3,15 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { http } from '../../api/http.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { uploadMediaFiles } from '../../api/uploads.js'
-import { Button, Card, Input } from '../../components/ui/FormControls.jsx'
+import { Button, Select } from '../../components/ui/FormControls.jsx'
 import { SocialPostCard } from '../../components/social/SocialPostCard.jsx'
 import { FeedLayout } from '../../components/feed/FeedLayout.jsx'
-import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { useToast } from '../../components/ui/Toast.jsx'
 import { usePageMeta } from '../../components/ui/seo.js'
 import { useDraftAutosave } from '../../lib/drafts.js'
 import { useOnlineStatus } from '../../lib/useOnlineStatus.js'
 
-function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
+function CreatePostCard({ viewerId, userPic, onPosted, autoFocus = false }) {
   const toast = useToast()
   const { online } = useOnlineStatus()
   const textRef = useRef(null)
@@ -44,9 +43,7 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
       try {
         textRef.current?.focus?.()
         textRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
     }, 50)
     return () => clearTimeout(t)
   }, [autoFocus])
@@ -60,9 +57,7 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
   }, [files])
 
   useEffect(() => {
-    return () => {
-      for (const p of previews) URL.revokeObjectURL(p.url)
-    }
+    return () => { for (const p of previews) URL.revokeObjectURL(p.url) }
   }, [previews])
 
   async function submit(e) {
@@ -100,88 +95,86 @@ function CreatePostCard({ viewerId, onPosted, autoFocus = false }) {
   }
 
   return (
-    <Card>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="text-sm font-semibold">Create post</div>
-        <div className="text-xs text-slate-500">{draft.savedAt ? <span className="text-emerald-700">Draft saved</span> : <span>Draft not saved yet</span>}</div>
-      </div>
-      <form onSubmit={submit} className="mt-3 space-y-3">
-        <textarea
-          id="create-post-text"
-          name="postText"
-          ref={textRef}
-          className="w-full rounded-2xl border border-slate-200 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-          rows={3}
-          placeholder="Share an update…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          disabled={busy}
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            onClick={() => fileInputRef.current?.click?.()}
-          >
-            Photo
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={busy}
-            onClick={() => fileInputRef.current?.click?.()}
-          >
-            Video
-          </Button>
-          <input
-            id="create-post-media"
-            name="postMedia"
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            className="hidden"
-            onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
+    <div className="rounded-2xl border border-stone-200/60 bg-white p-4 shadow-sm">
+      <form onSubmit={submit}>
+        <div className="flex gap-3">
+          <img
+            src={userPic || '/locallink-logo.png'}
+            alt=""
+            className="h-10 w-10 shrink-0 rounded-full border border-stone-200 object-cover"
+          />
+          <textarea
+            id="create-post-text"
+            name="postText"
+            ref={textRef}
+            className="w-full resize-none rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+            rows={2}
+            placeholder="Share an update..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             disabled={busy}
           />
         </div>
-        <div className="text-xs text-slate-500">Images/videos supported. Max 50MB per file.</div>
+
         {previews.length ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {previews.map((p) => (
-              <div key={p.url} className="overflow-hidden rounded-2xl border bg-white">
+              <div key={p.url} className="relative overflow-hidden rounded-xl border bg-white">
                 {p.kind === 'video' ? (
-                  <video src={p.url} controls className="h-48 w-full object-cover" />
+                  <video src={p.url} controls className="h-40 w-full object-cover" />
                 ) : (
-                  <img src={p.url} alt={p.name} className="h-48 w-full object-cover" loading="lazy" />
+                  <img src={p.url} alt={p.name} className="h-40 w-full object-cover" loading="lazy" />
                 )}
-                <div className="px-3 py-2 text-xs text-slate-600">{p.name}</div>
+                <button
+                  type="button"
+                  className="absolute right-1.5 top-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[11px] font-bold text-white hover:bg-black/70"
+                  onClick={() => setFiles((prev) => prev.filter((_, i) => i !== previews.indexOf(p)))}
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
         ) : null}
-        {error ? <div className="text-sm text-red-700">{error}</div> : null}
-        <div className="flex gap-2">
-          <Button disabled={busy}>{busy ? 'Posting…' : 'Post'}</Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={busy}
-            onClick={() => {
-              setText('')
-              setFiles([])
-              setError(null)
-              draft.clear()
-            }}
-          >
-            Clear
+
+        {error ? <div className="mt-2 text-sm text-red-600">{error}</div> : null}
+
+        <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-3">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => fileInputRef.current?.click?.()}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
+            >
+              <svg className="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></svg>
+              Photo
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => fileInputRef.current?.click?.()}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:bg-stone-50 disabled:opacity-50"
+            >
+              <svg className="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+              Video
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])])}
+              disabled={busy}
+            />
+          </div>
+          <Button disabled={busy} className="px-6">
+            {busy ? 'Posting…' : 'Post'}
           </Button>
         </div>
       </form>
-    </Card>
+    </div>
   )
 }
 
@@ -193,38 +186,46 @@ function profileLinkForUser(u) {
   return `/u/${encodeURIComponent(u.id)}`
 }
 
-function SuggestedCard({ user, onFollow, busy }) {
+function SuggestedUserRow({ user, onFollow, busy }) {
   const to = profileLinkForUser(user)
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border bg-white p-3">
-      <Link to={to} className="flex min-w-0 items-center gap-3">
-        <img src={user?.profile_pic || '/locallink-logo.png'} alt="avatar" className="h-10 w-10 rounded-2xl border object-cover" />
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold text-slate-900">{user?.name || 'User'}</div>
-          <div className="text-xs text-slate-500">{String(user?.role || '').toUpperCase()}</div>
-        </div>
+    <div className="flex items-center gap-3 py-1.5">
+      <Link to={to} className="shrink-0">
+        <img
+          src={user?.profile_pic || '/locallink-logo.png'}
+          alt=""
+          className="h-9 w-9 rounded-full border border-stone-200 object-cover"
+        />
       </Link>
-      <Button size="sm" disabled={busy} onClick={() => onFollow(user.id)}>
+      <Link to={to} className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-slate-900">{user?.name || 'User'}</div>
+        <div className="text-[11px] text-slate-500">{String(user?.role || '').charAt(0).toUpperCase() + String(user?.role || '').slice(1)}</div>
+      </Link>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => onFollow(user.id)}
+        className="shrink-0 rounded-lg bg-brand-green px-3 py-1 text-xs font-semibold text-white transition hover:bg-green-600 disabled:opacity-50"
+      >
         Follow
-      </Button>
+      </button>
     </div>
   )
 }
 
 function JoinConversationCard() {
   return (
-    <Card className="rounded-2xl border-slate-200 bg-slate-50/50 shadow-sm">
-      <div className="text-sm font-semibold text-slate-800">Join the conversation!</div>
-      <p className="mt-2 text-sm text-slate-700">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="text-sm font-bold text-slate-900">Join the conversation!</div>
+      <div className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
         &ldquo;Using LocalLink has really boosted my business!&rdquo; #gratitude
-      </p>
-      <div className="mt-3 flex items-center gap-2">
-        <img src="/locallink-logo.png" alt="" className="h-8 w-8 rounded-full border border-slate-200 object-cover" />
-        <span className="text-sm font-medium text-slate-800">Afia Addo</span>
-        <span className="text-xs text-slate-500">Artisan</span>
-        <span className="text-slate-400" aria-hidden>💬</span>
       </div>
-    </Card>
+      <div className="mt-3 flex items-center gap-2">
+        <img src="/locallink-logo.png" alt="" className="h-7 w-7 rounded-full border border-slate-200 object-cover" />
+        <span className="text-sm font-medium text-slate-800">Afia Addo</span>
+        <span className="text-[11px] text-slate-500">• Artisan</span>
+      </div>
+    </div>
   )
 }
 
@@ -235,12 +236,15 @@ export function Feed() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const viewerId = user?.id ?? null
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const compose = String(params.get('compose') || '').toLowerCase()
   const composeMode = compose === '1' || compose === 'true' || compose === 'yes'
   const topicSlug = params.get('topic') ?? ''
+  const sortParam = (params.get('sort') ?? 'top').toLowerCase()
+  const feedSort = sortParam === 'newest' ? 'newest' : 'top'
   const TOPIC_LABELS = { 'rainy-season': 'Rainy Season Tips', 'kumasi-jobs': 'New Jobs in Kumasi', 'escrow': 'How Escrow Works' }
   const topicLabel = topicSlug ? (TOPIC_LABELS[topicSlug] ?? topicSlug) : ''
+  const TOPIC_CHIPS = [{ slug: '', label: 'All' }, ...Object.entries(TOPIC_LABELS).map(([slug, label]) => ({ slug, label }))]
 
   const [posts, setPosts] = useState([])
   const [nextCursor, setNextCursor] = useState(null)
@@ -258,28 +262,20 @@ export function Feed() {
 
   const loadFeed = useCallback(async (cursor = null) => {
     const isInitial = cursor == null
-    if (isInitial) {
-      setLoading(true)
-      setError(null)
-      setShowNewPostsBanner(false)
-    } else {
-      setLoadingMore(true)
-    }
+    if (isInitial) { setLoading(true); setError(null); setShowNewPostsBanner(false) }
+    else setLoadingMore(true)
     try {
-      const queryParams = { limit: FEED_PAGE_SIZE }
+      const queryParams = { limit: FEED_PAGE_SIZE, sort: feedSort }
       if (cursor) queryParams.cursor = cursor
       if (topicSlug) queryParams.topic = topicSlug
       const r = await http.get('/posts/feed', { params: queryParams })
       const items = Array.isArray(r.data?.items) ? r.data.items : []
       const next = r.data?.next_cursor ?? null
-      if (isInitial) {
-        setPosts(items)
-        setTopPostId(items[0]?.id ?? null)
-      } else {
+      if (isInitial) { setPosts(items); setTopPostId(items[0]?.id ?? null) }
+      else {
         setPosts((prev) => {
           const seen = new Set(prev.map((p) => p.id))
-          const added = items.filter((p) => p.id && !seen.has(p.id))
-          return prev.concat(added)
+          return prev.concat(items.filter((p) => p.id && !seen.has(p.id)))
         })
       }
       setNextCursor(next)
@@ -290,7 +286,7 @@ export function Feed() {
       if (isInitial) setLoading(false)
       else setLoadingMore(false)
     }
-  }, [toast, topicSlug])
+  }, [toast, topicSlug, feedSort])
 
   async function loadMore() {
     if (!nextCursor || loadingMore) return
@@ -302,50 +298,32 @@ export function Feed() {
     try {
       const r = await http.get('/follows/suggested/list')
       setSuggested(Array.isArray(r.data) ? r.data : [])
-    } catch {
-      setSuggested([])
-    } finally {
-      setSuggestedLoading(false)
-    }
+    } catch { setSuggested([]) }
+    finally { setSuggestedLoading(false) }
   }
 
-  useEffect(() => {
-    loadFeed()
-    loadSuggested()
-  }, [topicSlug])
+  useEffect(() => { loadFeed(); loadSuggested() }, [topicSlug, feedSort])
 
-  // Check for new posts when tab becomes visible or every 90s
   useEffect(() => {
     if (posts.length === 0 || loading) return
     function checkNew() {
-      http.get('/posts/feed', { params: { limit: 1 } })
+      http.get('/posts/feed', { params: { limit: 1, sort: feedSort } })
         .then((r) => {
           const first = r.data?.items?.[0]
           if (first?.id && first.id !== topPostId) setShowNewPostsBanner(true)
         })
         .catch(() => {})
     }
-    const onVisible = () => {
-      if (document.visibilityState === 'visible') checkNew()
-    }
+    const onVisible = () => { if (document.visibilityState === 'visible') checkNew() }
     document.addEventListener('visibilitychange', onVisible)
     const t = setInterval(checkNew, 90000)
-    return () => {
-      document.removeEventListener('visibilitychange', onVisible)
-      clearInterval(t)
-    }
+    return () => { document.removeEventListener('visibilitychange', onVisible); clearInterval(t) }
   }, [posts.length, loading, topPostId])
 
   useEffect(() => {
     if (!composeMode) return
     const t = setTimeout(() => {
-      const el = document.getElementById('feed-compose')
-      if (!el) return
-      try {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      } catch {
-        // ignore
-      }
+      try { document.getElementById('feed-compose')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch { /* ignore */ }
     }, 50)
     return () => clearTimeout(t)
   }, [composeMode])
@@ -359,108 +337,123 @@ export function Feed() {
       await loadSuggested()
     } catch (e) {
       toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to follow')
-    } finally {
-      setFollowBusyId(null)
-    }
+    } finally { setFollowBusyId(null) }
   }
 
   const empty = useMemo(() => !loading && !error && posts.length === 0, [loading, error, posts.length])
 
   const leftSuggestedSection = (
-    <Card className="overflow-hidden rounded-2xl border-slate-200 p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-sm font-semibold text-slate-900">Suggested to follow</div>
-        <Button size="sm" variant="secondary" onClick={loadSuggested} disabled={suggestedLoading}>
-          Refresh
-        </Button>
+    <div className="rounded-2xl border border-stone-200/60 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-bold text-stone-900">Suggested to Follow</div>
       </div>
       {suggestedLoading ? (
-        <div className="mt-3 text-sm text-slate-600">Loading…</div>
+        <div className="mt-3 text-sm text-stone-500">Loading…</div>
       ) : suggested.length === 0 ? (
-        <div className="mt-3 text-sm text-slate-600">No suggestions right now.</div>
+        <div className="mt-3 text-sm text-stone-500">No suggestions right now.</div>
       ) : (
-        <div className="mt-3 space-y-2">
-          {suggested.map((u) => (
-            <SuggestedCard key={u.id} user={u} onFollow={follow} busy={followBusyId === u.id} />
+        <div className="mt-2 divide-y divide-stone-100">
+          {suggested.slice(0, 5).map((u) => (
+            <SuggestedUserRow key={u.id} user={u} onFollow={follow} busy={followBusyId === u.id} />
           ))}
         </div>
       )}
-      <Link to="/people" className="mt-2 block text-xs font-medium text-emerald-700 hover:underline">
-        See all &gt;
+      <Link to="/people" className="mt-3 flex items-center gap-1 text-xs font-semibold text-stone-600 hover:text-stone-900">
+        See All <span aria-hidden>&gt;</span>
       </Link>
-    </Card>
+    </div>
   )
 
   return (
     <FeedLayout leftSuggestedSection={leftSuggestedSection}>
-      <div className="space-y-6">
-        <PageHeader
-          kicker="Community"
-          title="Feed"
-          subtitle="Posts from people you follow (and your own posts)."
-        />
-
+      <div className="space-y-4">
         <div id="feed-compose">
-          <CreatePostCard viewerId={viewerId} onPosted={() => loadFeed()} autoFocus={composeMode} />
+          <CreatePostCard
+            viewerId={viewerId}
+            userPic={user?.profile_pic}
+            onPosted={() => loadFeed()}
+            autoFocus={composeMode}
+          />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {topicSlug ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
-                Trending: {topicLabel}
-                <Link to="/feed" className="font-semibold text-emerald-700 hover:underline" aria-label="Clear topic">
-                  ×
-                </Link>
-              </span>
-            ) : null}
-            <span className="text-xs text-slate-500">Follow providers or friends to curate your feed.</span>
-            <span className="text-[10px] text-slate-400" title="Build identifier">v2026-02</span>
+            <span className="text-xs font-medium text-stone-500">Topic:</span>
+            {TOPIC_CHIPS.map(({ slug, label }) => (
+              <Link
+                key={slug || 'all'}
+                to={slug ? `/feed?topic=${encodeURIComponent(slug)}` : '/feed'}
+                className={`inline-flex rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                  topicSlug === slug
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                    : 'border-stone-200 bg-white text-stone-700 hover:border-stone-300 hover:bg-stone-50'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => loadFeed()} disabled={loading}>
-              Refresh
-            </Button>
-            <Link to="/people">
-              <Button variant="secondary">Find people</Button>
-            </Link>
-          </div>
+          <Select
+            value={feedSort}
+            onChange={(e) => {
+              const v = e.target.value
+              const next = new URLSearchParams(params)
+              if (v === 'newest') next.set('sort', 'newest')
+              else next.delete('sort')
+              setParams(next, { replace: true })
+            }}
+            className="w-auto min-w-[10rem] text-xs text-stone-600"
+          >
+            <option value="top">Top (engagement)</option>
+            <option value="newest">Newest first</option>
+          </Select>
         </div>
 
         {showNewPostsBanner && !loading && (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <span className="text-sm font-medium text-emerald-900">New posts available</span>
-            <Button size="sm" onClick={() => loadFeed()}>
-              Refresh
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={() => loadFeed()}
+            className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+          >
+            New posts available — tap to refresh
+          </button>
         )}
 
         {loading ? (
-          <Card className="rounded-2xl border-slate-200 p-8 text-center text-slate-600 shadow-sm">Loading…</Card>
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="animate-pulse rounded-2xl border border-stone-200/60 bg-white p-5 shadow-sm">
+                <div className="flex gap-3">
+                  <div className="h-10 w-10 rounded-full bg-stone-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-32 rounded bg-stone-200" />
+                    <div className="h-2.5 w-20 rounded bg-stone-100" />
+                  </div>
+                </div>
+                <div className="mt-4 h-3 w-3/4 rounded bg-stone-100" />
+                <div className="mt-2 h-40 rounded-xl bg-stone-100" />
+              </div>
+            ))}
+          </div>
         ) : error ? (
-          <Card className="rounded-2xl border-slate-200 shadow-sm">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center">
             <div className="text-sm text-red-700">{error}</div>
-          </Card>
+            <Button variant="secondary" className="mt-3" onClick={() => loadFeed()}>Retry</Button>
+          </div>
         ) : empty ? (
-          <Card className="rounded-2xl border-slate-200 p-8 text-center shadow-sm">
-            <div className="text-sm text-slate-600">Your feed is empty. Follow someone or post an update.</div>
-            <p className="mt-2 text-xs text-slate-500">If you already follow people and still see this, your session may be stale. Log out and log in again to refresh.</p>
+          <div className="rounded-2xl border border-stone-200/60 bg-white p-8 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-stone-100">
+              <svg className="h-8 w-8 text-stone-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            </div>
+            <div className="text-sm font-semibold text-stone-800">Your feed is empty</div>
+            <p className="mt-1 text-sm text-stone-500">Follow people to see their posts here.</p>
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <Link to="/people">
-                <Button>Find people</Button>
-              </Link>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  logout()
-                  navigate('/login?reason=session&next=/feed', { replace: true })
-                }}
-              >
-                Log out and sign in again
+              <Link to="/people"><Button>Find people</Button></Link>
+              <Button variant="secondary" onClick={() => { logout(); navigate('/login?reason=session&next=/feed', { replace: true }) }}>
+                Re-login
               </Button>
             </div>
-          </Card>
+          </div>
         ) : (
           <>
             <div className="space-y-4">
@@ -482,4 +475,3 @@ export function Feed() {
     </FeedLayout>
   )
 }
-

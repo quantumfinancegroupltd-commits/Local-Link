@@ -1,45 +1,49 @@
 import { useCallback, useMemo, useState } from 'react'
 import { http } from '../api/http.js'
-import { AuthContext, LS_TOKEN, LS_USER, readLocal, removeLocal, safeParse, writeLocal } from './authContext.js'
+import { AuthContext, LS_TOKEN, LS_REFRESH_TOKEN, LS_USER, readLocal, removeLocal, safeParse, writeLocal } from './authContext.js'
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => readLocal(LS_TOKEN))
   const [user, setUser] = useState(() => safeParse(readLocal(LS_USER) ?? ''))
   const booted = true
 
-  const setSession = useCallback((nextToken, nextUser) => {
+  const setSession = useCallback((nextToken, nextUser, nextRefreshToken) => {
     setToken(nextToken)
     setUser(nextUser)
     if (nextToken) writeLocal(LS_TOKEN, nextToken)
     else removeLocal(LS_TOKEN)
     if (nextUser) writeLocal(LS_USER, JSON.stringify(nextUser))
     else removeLocal(LS_USER)
+    if (nextRefreshToken) writeLocal(LS_REFRESH_TOKEN, nextRefreshToken)
+    else if (nextRefreshToken === null) removeLocal(LS_REFRESH_TOKEN)
   }, [])
 
   const clearSession = useCallback(() => {
     setToken(null)
     setUser(null)
     removeLocal(LS_TOKEN)
+    removeLocal(LS_REFRESH_TOKEN)
     removeLocal(LS_USER)
   }, [])
 
   const login = useCallback(async ({ email, password }) => {
     const res = await http.post('/login', { email, password })
     const nextToken = res.data?.token ?? res.data?.accessToken ?? null
+    const nextRefreshToken = res.data?.refreshToken ?? null
     const nextUser = res.data?.user ?? null
     if (!nextToken || !nextUser) {
       throw new Error('Login response missing token/user')
     }
-    setSession(nextToken, nextUser)
+    setSession(nextToken, nextUser, nextRefreshToken)
     return nextUser
   }, [setSession])
 
   const register = useCallback(async ({ name, email, phone, password, role, referral_code }) => {
     const res = await http.post('/register', { name, email, phone, password, role, referral_code })
-    // Support either: register returns token+user, or just user.
     const nextToken = res.data?.token ?? res.data?.accessToken ?? null
+    const nextRefreshToken = res.data?.refreshToken ?? null
     const nextUser = res.data?.user ?? res.data ?? null
-    if (nextToken && nextUser) setSession(nextToken, nextUser)
+    if (nextToken && nextUser) setSession(nextToken, nextUser, nextRefreshToken)
     return nextUser
   }, [setSession])
 

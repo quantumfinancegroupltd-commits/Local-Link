@@ -68,7 +68,7 @@ export function FeedSidebarLeft({ className = '' }) {
             to={to}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive ? 'bg-emerald-50 text-emerald-800 font-semibold' : 'text-stone-700 hover:bg-stone-50'
+                isActive ? 'bg-emerald-50 text-emerald-800 font-semibold dark:bg-brand-emerald/20 dark:text-white' : 'text-stone-700 hover:bg-stone-50 dark:text-slate-300 dark:hover:bg-white/10'
               }`
             }
           >

@@ -753,6 +753,11 @@ export function AppLayout() {
               </div>
             </div>
           </div>
+          {typeof globalThis.__LOCAL_LINK_BUILD_TIME__ === 'string' && globalThis.__LOCAL_LINK_BUILD_TIME__ ? (
+            <div className="mt-6 border-t border-slate-200 pt-4 text-center text-xs text-slate-400 dark:border-white/10 dark:text-slate-500">
+              Build {globalThis.__LOCAL_LINK_BUILD_TIME__.slice(0, 19).replace('T', ' ')} UTC
+            </div>
+          ) : null}
         </div>
       </footer>
       <AssistantFab />

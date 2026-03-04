@@ -378,7 +378,7 @@ export function AppLayout() {
                   ) : null}
                 </Link>
 
-                <div className="relative hidden md:block">
+                <div className="relative hidden md:block overflow-visible">
                   <button
                     type="button"
                     onClick={() => setAccountOpen((v) => !v)}
@@ -400,7 +400,7 @@ export function AppLayout() {
                         onClick={() => setAccountOpen(false)}
                         aria-label="Close account menu"
                       />
-                      <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
+                      <div className="absolute right-0 top-full z-[100] mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft dark:border-white/10 dark:bg-black/95">
                         <Link
                           to={roleHomePath(user?.role)}
                           className="block px-4 py-3 text-sm font-medium text-slate-800 hover:bg-slate-50 dark:text-white dark:hover:bg-white/10"

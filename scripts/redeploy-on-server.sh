@@ -32,4 +32,4 @@ docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate
 
 echo ""
 echo "Done. Wait ~10s then open https://locallink.agency/ and hard refresh (Cmd+Shift+R)."
-echo "Check the footer for 'Build YYYY-MM-DD HH:MM:SS UTC' to confirm the new build is live."
+echo "Hard refresh (Cmd+Shift+R) to ensure the new bundle loads."

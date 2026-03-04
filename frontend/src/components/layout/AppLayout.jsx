@@ -202,8 +202,10 @@ export function AppLayout() {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
-      <header className="relative w-full shrink-0 overflow-x-hidden border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-2 pr-[280px] py-3 pl-3 sm:gap-3 sm:px-4 sm:pr-[300px] sm:py-4 md:pl-4">
+      <header className="w-full shrink-0 border-b bg-white dark:border-white/10 dark:bg-black" role="banner">
+        <div className="flex w-full items-center py-3 pl-3 pr-2 sm:py-4 sm:pl-4 sm:pr-3">
+          {/* Left: logo + nav — scrolls if needed so right block always stays in view */}
+          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link to="/" className="flex shrink-0 items-center gap-3">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white md:h-12 md:w-12 dark:bg-white/10">
               <img
@@ -221,7 +223,7 @@ export function AppLayout() {
             </div>
           </Link>
 
-          <nav className="hidden min-w-0 flex-1 overflow-x-auto md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav className="hidden min-w-0 flex-1 md:flex">
             <div className="flex shrink-0 items-center justify-center gap-2">
             {!isAuthed ? (
               <>
@@ -283,8 +285,10 @@ export function AppLayout() {
             )}
             </div>
           </nav>
+          </div>
 
-          <div className="absolute right-0 top-0 flex h-full shrink-0 items-center justify-end gap-2 border-l border-slate-200/50 bg-white pl-3 pr-3 dark:border-white/10 dark:bg-black sm:gap-3 sm:pl-4 sm:pr-4">
+          {/* Right: search, theme, notifications, account — always visible, never pushed off */}
+          <div className="flex shrink-0 items-center justify-end gap-2 border-l border-slate-200/50 bg-white pl-3 pr-3 dark:border-white/10 dark:bg-black sm:gap-3 sm:pl-4 sm:pr-4">
             <div className="relative hidden min-w-0 xl:block xl:min-w-[7rem] xl:max-w-[14rem]">
               <form onSubmit={handleSearchSubmit} className="block min-w-0">
                 <input

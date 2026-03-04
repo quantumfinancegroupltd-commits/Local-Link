@@ -7,10 +7,6 @@ import { initSentry } from './lib/sentry.js'
 
 initSentry()
 
-try {
-  document.body.dataset.build = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev'
-} catch (_) {}
-
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

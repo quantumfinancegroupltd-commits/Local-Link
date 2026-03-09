@@ -77,33 +77,27 @@ body{
 /* ═══════════════════════════════════════
    FRONT COVER
 ═══════════════════════════════════════ */
-#cover{background:var(--white);min-height:1123px}
-/* No background image, overlay, or decorative assets */
+#cover{background:var(--forest);min-height:1123px}
 #cover .grain,#cover .dot-bg{display:none}
-#cover .cv-photo,#cover .cv-wash,#cover .cv-circle{display:none !important}
-/* Cover text on white: use dark/terra so readable */
-#cover .cvw-local{color:var(--terra)}
-#cover .cvw-link{color:var(--ink)}
-#cover .cvw-tag{color:var(--mid)}
-#cover .cv-vol-lbl{color:var(--terra)}
-#cover .cv-date-lbl{color:var(--mid)}
-#cover .cv-hl-main{color:var(--ink)}
-#cover .cv-hl-main em{color:var(--terra)}
-#cover .cv-hl-sub{color:var(--ink-mid)}
-#cover .cv-slbl{color:var(--mid)}
-#cover .cvt-lbl{color:var(--terra)}
-#cover .cvt-title{color:var(--ink-mid)}
-#cover .cv-teasers{border-top-color:var(--lt-border)}
-#cover .cv-price-bar{color:var(--mid)}
-#cover .cv-mastbar{border-bottom-color:rgba(196,84,26,.25)}
-#cover .cv-stat-strip{border-top-color:rgba(196,84,26,.2)}
-#cover .cv-stat{border-right-color:rgba(196,84,26,.15)}
+#cover .cv-circle{display:none !important}
 
 .cv-photo{
   position:absolute;inset:0;width:100%;height:100%;
   object-fit:cover;object-position:center 30%;
+  opacity:1;
 }
-.cv-wash{position:absolute;inset:0;z-index:2;pointer-events:none}
+/* Dark transparent overlay over cover image */
+.cv-wash{
+  position:absolute;inset:0;z-index:2;
+  background:linear-gradient(
+    160deg,
+    rgba(0,0,0,.55) 0%,
+    rgba(0,0,0,.32) 40%,
+    rgba(0,0,0,.28) 70%,
+    rgba(0,0,0,.7) 100%
+  );
+  pointer-events:none;
+}
 /* Terracotta left bar — bolder than Vol 02, angled */
 .cv-bar{
   position:absolute;left:0;top:0;width:8px;height:100%;
@@ -550,6 +544,8 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
      FRONT COVER
 ██████████████████████████████████████████ -->
 <div class="page" id="cover">
+  <img class="cv-photo" src="REPLACE_COVER_IMAGE_DATA_URL" alt="Women in Skilled Trades, Ghana">
+  <div class="cv-wash"></div>
   <div class="cv-bar"></div>
   <div class="cv-top-rule"></div>
 

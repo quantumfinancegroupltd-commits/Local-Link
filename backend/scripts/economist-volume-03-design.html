@@ -5,34 +5,2225 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LocalLink Economist — Women in Skilled Trades, Ghana 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,700;1,9..144,900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Vol. 03 palette — warm terracotta / forest green editorial */
+  --terra:      #c4541a;   /* primary accent — terracotta/burnt orange */
+  --terra-lt:   #e8773a;
+  --terra-dk:   #8f3a10;
+  --forest:     #1f4a2e;   /* secondary — deep forest green */
+  --forest-lt:  #2d6b40;
+  --sage:       #8ab89a;   /* soft sage highlight */
+  --ochre:      #d4a020;   /* warm ochre */
+  --cream:      #f4efe6;   /* warm off-white body pages */
+  --cream-lt:   #faf7f2;
+  --parchment:  #ede7d8;
+  --ink:        #1a1008;   /* near-black warm */
+  --ink-mid:    #3d2e1c;
+  --mid:        #7a6a58;   /* warm mid-grey */
+  --lt-border:  #ddd5c4;
+  --deep:       #0e1c10;   /* cover/divider dark */
+  --white:      #ffffff;
+  --blush:      #f0d9cc;   /* soft blush for female-coded accents */
+  --red:        #b5311a;
+  --green:      #1f5c34;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:#0a0e0a;
+  font-family:'DM Sans',sans-serif;
+  color:var(--ink);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+/* ═══════════════════════════════════════
+   PAGE SHELL
+═══════════════════════════════════════ */
+.page{
+  width:794px;
+  min-height:1123px;
+  position:relative;
+  overflow:hidden;
+  background:var(--cream);
+  display:flex;
+  flex-direction:column;
+}
+.p-sep{
+  width:794px;padding:6px 0;background:#060a06;
+  font-family:'Space Mono',monospace;font-size:7px;
+  color:rgba(255,255,255,.14);letter-spacing:4px;text-transform:uppercase;text-align:center;
+}
+
+/* Warm grain texture overlay */
+.grain{
+  position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size:128px 128px;
+}
+
+/* Subtle warm dot pattern */
+.dot-bg{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle, rgba(196,84,26,.07) 1px, transparent 1px);
+  background-size:18px 18px;
+}
+
+/* ═══════════════════════════════════════
+   FRONT COVER
+═══════════════════════════════════════ */
+#cover{background:var(--forest);min-height:1123px}
+
+.cv-photo{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center 30%;
+  opacity:.35;filter:grayscale(15%) sepia(25%);
+}
+.cv-wash{
+  position:absolute;inset:0;z-index:2;
+  background:linear-gradient(
+    160deg,
+    rgba(31,74,46,.92) 0%,
+    rgba(31,74,46,.6) 35%,
+    rgba(14,28,16,.4) 55%,
+    rgba(14,28,16,.97) 100%
+  );
+}
+/* Terracotta left bar — bolder than Vol 02, angled */
+.cv-bar{
+  position:absolute;left:0;top:0;width:8px;height:100%;
+  background:linear-gradient(to bottom,var(--terra-lt) 0%,var(--terra) 50%,var(--terra-dk) 100%);
+  z-index:10;
+}
+/* Top ornamental line */
+.cv-top-rule{position:absolute;top:0;left:8px;right:0;height:2px;background:var(--terra);z-index:10}
+/* Decorative circle motif */
+.cv-circle{
+  position:absolute;right:-80px;top:120px;
+  width:400px;height:400px;border-radius:50%;
+  border:1px solid rgba(196,84,26,.18);
+  z-index:3;pointer-events:none;
+}
+.cv-circle::before{
+  content:'';position:absolute;inset:30px;border-radius:50%;
+  border:1px solid rgba(196,84,26,.1);
+}
+.cv-circle::after{
+  content:'';position:absolute;inset:70px;border-radius:50%;
+  border:1px solid rgba(196,84,26,.06);
+}
+
+.cv-content{position:relative;z-index:6;height:100%;display:flex;flex-direction:column;padding-left:8px}
+
+/* Masthead bar */
+.cv-mastbar{
+  padding:22px 44px 18px 36px;
+  border-bottom:1px solid rgba(196,84,26,.2);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cv-wordmark{display:flex;flex-direction:column}
+.cvw-name{display:flex;align-items:baseline;gap:0}
+.cvw-local{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--terra-lt);letter-spacing:3px;line-height:1}
+.cvw-link{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);letter-spacing:3px;line-height:1}
+.cvw-tag{font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.3);letter-spacing:5px;text-transform:uppercase;margin-top:3px}
+.cv-meta-r{text-align:right}
+.cv-vol-lbl{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra-lt);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:2px}
+.cv-date-lbl{font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.25);letter-spacing:1px}
+
+/* Cover hero body */
+.cv-hero{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 44px 48px 36px}
+
+.cv-kicker{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:'Space Mono',monospace;font-size:8.5px;
+  color:var(--terra-lt);letter-spacing:4px;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.cv-kicker::before{content:'';display:block;width:24px;height:1px;background:var(--terra-lt)}
+
+/* The big Fraunces serif headline — different feel from Bebas */
+.cv-hl-main{
+  font-family:'Fraunces',serif;
+  font-weight:900;
+  font-size:78px;
+  color:var(--white);
+  line-height:.93;
+  letter-spacing:-1px;
+  margin-bottom:6px;
+}
+.cv-hl-main em{color:var(--terra-lt);font-style:italic}
+
+.cv-hl-sub{
+  font-family:'Fraunces',serif;
+  font-weight:300;
+  font-style:italic;
+  font-size:26px;
+  color:rgba(255,255,255,.55);
+  line-height:1.3;
+  margin-bottom:28px;
+  max-width:500px;
+}
+
+/* Stat badge — earthy block */
+.cv-stat-strip{
+  display:flex;gap:0;
+  border-top:1px solid rgba(196,84,26,.3);
+  padding-top:24px;
+  margin-bottom:28px;
+}
+.cv-stat{
+  flex:1;padding:0 20px 0 0;border-right:1px solid rgba(196,84,26,.2);
+}
+.cv-stat:last-child{border-right:none;padding-left:20px;padding-right:0}
+.cv-stat:first-child{padding-left:0}
+.cv-snum{font-family:'Fraunces',serif;font-weight:700;font-size:32px;color:var(--terra-lt);line-height:1}
+.cv-slbl{font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;line-height:1.4}
+
+/* Cover story teasers */
+.cv-teasers{
+  border-top:1px solid rgba(255,255,255,.07);
+  padding-top:18px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+}
+.cvt-lbl{font-family:'Space Mono',monospace;font-size:6.5px;color:var(--terra-lt);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.cvt-title{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:rgba(255,255,255,.75);line-height:1.35}
+
+.cv-price-bar{
+  position:absolute;bottom:0;right:0;
+  font-family:'Space Mono',monospace;font-size:7px;
+  color:rgba(255,255,255,.15);letter-spacing:1px;
+  padding:14px 44px;
+}
+
+/* ═══════════════════════════════════════
+   PAGE CHROME — HEADER / FOOTER
+═══════════════════════════════════════ */
+.page-header{
+  border-bottom:2px solid var(--ink);
+  padding:11px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--cream-lt);
+  position:relative;z-index:5;
+}
+.ph-brand{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--ink)}
+.ph-brand span{color:var(--terra)}
+.ph-section{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:3px;color:var(--mid);text-transform:uppercase}
+.ph-pn{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--mid)}
+
+.page-footer{
+  border-top:1px solid var(--lt-border);padding:8px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;position:relative;z-index:5;
+}
+.pf-txt{font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:1px}
+
+/* Terracotta accent rule under header */
+.h-rule{height:3px;background:linear-gradient(to right,var(--terra) 0%,transparent 100%)}
+/* Forest green variant */
+.h-rule-green{height:3px;background:linear-gradient(to right,var(--forest) 0%,transparent 100%)}
+
+/* ═══════════════════════════════════════
+   MASTHEAD PAGE
+═══════════════════════════════════════ */
+.mast-layout{padding:34px 40px;display:grid;grid-template-columns:1fr 1fr;gap:38px;flex:1;position:relative;z-index:5}
+.ms-head{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--lt-border);padding-bottom:7px;margin-bottom:12px}
+.ms-name{font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;color:var(--ink)}
+.ms-role{font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:.5px;margin-bottom:9px;line-height:1.4}
+
+/* ═══════════════════════════════════════
+   CONTENTS PAGE
+═══════════════════════════════════════ */
+#contents{background:var(--forest)}
+.toc-banner{
+  padding:48px 50px 32px;
+  position:relative;z-index:5;
+}
+.toc-eye{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--sage);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px}
+.toc-big-title{
+  font-family:'Fraunces',serif;font-weight:900;font-size:58px;color:var(--white);
+  line-height:.92;letter-spacing:-1px;
+  border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:26px;margin-bottom:30px;
+}
+.toc-big-title em{color:var(--terra-lt);font-style:italic}
+.toc-grid{padding:0 50px;display:grid;grid-template-columns:1fr 1fr;gap:0;position:relative;z-index:5}
+.toc-sec-lbl{
+  font-family:'Space Mono',monospace;font-size:7px;color:var(--sage);
+  letter-spacing:4px;text-transform:uppercase;
+  padding:14px 0 8px;border-top:1px solid rgba(255,255,255,.06);margin-top:8px;
+}
+.toc-row{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.toc-n{font-family:'Space Mono',monospace;font-size:8px;color:var(--terra-lt);min-width:22px;padding-top:2px}
+.toc-t{font-family:'Fraunces',serif;font-size:13px;font-weight:600;color:rgba(244,239,230,.88);line-height:1.25}
+.toc-d{font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(255,255,255,.3);line-height:1.4;margin-top:2px}
+.toc-foot{padding:26px 50px;display:flex;align-items:flex-end;gap:18px;position:relative;z-index:5}
+.toc-img{width:80px;height:110px;object-fit:cover;border:2px solid rgba(196,84,26,.3);opacity:.55;filter:sepia(20%)}
+.toc-quote{font-family:'Fraunces',serif;font-style:italic;font-size:12px;color:rgba(244,239,230,.3);max-width:320px;line-height:1.6}
+
+/* ═══════════════════════════════════════
+   SECTION DIVIDERS
+═══════════════════════════════════════ */
+.sec-div{min-height:1123px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+.sd-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.28;filter:grayscale(10%) sepia(20%)}
+.sd-veil{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 15%,rgba(14,28,16,.82) 100%)}
+.sd-dots{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(196,84,26,.06) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+.sd-bar{position:absolute;left:0;top:0;width:6px;height:100%;background:linear-gradient(to bottom,var(--terra-lt),var(--terra-dk))}
+.sd-inner{position:relative;z-index:5;padding:50px 50px 50px 44px}
+.sd-eyebrow{font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.35);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px}
+.sd-accent{width:32px;height:3px;background:var(--terra);margin-bottom:16px}
+.sd-hl{font-family:'Fraunces',serif;font-weight:900;font-size:64px;color:var(--white);line-height:.9;letter-spacing:-1px;margin-bottom:16px}
+.sd-hl em{color:var(--terra-lt);font-style:italic}
+.sd-desc{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;color:rgba(255,255,255,.5);line-height:1.6;max-width:420px;font-style:italic}
+
+/* ═══════════════════════════════════════
+   EDITOR LETTER
+═══════════════════════════════════════ */
+.ed-grid{padding:28px 40px;flex:1;display:grid;grid-template-columns:1fr 220px;gap:36px;position:relative;z-index:5}
+.el-body p{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.78;margin-bottom:12px;color:var(--ink-mid)}
+.el-drop::first-letter{
+  font-family:'Fraunces',serif;font-weight:900;font-size:72px;float:left;
+  line-height:.78;margin-right:10px;margin-top:6px;color:var(--terra);
+}
+.el-sig{margin-top:18px;padding-top:14px;border-top:1px solid var(--lt-border)}
+.el-sig-name{font-family:'Fraunces',serif;font-size:14px;font-weight:600;color:var(--ink)}
+.el-sig-role{font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:1px;margin-top:3px}
+/* sidebar */
+.el-sb{border-left:3px solid var(--terra);padding-left:18px}
+.el-sb-head{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:4px;text-transform:uppercase;margin-bottom:14px}
+.sb-stat{margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--lt-border)}
+.sb-stat:last-child{border-bottom:none;margin-bottom:0}
+.sb-num{font-family:'Fraunces',serif;font-weight:700;font-size:36px;color:var(--ink);line-height:1;letter-spacing:0}
+.sb-num.terra{color:var(--terra)}.sb-num.forest{color:var(--forest)}.sb-num.up{color:var(--red)}.sb-num.dn{color:var(--green)}
+.sb-lbl{font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid);line-height:1.45;margin-top:3px}
+
+/* ═══════════════════════════════════════
+   STORY / ARTICLE LAYOUTS
+═══════════════════════════════════════ */
+.story-head{padding:22px 40px 0;position:relative;z-index:5}
+.story-tag{
+  display:inline-block;background:var(--terra);color:var(--white);
+  font-family:'Space Mono',monospace;font-size:7px;letter-spacing:3px;
+  padding:3px 9px;text-transform:uppercase;margin-bottom:11px;
+}
+.story-tag.green{background:var(--forest)}
+.story-tag.outline{background:transparent;border:1px solid var(--terra);color:var(--terra)}
+.story-hl{font-family:'Fraunces',serif;font-weight:900;font-size:30px;line-height:1.05;color:var(--ink);margin-bottom:7px;letter-spacing:-.5px}
+.story-deck{font-family:'DM Sans',sans-serif;font-size:11px;font-style:italic;color:var(--mid);line-height:1.6;margin-bottom:10px;font-weight:300}
+.story-byline{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+
+/* 2-col & 3-col article grid */
+.two-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr;gap:30px;padding-top:18px;position:relative;z-index:5}
+.three-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding-top:18px;position:relative;z-index:5}
+.col-body p{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.76;margin-bottom:11px;color:#2a1c10}
+.col-body p:first-child::first-letter{
+  font-family:'Fraunces',serif;font-weight:900;font-size:52px;float:left;
+  line-height:.82;margin-right:8px;margin-top:4px;color:var(--terra);
+}
+.inline-head{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);margin:14px 0 6px;letter-spacing:-.3px}
+
+/* Pull quote — earthy style */
+.pullquote{border-left:4px solid var(--terra);padding:14px 18px;margin:16px 0;background:rgba(196,84,26,.04)}
+.pq-text{font-family:'Fraunces',serif;font-size:15px;font-weight:600;font-style:italic;color:var(--ink);line-height:1.4}
+.pq-attr{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:1.5px;margin-top:8px}
+
+/* Full-width pull */
+.big-pullquote{
+  background:var(--forest);padding:28px 40px;position:relative;z-index:5;
+  margin:0;
+}
+.bpq-text{font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:22px;color:var(--white);line-height:1.35;margin-bottom:10px}
+.bpq-attr{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--sage);letter-spacing:2px;text-transform:uppercase}
+
+/* ═══════════════════════════════════════
+   DATA / INDEX COMPONENTS
+═══════════════════════════════════════ */
+.data-page{padding:22px 40px;flex:1;position:relative;z-index:5}
+.data-hl{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:-.5px}
+.data-sub{font-family:'DM Sans',sans-serif;font-size:10px;color:var(--mid);font-style:italic;margin-bottom:18px}
+
+/* KPI row — warm card style */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--lt-border);margin-bottom:20px;background:var(--cream-lt)}
+.kpi-cell{padding:16px 14px;border-right:1px solid var(--lt-border);text-align:center}
+.kpi-cell:last-child{border-right:none}
+.kpi-num{font-family:'Fraunces',serif;font-weight:700;font-size:32px;letter-spacing:0;line-height:1;color:var(--ink)}
+.kpi-num.terra{color:var(--terra)}.kpi-num.forest{color:var(--forest)}.kpi-num.up{color:var(--red)}.kpi-num.dn{color:var(--green)}
+.kpi-lbl{font-family:'DM Sans',sans-serif;font-size:8.5px;color:var(--mid);line-height:1.4;margin-top:5px}
+
+/* Chart containers */
+.chart-box{background:var(--cream-lt);border:1px solid var(--lt-border);padding:18px;margin-bottom:16px}
+.chart-box.dark{background:var(--forest);border-color:var(--forest-lt)}
+.chart-box.warm{background:var(--parchment);border-color:var(--lt-border)}
+.chart-lbl{font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.chart-lbl.light{color:rgba(255,255,255,.3)}
+
+/* Horizontal bar chart */
+.hbar{display:flex;flex-direction:column;gap:9px}
+.hb-row{display:flex;align-items:center;gap:10px}
+.hb-lbl{font-family:'Space Mono',monospace;font-size:7px;color:var(--ink);min-width:140px;text-align:right;line-height:1.3}
+.hb-lbl.light{color:rgba(255,255,255,.65)}
+.hb-lbl.sm{min-width:100px}
+.hb-track{flex:1;height:14px;background:rgba(196,84,26,.1);position:relative;overflow:hidden}
+.hb-track.dk{background:rgba(255,255,255,.06)}
+.hb-fill{height:100%;background:var(--terra);position:relative}
+.hb-fill.forest{background:var(--forest-lt)}.hb-fill.ochre{background:var(--ochre)}.hb-fill.sage{background:var(--sage)}.hb-fill.red{background:var(--red)}.hb-fill.dark{background:var(--ink)}
+.hb-val{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--mid);min-width:64px}
+.hb-val.light{color:rgba(255,255,255,.45)}
+
+/* Number feature row */
+.num-feat{display:flex;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);background:var(--cream-lt);margin:16px 0}
+.nf-cell{flex:1;text-align:center;border-right:1px solid var(--lt-border);padding:14px 8px}
+.nf-cell:last-child{border-right:none}
+.nf-num{font-family:'Fraunces',serif;font-weight:700;font-size:40px;color:var(--ink);line-height:1}
+.nf-num span{color:var(--terra)}
+.nf-lbl{font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;line-height:1.5;margin-top:3px}
+
+/* ═══════════════════════════════════════
+   DATA TABLE
+═══════════════════════════════════════ */
+.tbl-wrap{overflow:hidden;border:1px solid var(--lt-border);margin-bottom:16px}
+table.dtbl{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:8px}
+table.dtbl thead tr{background:var(--forest);color:var(--cream)}
+table.dtbl thead th{padding:9px 10px;text-align:left;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;font-weight:400;white-space:nowrap}
+table.dtbl thead th:not(:first-child){text-align:right}
+table.dtbl tbody tr{border-bottom:1px solid var(--lt-border)}
+table.dtbl tbody tr:nth-child(even){background:rgba(196,84,26,.04)}
+table.dtbl tbody tr:hover{background:rgba(196,84,26,.07)}
+table.dtbl td{padding:7px 10px;color:var(--ink);line-height:1.3}
+table.dtbl td:not(:first-child){text-align:right}
+table.dtbl td.cat{font-family:'DM Sans',sans-serif;font-size:10.5px;font-weight:600;color:var(--forest);letter-spacing:.2px}
+table.dtbl td.sub{font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid)}
+table.dtbl td.val{font-weight:700;color:var(--ink)}
+table.dtbl td.up{color:var(--red);font-weight:700}
+table.dtbl td.dn{color:var(--green);font-weight:700}
+table.dtbl td.mid{color:var(--mid)}
+table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-family:'Space Mono',monospace;font-size:6.5px;letter-spacing:3px;text-transform:uppercase;padding:6px 10px}
+.pill-up{display:inline-block;background:rgba(181,49,26,.1);color:var(--red);padding:1px 6px;border-radius:2px;font-size:7px;font-weight:700}
+.pill-dn{display:inline-block;background:rgba(31,92,52,.1);color:var(--green);padding:1px 6px;border-radius:2px;font-size:7px;font-weight:700}
+.pill-mid{display:inline-block;background:rgba(122,106,88,.1);color:var(--mid);padding:1px 6px;border-radius:2px;font-size:7px}
+
+/* ═══════════════════════════════════════
+   PORTRAIT / PROFILE CARDS
+═══════════════════════════════════════ */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:0 40px 0;position:relative;z-index:5;flex:1}
+.profile-card{background:var(--cream-lt);border:1px solid var(--lt-border);overflow:hidden;display:flex;flex-direction:column}
+.pc-photo{width:100%;height:180px;object-fit:cover;object-position:top center;filter:sepia(12%) contrast(108%)}
+.pc-body{padding:16px;flex:1}
+.pc-name{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:2px;letter-spacing:-.3px}
+.pc-trade{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-bottom:9px}
+.pc-text{font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.6}
+.pc-stat-row{display:flex;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--lt-border)}
+.pc-stat-n{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--terra);line-height:1}
+.pc-stat-l{font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;line-height:1.4;margin-top:2px}
+
+/* Full-page portrait */
+.portrait-page{display:grid;grid-template-columns:1fr 1fr;flex:1;position:relative;z-index:5}
+.port-photo-col{overflow:hidden;position:relative}
+.port-photo-col img{width:100%;height:100%;object-fit:cover;object-position:top;filter:sepia(8%) contrast(110%)}
+.port-photo-col .port-overlay{position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,var(--cream) 100%)}
+.port-text-col{padding:36px 40px 36px 28px;display:flex;flex-direction:column;justify-content:center}
+
+/* ═══════════════════════════════════════
+   INTERVIEW PAGE
+═══════════════════════════════════════ */
+.itv-band{background:var(--terra);padding:28px 40px 22px;position:relative;overflow:hidden}
+.itv-band::after{content:'"';position:absolute;right:20px;bottom:-30px;font-family:'Fraunces',serif;font-size:200px;color:rgba(255,255,255,.08);line-height:1;font-weight:900}
+.itv-tag{font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}
+.itv-name{font-family:'Fraunces',serif;font-weight:900;font-size:40px;color:var(--white);line-height:1;margin-bottom:5px;letter-spacing:-.5px}
+.itv-role{font-family:'DM Sans',sans-serif;font-size:12px;font-style:italic;color:rgba(255,255,255,.55)}
+.itv-body{padding:22px 40px;flex:1;display:grid;grid-template-columns:180px 1fr;gap:26px;position:relative;z-index:5}
+.itv-photo{width:180px;height:235px;object-fit:cover;object-position:top;border:3px solid var(--terra)}
+.qa-block{margin-bottom:16px}
+.qa-q{font-family:'Fraunces',serif;font-size:11.5px;font-weight:700;font-style:italic;color:var(--terra);margin-bottom:5px;line-height:1.35}
+.qa-a{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.72;color:var(--ink-mid)}
+
+/* ═══════════════════════════════════════
+   OPINION
+═══════════════════════════════════════ */
+.op-band{background:var(--forest);padding:14px 40px;display:flex;align-items:center;gap:14px}
+.op-lbl{font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--white);letter-spacing:0;font-style:italic}
+.op-rule{flex:1;height:1px;background:rgba(255,255,255,.15)}
+.op-by{font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-align:right}
+.op-body{padding:22px 40px;flex:1;display:grid;grid-template-columns:1fr 190px;gap:30px;position:relative;z-index:5}
+.op-text p{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.76;margin-bottom:11px;color:var(--ink-mid)}
+.op-text p:first-child::first-letter{
+  font-family:'Fraunces',serif;font-weight:900;font-size:56px;float:left;
+  line-height:.78;margin-right:9px;margin-top:4px;color:var(--forest);
+}
+.op-sb{border-left:2px solid var(--lt-border);padding-left:18px}
+.op-sb-head{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px}
+.osb-stat{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--lt-border)}
+.osb-stat:last-child{border-bottom:none}
+.osb-n{font-family:'Fraunces',serif;font-weight:700;font-size:30px;color:var(--ink);line-height:1}
+.osb-l{font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid);line-height:1.4;margin-top:2px}
+
+/* ═══════════════════════════════════════
+   PHOTO ESSAY PAGE
+═══════════════════════════════════════ */
+.photo-mosaic{display:grid;gap:3px;flex:1}
+.pm-3x2{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
+.pm-hero-left{grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr}
+.pm-hero-right{grid-template-columns:1fr 1.6fr;grid-template-rows:1fr 1fr}
+.pc-cell{overflow:hidden;position:relative}
+.pc-cell img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(10%) contrast(108%)}
+.pc-cell .cap{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(14,28,16,.75));padding:16px 10px 8px;font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.7);letter-spacing:.5px}
+.pc-cell.tall{grid-row:span 2}
+
+/* ═══════════════════════════════════════
+   AMBER RULE / UTILITY
+═══════════════════════════════════════ */
+.terra-rule{width:32px;height:2px;background:var(--terra);margin-bottom:10px}
+.forest-rule{width:32px;height:2px;background:var(--forest);margin-bottom:10px}
+.full-rule{height:1px;background:var(--lt-border);margin:14px 0}
+.col-body .inline-head{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink);margin:14px 0 6px;letter-spacing:-.3px}
+
+/* Regional cards */
+.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0 40px;flex:1;position:relative;z-index:5}
+.region-card{border:1px solid var(--lt-border);padding:18px;position:relative}
+.region-card:nth-child(even){border-left:none}
+.region-card:nth-child(n+3){border-top:none}
+.rc-name{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--ink);margin-bottom:2px;letter-spacing:-.3px}
+.rc-sub{font-family:'Space Mono',monospace;font-size:6.5px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.rc-img{width:100%;height:90px;object-fit:cover;margin-bottom:10px;display:block;filter:sepia(15%) contrast(105%)}
+.rc-txt{font-family:'DM Sans',sans-serif;font-size:9px;line-height:1.6;color:var(--ink-mid)}
+.rc-kpi{margin-top:10px;padding-top:10px;border-top:1px solid var(--lt-border);display:flex;gap:14px}
+.rc-kpi-n{font-family:'Fraunces',serif;font-size:19px;font-weight:700;color:var(--terra);line-height:1}
+.rc-kpi-l{font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:.5px;text-transform:uppercase;line-height:1.4;margin-top:2px}
+
+/* Policy sidebar layout */
+.pol-layout{display:grid;grid-template-columns:1fr 190px;gap:0;padding:0 40px 24px;flex:1;position:relative;z-index:5}
+.pol-main{padding-right:24px}
+.pol-sb{border-left:2px solid var(--lt-border);padding-left:18px}
+.psw{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--lt-border)}
+.psw:last-child{border-bottom:none}
+.psw-head{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px}
+.psw-list{list-style:none}
+.psw-list li{font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink);padding:4px 0;border-bottom:1px solid var(--lt-border);line-height:1.4}
+.psw-list li:last-child{border-bottom:none}
+.psw-list li span{color:var(--terra);font-family:'Space Mono',monospace;font-size:7.5px;display:block}
+
+/* ═══════════════════════════════════════
+   BACK COVER
+═══════════════════════════════════════ */
+#back-cover{background:var(--forest);min-height:1123px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.bc-dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(196,84,26,.05) 1px,transparent 1px);background-size:24px 24px;pointer-events:none}
+.bc-bar{position:absolute;left:0;top:0;width:6px;height:100%;background:linear-gradient(to bottom,var(--terra-lt),var(--terra-dk))}
+.bc-top{padding:36px 46px 24px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:5}
+.bc-brand-name{font-family:'Fraunces',serif;font-weight:900;font-size:28px;letter-spacing:-.5px;color:var(--white)}
+.bc-brand-name span{color:var(--terra-lt)}
+.bc-tagline{font-family:'DM Sans',sans-serif;font-size:11px;font-style:italic;color:rgba(255,255,255,.22);margin-top:4px}
+.bc-body{flex:1;padding:44px 46px 0;position:relative;z-index:5}
+.bc-quote{font-family:'Fraunces',serif;font-weight:700;font-style:italic;font-size:40px;color:var(--white);line-height:1.05;letter-spacing:-.5px;max-width:620px;margin-bottom:14px}
+.bc-quote span{color:var(--terra-lt)}
+.bc-attrib{font-family:'Space Mono',monospace;font-size:8px;color:var(--sage);letter-spacing:2px;text-transform:uppercase}
+.bc-img-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:34px;height:170px}
+.bc-img-strip img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%) sepia(20%);opacity:.45}
+.bc-bottom{padding:22px 46px 36px;display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;position:relative;z-index:5}
+.bc-contact h4{font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra-lt);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px}
+.bc-contact p{font-family:'DM Sans',sans-serif;font-size:9.5px;color:rgba(255,255,255,.25);line-height:1.65}
+.bc-next{text-align:right}
+.bc-next-lbl{font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.22);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.bc-next-title{font-family:'Fraunces',serif;font-size:16px;font-style:italic;font-weight:600;color:rgba(255,255,255,.45)}
+
+</style>
 </head>
 <body>
-<!--
-  VOLUME 03 DESIGN — FULL HTML REQUIRED
 
-  Paste your complete Vol 03 HTML here (from your message), from the opening <style>
-  through the back-cover div that currently ends with:
-    ...;letter-s
-  Do NOT include this comment block in the pasted content.
+<!-- ██████████████████████████████████████████
+     FRONT COVER
+██████████████████████████████████████████ -->
+<div class="page" id="cover">
+  <img class="cv-photo" src="https://picsum.photos/seed/women-trades-ghana/794/1123" alt="Women in Skilled Trades, Ghana">
+  <div class="cv-wash"></div>
+  <div class="cv-bar"></div>
+  <div class="cv-top-rule"></div>
+  <div class="cv-circle"></div>
 
-  Then run from repo root:
-    node backend/scripts/fix-vol03-design-html.js backend/scripts/economist-volume-03-design.html
+  <div class="cv-content">
+    <div class="cv-mastbar">
+      <div class="cv-wordmark">
+        <div class="cvw-name">
+          <span class="cvw-local">LOCAL</span><span class="cvw-link">LINK</span>
+        </div>
+        <div class="cvw-tag">Economist</div>
+      </div>
+      <div class="cv-meta-r">
+        <span class="cv-vol-lbl">Vol. 03 &nbsp;·&nbsp; Issue 03</span>
+        <span class="cv-date-lbl">March 2026 &nbsp;·&nbsp; GH₵ 25.00 / $3.50</span>
+      </div>
+    </div>
 
-  That script will complete the truncated back-cover (letter-s → letter-spacing:1px + closing tags)
-  and overwrite this file. Then run:
-    node backend/scripts/generate-economist-volume-03-pdf-from-html.js
--->
-<div class="page" id="cover" style="width:794px;min-height:1123px;background:#1f4a2e;display:flex;align-items:center;justify-content:center;">
-  <p style="color:rgba(255,255,255,.9);font-family:'Fraunces',serif;font-size:24px;">Vol. 03 — Women in Skilled Trades<br>Paste full design HTML above this placeholder, then run fix-vol03-design-html.js</p>
-</div>
-<div class="page" id="back-cover" style="width:794px;min-height:1123px;background:#1f4a2e;">
-  <div class="bc-bottom" style="padding:24px 46px;">
-    <div class="bc-next">
-      <div class="bc-next-lbl">Next Issue — April 2026</div>
-      <div class="bc-next-title">Youth &amp; Employment: Ghana's Generation at Work</div>
-      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.15);letter-spacing:1px"></div>
+    <div class="cv-hero">
+      <div class="cv-kicker">Special Report</div>
+
+      <div class="cv-hl-main">
+        WOMEN<br>IN <em>SKILLED</em><br>TRADES
+      </div>
+
+      <div class="cv-hl-sub">
+        Breaking barriers, building Ghana — how women are entering, surviving, and transforming the skilled trades workforce
+      </div>
+
+      <div class="cv-stat-strip">
+        <div class="cv-stat">
+          <div class="cv-snum">18%</div>
+          <div class="cv-slbl">Women in formal TVET enrolment, 2025</div>
+        </div>
+        <div class="cv-stat">
+          <div class="cv-snum">34K</div>
+          <div class="cv-slbl">Women in NAP apprenticeship programme</div>
+        </div>
+        <div class="cv-stat">
+          <div class="cv-snum">+61%</div>
+          <div class="cv-slbl">Growth in female trade enrolment since 2020</div>
+        </div>
+        <div class="cv-stat">
+          <div class="cv-snum">6</div>
+          <div class="cv-slbl">Regions profiled in this edition</div>
+        </div>
+      </div>
+
+      <div class="cv-teasers">
+        <div>
+          <div class="cvt-lbl">Cover Story</div>
+          <div class="cvt-title">The Wage Gap in the Trades: Data Across 18 Occupations</div>
+        </div>
+        <div>
+          <div class="cvt-lbl">Profiles</div>
+          <div class="cvt-title">Eight Women, Eight Trades — From Accra to Tamale</div>
+        </div>
+        <div>
+          <div class="cvt-lbl">Policy</div>
+          <div class="cvt-title">What TVET Reform Must Do to Close the Gender Gap</div>
+        </div>
+        <div>
+          <div class="cvt-lbl">Data</div>
+          <div class="cvt-title">Enrolment, Completion, Employment — The Numbers</div>
+        </div>
+      </div>
     </div>
   </div>
+  <div class="cv-price-bar">ISSN 0000-0001 &nbsp;·&nbsp; GH₵ 25.00</div>
 </div>
-</body>
-</html>
+
+<div class="p-sep">── inside front cover ──</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 02 — MASTHEAD
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Masthead</div>
+    <div class="ph-pn">02</div>
+  </div>
+  <div class="mast-layout">
+    <div>
+      <div class="ms-head">Editorial</div>
+      <div class="ms-name">Kwame A. Mensah</div><div class="ms-role">Editor-in-Chief</div>
+      <div class="ms-name">Abena Osei-Kuffour</div><div class="ms-role">Deputy Editor, Economics</div>
+      <div class="ms-name">Efua Quartey</div><div class="ms-role">Lead Correspondent, Gender & Labour</div>
+      <div class="ms-name">Ama Boateng</div><div class="ms-role">Lead Data Analyst</div>
+      <div class="ms-name">Yaw Owusu</div><div class="ms-role">Features Writer</div>
+      <div class="ms-name">Adjoa Asante-Twum</div><div class="ms-role">TVET & Skills Policy Correspondent</div>
+      <div class="ms-name">Prince Nkrumah-Yeboah</div><div class="ms-role" style="margin-bottom:20px">Regional Correspondent, Northern & Volta</div>
+
+      <div class="ms-head">Photography & Field Research</div>
+      <div class="ms-name">Nana Addo Boateng</div><div class="ms-role">Lead Photographer, March 2026</div>
+      <div class="ms-name">Samuel Ofori-Atta</div><div class="ms-role">Field Research Coordinator (6 regions)</div>
+      <div class="ms-name">Priscilla Aidoo</div><div class="ms-role" style="margin-bottom:20px">Quantitative Research Lead</div>
+
+      <div class="ms-head">Design</div>
+      <div class="ms-name">Adjoa Mensah-Ankrah</div><div class="ms-role">Art Director</div>
+      <div class="ms-name">Emmanuel Tetteh</div><div class="ms-role">Senior Graphic Designer</div>
+    </div>
+    <div>
+      <div class="ms-head">Advisory Panel — Gender & Labour</div>
+      <div class="ms-name">Dr. Akosua Darkwah</div><div class="ms-role">Department of Sociology, University of Ghana</div>
+      <div class="ms-name">Ms. Comfort Asante</div><div class="ms-role">Director, TVET Service, Ministry of Education</div>
+      <div class="ms-name">Ing. Adwoa Asante-Kumi</div><div class="ms-role">Ghana Institution of Engineers (GhIE)</div>
+      <div class="ms-name">Mrs. Grace Tetteh-Nartey</div><div class="ms-role" style="margin-bottom:20px">Executive Director, Women in STEM Ghana</div>
+
+      <div class="ms-head">Data Partners</div>
+      <div class="ms-name">Ghana Statistical Service</div><div class="ms-role">Ghana Living Standards Survey 8 (GLSS 8)</div>
+      <div class="ms-name">TVET Service, Ministry of Education</div><div class="ms-role">Enrolment & completion data, 2020–2025</div>
+      <div class="ms-name">COTVET</div><div class="ms-role">NAP apprenticeship programme data</div>
+      <div class="ms-name">ILO Ghana Country Office</div><div class="ms-role" style="margin-bottom:20px">Gender & Skills Monograph 2025</div>
+
+      <div style="background:var(--forest);padding:16px 18px;margin-bottom:16px">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--sage);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px">Research Note</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(244,239,230,.5);line-height:1.65">This edition draws on original field research conducted in six regions (Greater Accra, Ashanti, Western, Central, Northern, Upper East), interviews with 62 women in skilled trades, and analysis of GLSS 8 micro-data. Trade wage data is from direct employer and worker surveys. All gender pay gap calculations use median daily rates.</div>
+      </div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:8.5px;color:var(--mid);line-height:1.65">© 2026 LocalLink Media Group, Accra. All rights reserved.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">02</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 03 — CONTENTS
+██████████████████████████████████████████ -->
+<div class="page" id="contents">
+  <div class="toc-banner">
+    <div class="toc-eye">Vol. 03 · March 2026 · Special Report</div>
+    <div class="toc-big-title">WOMEN IN<br><em>SKILLED</em><br>TRADES</div>
+  </div>
+  <div class="toc-grid">
+    <div>
+      <div class="toc-sec-lbl">Overview & Data</div>
+      <div class="toc-row"><div class="toc-n">06</div><div><div class="toc-t">The State of Women in Ghana's Skilled Trades</div><div class="toc-d">Enrolment, employment, and earnings — the complete picture</div></div></div>
+      <div class="toc-row"><div class="toc-n">10</div><div><div class="toc-t">The Gender Pay Gap Across 18 Trades</div><div class="toc-d">Daily rates by trade and skill level — where the gaps are widest</div></div></div>
+      <div class="toc-row"><div class="toc-n">14</div><div><div class="toc-t">TVET Enrolment Trends: 2020–2025</div><div class="toc-d">What the data shows and why the sector has a long way to go</div></div></div>
+      <div class="toc-sec-lbl">Profiles & Portraits</div>
+      <div class="toc-row"><div class="toc-n">20</div><div><div class="toc-t">Eight Women, Eight Trades</div><div class="toc-d">Portrait profiles from across Ghana — in their own words</div></div></div>
+      <div class="toc-row"><div class="toc-n">30</div><div><div class="toc-t">Grace Sarpong: The Electrician of Kumasi</div><div class="toc-d">Long-form portrait of a woman who changed her community's wiring</div></div></div>
+      <div class="toc-row"><div class="toc-n">34</div><div><div class="toc-t">The Sunyani Welders Cooperative</div><div class="toc-d">How twelve women built West Africa's first all-female welding guild</div></div></div>
+    </div>
+    <div>
+      <div class="toc-sec-lbl">Sector Analysis</div>
+      <div class="toc-row"><div class="toc-n">40</div><div><div class="toc-t">Construction: The Last Frontier</div><div class="toc-d">Why the building trades have resisted female entry — and what is changing</div></div></div>
+      <div class="toc-row"><div class="toc-n">44</div><div><div class="toc-t">Automotive & Manufacturing Trades</div><div class="toc-d">Mechanics, fabricators, and electricians — the emerging wave</div></div></div>
+      <div class="toc-row"><div class="toc-n">48</div><div><div class="toc-t">Regional Spotlight: The Northern Paradox</div><div class="toc-d">Higher social barriers, but stronger community apprenticeship structures</div></div></div>
+      <div class="toc-sec-lbl">Policy & Outlook</div>
+      <div class="toc-row"><div class="toc-n">56</div><div><div class="toc-t">Interview: COTVET on Gender-Responsive TVET</div><div class="toc-d">Can the national apprenticeship programme deliver for women?</div></div></div>
+      <div class="toc-row"><div class="toc-n">60</div><div><div class="toc-t">Opinion: What Real Reform Looks Like</div><div class="toc-d">Dr. Akosua Darkwah on structural barriers and what must change</div></div></div>
+      <div class="toc-row"><div class="toc-n">66</div><div><div class="toc-t">Five Policy Priorities for 2026</div><div class="toc-d">From stipend reform to childcare — concrete recommendations</div></div></div>
+      <div class="toc-row"><div class="toc-n">70</div><div><div class="toc-t">Photo Essay: Women Who Build</div><div class="toc-d">Documentary photographs from six regions, March 2026</div></div></div>
+    </div>
+  </div>
+  <div class="toc-foot">
+    <img class="toc-img" src="https://picsum.photos/seed/woman-welder-gh/80/110" alt="Cover">
+    <div class="toc-quote">"The trades have always needed skilled hands. Ghana is finally discovering that half its skilled hands have been overlooked."<br><br>— Kwame A. Mensah, Editor-in-Chief</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 05 — EDITOR'S LETTER
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">From the Editor</div>
+    <div class="ph-pn">05</div>
+  </div>
+  <div class="h-rule"></div>
+  <div style="padding:22px 40px 0;margin-bottom:14px;position:relative;z-index:5">
+    <div class="terra-rule"></div>
+    <div style="font-family:'Fraunces',serif;font-size:26px;font-weight:700;line-height:1.1;color:var(--ink);letter-spacing:-.5px;margin-bottom:5px">The Hands Ghana Has Forgotten</div>
+    <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);letter-spacing:3px;text-transform:uppercase">Letter from the Editor-in-Chief</div>
+  </div>
+  <div class="ed-grid">
+    <div class="el-body">
+      <p class="el-drop">In the courtyard of a vocational training centre in Tamale, I watched a young woman named Fatima carefully thread a conduit through a concrete wall. She was twenty-two years old, four months into her electrical installation apprenticeship, and faster and more precise than any of the three men beside her. Her trainer told me she was the best student he had seen in six years of teaching. He also told me that when she finishes and goes to find work, she will almost certainly be paid less than they will.</p>
+      <p>This is the story of women in Ghana's skilled trades. Not a story of absence — because women have always been part of the trades, in tailoring, in food processing, in hairdressing. It is a story of invisible ceilings: the trades where women are allowed to work, the wages they are allowed to earn, and the training systems that have for decades been designed around male learners and male career paths.</p>
+      <p>This third edition of LocalLink Economist is devoted entirely to understanding that story through data. We surveyed 62 women in skilled trades across six regions. We collected wage data for 18 trade occupations, disaggregated by gender. We analysed five years of TVET enrolment records and NAP apprenticeship data. We tracked employment and income outcomes for female completers of technical programmes. And we spent two weeks in the field, listening.</p>
+      <p>What we found is both encouraging and sobering. The encouraging part: female TVET enrolment has grown 61% since 2020. Thirty-four thousand women are currently registered in the National Apprenticeship Programme. Women who complete technical qualifications and find employment in their trade earn incomes 2.3 times higher than women who enter the informal economy without qualifications. The trades work for women — when women can get into them.</p>
+      <p>The sobering part: women remain 18% of formal TVET enrolment. In construction trades specifically, they are 4%. The gender pay gap across all skilled trades averages 23% — even for identical qualifications and identical experience levels. Dropout rates for women in technical programmes are 1.8 times higher than for men, driven overwhelmingly by financial hardship, childcare obligations, and hostile training environments. These are not cultural inevitabilities. They are policy failures.</p>
+      <p>We dedicate this edition to Fatima, to Grace, to Abena, to all the women who showed us their hands and their workshops and their certificates and said: this is what I can do. The question for Ghana's policymakers is whether they are listening.</p>
+      <div class="el-sig">
+        <div class="el-sig-name">Kwame A. Mensah</div>
+        <div class="el-sig-role">Editor-in-Chief, LocalLink Economist</div>
+        <div class="el-sig-role" style="color:var(--mid)">Accra, March 2026</div>
+      </div>
+    </div>
+    <div class="el-sb">
+      <div class="el-sb-head">Edition Snapshot</div>
+      <div class="sb-stat"><div class="sb-num terra">18%</div><div class="sb-lbl">Women as share of formal TVET enrolment, 2025</div></div>
+      <div class="sb-stat"><div class="sb-num forest">+61%</div><div class="sb-lbl">Growth in female trade enrolment, 2020–2025</div></div>
+      <div class="sb-stat"><div class="sb-num up">23%</div><div class="sb-lbl">Average gender pay gap across 18 skilled trade occupations</div></div>
+      <div class="sb-stat"><div class="sb-num">34,000</div><div class="sb-lbl">Women currently in NAP apprenticeship programme</div></div>
+      <div class="sb-stat"><div class="sb-num dn">4%</div><div class="sb-lbl">Women in construction-specific TVET programmes</div></div>
+      <div class="sb-stat"><div class="sb-num terra">62</div><div class="sb-lbl">Women interviewed for this edition across 6 regions</div></div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">05</div>
+  </div>
+</div>
+
+<!-- SECTION DIVIDER I -->
+<div class="page sec-div" style="background:var(--deep)">
+  <div class="sd-bar"></div>
+  <img class="sd-photo" src="https://picsum.photos/seed/tvet-women-ghana/794/1123" alt="">
+  <div class="sd-veil"></div>
+  <div class="sd-dots"></div>
+  <div class="sd-inner">
+    <div class="sd-eyebrow">Part One</div>
+    <div class="sd-accent"></div>
+    <div class="sd-hl">THE<br><em>DATA</em><br>PICTURE</div>
+    <div class="sd-desc">Enrolment, employment, wages, and outcomes — Ghana's most complete data portrait of women in skilled trades</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 06 — OVERVIEW DATA PAGE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Overview — Women in Skilled Trades</div>
+    <div class="ph-pn">06</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="data-page">
+    <div class="data-hl">The State of Women in Ghana's Skilled Trades — 2025</div>
+    <div class="data-sub">A composite picture drawn from GLSS 8, TVET Service data, COTVET NAP records, and LocalLink original field survey. All figures refer to calendar year 2025 unless noted.</div>
+
+    <div class="num-feat">
+      <div class="nf-cell"><div class="nf-num">18<span>%</span></div><div class="nf-lbl">Women · Formal TVET Enrolment</div></div>
+      <div class="nf-cell"><div class="nf-num">34<span>K</span></div><div class="nf-lbl">Women · NAP Registered</div></div>
+      <div class="nf-cell"><div class="nf-num">4<span>%</span></div><div class="nf-lbl">Women · Construction Trades</div></div>
+      <div class="nf-cell"><div class="nf-num">23<span>%</span></div><div class="nf-lbl">Avg Gender Pay Gap · All Trades</div></div>
+      <div class="nf-cell"><div class="nf-num">61<span>%</span></div><div class="nf-lbl">Enrolment Growth · 2020–2025</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="chart-box">
+        <div class="chart-lbl">Female Share of TVET Enrolment by Trade Category — 2025 (%)</div>
+        <div class="hbar">
+          <div class="hb-row"><div class="hb-lbl sm">Hairdressing / Beauty</div><div class="hb-track"><div class="hb-fill" style="width:92%;background:var(--terra-lt)"></div></div><div class="hb-val">92%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Dressmaking / Fashion</div><div class="hb-track"><div class="hb-fill" style="width:88%;background:var(--terra-lt)"></div></div><div class="hb-val">88%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Catering / Hospitality</div><div class="hb-track"><div class="hb-fill" style="width:72%;background:var(--terra)"></div></div><div class="hb-val">72%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Business / ICT</div><div class="hb-track"><div class="hb-fill" style="width:44%;background:var(--ochre)"></div></div><div class="hb-val">44%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Electrical Installation</div><div class="hb-track"><div class="hb-fill" style="width:16%;background:var(--forest-lt)"></div></div><div class="hb-val">16%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Plumbing</div><div class="hb-track"><div class="hb-fill" style="width:11%;background:var(--forest-lt)"></div></div><div class="hb-val">11%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Welding / Fabrication</div><div class="hb-track"><div class="hb-fill" style="width:9%;background:var(--forest)"></div></div><div class="hb-val">9%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Construction / Masonry</div><div class="hb-track"><div class="hb-fill" style="width:4%;background:var(--ink)"></div></div><div class="hb-val">4%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Automotive Mechanics</div><div class="hb-track"><div class="hb-fill" style="width:3%;background:var(--ink)"></div></div><div class="hb-val">3%</div></div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-lbl">Female TVET Enrolment Growth — 2020 to 2025 (Index 2020 = 100)</div>
+        <div class="hbar">
+          <div class="hb-row"><div class="hb-lbl sm">2020 (baseline)</div><div class="hb-track"><div class="hb-fill forest" style="width:38%"></div></div><div class="hb-val">100 (46,200)</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2021</div><div class="hb-track"><div class="hb-fill forest" style="width:44%"></div></div><div class="hb-val">115 (53,130)</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2022</div><div class="hb-track"><div class="hb-fill" style="width:52%;background:var(--forest-lt)"></div></div><div class="hb-val">128 (59,136)</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2023</div><div class="hb-track"><div class="hb-fill" style="width:64%;background:var(--forest-lt)"></div></div><div class="hb-val">142 (65,604)</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2024</div><div class="hb-track"><div class="hb-fill" style="width:76%;background:var(--ochre)"></div></div><div class="hb-val">153 (70,686)</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2025</div><div class="hb-track"><div class="hb-fill" style="width:100%;background:var(--terra)"></div></div><div class="hb-val">161 (74,382)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-box warm">
+      <div class="chart-lbl">Post-Training Employment & Income Outcomes — Women, 12 Months After TVET Completion (2025 survey, n=628 women)</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--lt-border);margin-top:8px">
+        <div style="padding:14px;border-right:1px solid var(--lt-border);text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--forest);line-height:1">68%</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Employed in trade within 12 months</div>
+        </div>
+        <div style="padding:14px;border-right:1px solid var(--lt-border);text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--terra);line-height:1">GH₵ 1,820</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Median monthly income, employed in trade</div>
+        </div>
+        <div style="padding:14px;border-right:1px solid var(--lt-border);text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--ochre);line-height:1">GH₵ 780</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Median income, informal economy (no qualification)</div>
+        </div>
+        <div style="padding:14px;border-right:1px solid var(--lt-border);text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--red);line-height:1">1.8×</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Higher female dropout rate vs male (in TVET)</div>
+        </div>
+        <div style="padding:14px;text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--forest);line-height:1">2.3×</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Income premium: qualified trade vs informal economy</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(31,74,46,.06);border-left:4px solid var(--forest);padding:12px 16px">
+      <div style="font-family:'Fraunces',serif;font-size:13px;font-weight:700;color:var(--forest);margin-bottom:5px">Key Finding: The trades work for women — when women can access them</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Women who complete TVET qualifications and find employment in their trade earn median incomes 2.3 times higher than women in the informal economy without technical qualifications. The economic case for expanding female access to skilled trades is not ambiguous. The barriers are not economic — they are structural, social, and embedded in training system design.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">06 — 07</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 10 — GENDER PAY GAP TABLE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Gender Pay Gap — 18 Trade Occupations</div>
+    <div class="ph-pn">10</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="data-page">
+    <div class="data-hl">The Gender Pay Gap Across 18 Trades — Q4 2025</div>
+    <div class="data-sub">Median daily rates for equivalent work by gender and skill level. Data from LocalLink direct employer and worker survey (n=842 workers, 6 regions). Gap = (male median − female median) ÷ male median × 100. Accra market.</div>
+
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th style="width:28%">Occupation</th>
+            <th>Skill Level</th>
+            <th>Male Median (GH₵/day)</th>
+            <th>Female Median (GH₵/day)</th>
+            <th>Gender Pay Gap</th>
+            <th>Female Workers (est. %)</th>
+            <th>Gap Direction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sec-row"><td colspan="7">CONSTRUCTION & CIVIL TRADES</td></tr>
+          <tr><td class="cat">Mason / Bricklayer</td><td class="sub">Skilled</td><td>110</td><td class="val">82</td><td class="up"><span class="pill-up">−25%</span></td><td class="mid">6%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">Carpenter (Formwork)</td><td class="sub">Skilled</td><td>120</td><td class="val">91</td><td class="up"><span class="pill-up">−24%</span></td><td class="mid">5%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">Steel Fixer / Bar Bender</td><td class="sub">Skilled</td><td>115</td><td class="val">—</td><td class="mid"><span class="pill-mid">No data</span></td><td class="mid">&lt;1%</td><td class="mid">Near zero female</td></tr>
+          <tr><td class="cat">Plasterer</td><td class="sub">Skilled</td><td>105</td><td class="val">84</td><td class="up"><span class="pill-up">−20%</span></td><td class="mid">12%</td><td class="up">Moderate gap</td></tr>
+          <tr><td class="cat">Painter & Decorator</td><td class="sub">Skilled</td><td>98</td><td class="val">80</td><td class="up"><span class="pill-up">−18%</span></td><td class="mid">14%</td><td class="up">Moderate gap</td></tr>
+          <tr><td class="cat">Tiler (Floor / Wall)</td><td class="sub">Skilled</td><td>115</td><td class="val">95</td><td class="up"><span class="pill-up">−17%</span></td><td class="mid">22%</td><td class="up">Moderate gap</td></tr>
+          <tr class="sec-row"><td colspan="7">ELECTRICAL & MECHANICAL TRADES</td></tr>
+          <tr><td class="cat">Licensed Electrician</td><td class="sub">Skilled</td><td>155</td><td class="val">114</td><td class="up"><span class="pill-up">−26%</span></td><td class="mid">16%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">Electrical Engr. (Supervising)</td><td class="sub">Professional</td><td>160</td><td class="val">128</td><td class="up"><span class="pill-up">−20%</span></td><td class="mid">19%</td><td class="up">Moderate gap</td></tr>
+          <tr><td class="cat">Plumber (Licensed)</td><td class="sub">Skilled</td><td>130</td><td class="val">96</td><td class="up"><span class="pill-up">−26%</span></td><td class="mid">11%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">AC Technician</td><td class="sub">Skilled</td><td>145</td><td class="val">112</td><td class="up"><span class="pill-up">−23%</span></td><td class="mid">8%</td><td class="up">Wide gap</td></tr>
+          <tr class="sec-row"><td colspan="7">FABRICATION & WORKSHOP TRADES</td></tr>
+          <tr><td class="cat">Welder (MIG/TIG)</td><td class="sub">Skilled</td><td>132</td><td class="val">100</td><td class="up"><span class="pill-up">−24%</span></td><td class="mid">9%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">Aluminium Fabricator</td><td class="sub">Skilled</td><td>125</td><td class="val">98</td><td class="up"><span class="pill-up">−22%</span></td><td class="mid">18%</td><td class="up">Moderate gap</td></tr>
+          <tr><td class="cat">Auto Mechanic (Petrol)</td><td class="sub">Skilled</td><td>118</td><td class="val">90</td><td class="up"><span class="pill-up">−24%</span></td><td class="mid">3%</td><td class="up">Wide gap</td></tr>
+          <tr><td class="cat">Refrigeration & AC Repair</td><td class="sub">Skilled</td><td>128</td><td class="val">102</td><td class="up"><span class="pill-up">−20%</span></td><td class="mid">7%</td><td class="up">Moderate gap</td></tr>
+          <tr class="sec-row"><td colspan="7">SERVICE & ESTABLISHED FEMALE TRADES</td></tr>
+          <tr><td class="cat">Dressmaker / Fashion Design</td><td class="sub">Skilled</td><td>72</td><td class="val">68</td><td class="dn"><span class="pill-dn">−6%</span></td><td class="mid">88%</td><td class="dn">Narrow gap</td></tr>
+          <tr><td class="cat">Hairdresser / Beautician</td><td class="sub">Skilled</td><td>65</td><td class="val">62</td><td class="dn"><span class="pill-dn">−5%</span></td><td class="mid">92%</td><td class="dn">Near parity</td></tr>
+          <tr><td class="cat">Catering / Baker</td><td class="sub">Semi-skilled</td><td>58</td><td class="val">55</td><td class="dn"><span class="pill-dn">−5%</span></td><td class="mid">76%</td><td class="dn">Near parity</td></tr>
+          <tr><td class="cat">Site Supervisor / Foreman</td><td class="sub">Professional</td><td>145</td><td class="val">108</td><td class="up"><span class="pill-up">−26%</span></td><td class="mid">4%</td><td class="up">Wide gap</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="background:rgba(181,49,26,.05);border-left:3px solid var(--red);padding:12px 14px">
+        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px">The Pattern Is Consistent</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">In every male-dominated skilled trade, women earn a median daily rate 17–26% below their male counterparts for equivalent qualifications and experience. The gap is widest in construction (24–25%) and electrical trades (20–26%). The pattern strongly suggests discrimination in client and employer pricing rather than skill or productivity differences.</div>
+      </div>
+      <div style="background:rgba(31,74,46,.05);border-left:3px solid var(--forest);padding:12px 14px">
+        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--forest);margin-bottom:6px">Female-Dominated Trades Show Near Parity</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">In hairdressing, dressmaking, and catering — trades where women are the majority — gender pay gaps have compressed to 5–6%. This suggests that female market power, not inherent trade structure, determines pay equity. The solution to the pay gap in male-dominated trades is, in part, more women in them.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">10 — 11</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 14 — TVET ENROLMENT ANALYSIS
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">TVET Enrolment Analysis — 2020 to 2025</div>
+    <div class="ph-pn">14</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Data Analysis</span>
+    <div class="story-hl">Five Years of Progress — And Why 18% Is Not Enough</div>
+    <div class="story-deck">Female TVET enrolment has grown impressively since 2020, but a closer look at the data reveals a system still sorted by gender — and a dropout problem that erases much of the gain before it reaches the labour market.</div>
+    <div class="story-byline">By Ama Boateng, Lead Data Analyst &amp; Priscilla Aidoo, Quantitative Research Lead</div>
+  </div>
+  <div class="two-col">
+    <div class="col-body">
+      <p>The headline number is encouraging. Between 2020 and 2025, the number of women enrolled in formal TVET programmes in Ghana rose from 46,200 to 74,382 — a 61% increase over five years. On its own, that is a genuine achievement. The National Apprenticeship Programme, the expansion of community TVET centres in the Northern regions, and — critically — deliberate outreach by a number of COTVET-affiliated institutions have all contributed.</p>
+      <p>But aggregate enrolment numbers hide a pattern that should give pause. Of those 74,382 female TVET students in 2025, approximately 82% are enrolled in just four programme categories: hairdressing and cosmetology, dressmaking and fashion design, catering and hospitality, and business studies. These are programmes that are culturally coded as female — which is not a criticism of the programmes themselves, but a reflection of a system that has not seriously challenged the sorting of women and men into different economic destinies at the age of fifteen or sixteen.</p>
+      <div class="inline-head">The Dropout Crisis</div>
+      <p>The second number that demands attention is dropout. Among women enrolled in TVET programmes across all categories, the dropout rate in 2025 was 31% — compared to 17% for men. The primary reasons cited by women who leave programmes early: financial hardship (68% of dropouts), childcare obligations with no provision in the training centre (52%), and hostile or uncomfortable training environments (34%). Only 12% cited academic difficulty.</p>
+      <p>This is a system design problem, not a learner problem. TVET stipends for female students in technical programmes average GH₵ 380 per month — less than half the cost of accommodation in most urban training centres. There is no childcare provision in any public TVET centre in Ghana. And training environments in male-dominated trades are, by the account of women who have navigated them, frequently unwelcoming at best and hostile at worst.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">What the Regional Data Shows</div>
+      <p>The regional breakdown of female technical enrolment reveals a geographic dimension to the gender gap in TVET. Greater Accra leads all regions in absolute female enrolment but performs poorly on female share of technical (non-service) programmes — reflecting a large overall system with persistent gender sorting. The Northern Region, despite lower absolute numbers, has seen the fastest growth in female enrolment in technical trades, driven partly by community apprenticeship models that are more accommodating of women's domestic obligations.</p>
+      <p>The Upper East Region stands out for a different reason: a higher-than-national-average completion rate for women who do enrol — 74%, compared to the national female completion rate of 69%. Researchers attribute this partly to the strong community accountability structures in traditional apprenticeship contexts and to the relatively lower cost-of-living pressures compared to urban centres.</p>
+
+      <div class="chart-box warm" style="margin-top:6px">
+        <div class="chart-lbl">Female TVET Completion Rate vs Enrolment Share — By Region (2025)</div>
+        <div class="hbar" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Greater Accra</div><div class="hb-track"><div class="hb-fill" style="width:66%"></div></div><div class="hb-val">66% completion · 21% share</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Ashanti</div><div class="hb-track"><div class="hb-fill" style="width:68%"></div></div><div class="hb-val">68% · 19%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Western</div><div class="hb-track"><div class="hb-fill forest" style="width:72%"></div></div><div class="hb-val">72% · 18%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Central</div><div class="hb-track"><div class="hb-fill forest" style="width:70%"></div></div><div class="hb-val">70% · 17%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Northern</div><div class="hb-track"><div class="hb-fill ochre" style="width:67%"></div></div><div class="hb-val">67% · 14%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Upper East</div><div class="hb-track"><div class="hb-fill" style="width:74%;background:var(--forest-lt)"></div></div><div class="hb-val">74% · 13%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Volta</div><div class="hb-track"><div class="hb-fill" style="width:65%"></div></div><div class="hb-val">65% · 16%</div></div>
+        </div>
+      </div>
+
+      <div class="pullquote" style="margin-top:12px">
+        <div class="pq-text">"We lose them not because they can't do the work. We lose them because they can't eat while they're learning it."</div>
+        <div class="pq-attr">— Director, Community TVET Centre, Wa, Upper West Region</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">14 — 15</div>
+  </div>
+</div>
+
+<!-- SECTION DIVIDER II -->
+<div class="page sec-div" style="background:#120a06">
+  <div class="sd-bar"></div>
+  <img class="sd-photo" src="https://picsum.photos/seed/woman-carpenter-gh/794/1123" alt="">
+  <div class="sd-veil" style="background:linear-gradient(to bottom,transparent 15%,rgba(18,10,6,.88) 100%)"></div>
+  <div class="sd-dots"></div>
+  <div class="sd-inner">
+    <div class="sd-eyebrow">Part Two</div>
+    <div class="sd-accent"></div>
+    <div class="sd-hl">FACES &amp;<br><em>VOICES</em></div>
+    <div class="sd-desc">Eight women. Eight trades. Eight stories from across Ghana's regions — told in their own words</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 20 — PORTRAIT PROFILES (4-UP)
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Eight Women, Eight Trades</div>
+    <div class="ph-pn">20</div>
+  </div>
+  <div class="h-rule"></div>
+  <div style="padding:14px 40px 8px;position:relative;z-index:5">
+    <div class="story-hl" style="font-size:22px">Eight Women, Eight Trades</div>
+    <div class="story-deck">Portraits from our field research — across Greater Accra, Ashanti, Western, Northern, Upper East, and Volta regions. March 2026.</div>
+  </div>
+  <div class="profile-grid" style="padding:0 40px 18px;gap:12px;display:grid;grid-template-columns:1fr 1fr;flex:1;position:relative;z-index:5">
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/grace-electrician/350/180" alt="Grace Sarpong">
+      <div class="pc-body">
+        <div class="pc-name">Grace Sarpong</div>
+        <div class="pc-trade">Licensed Electrician · Kumasi, Ashanti</div>
+        <div class="pc-text">"My clients still ask for the man in charge. Then I fix what the man couldn't fix, and they stop asking." Grace, 28, runs a two-person electrical business in Adum. Licensed with ECGB since 2022. Earns GH₵ 120/day — same rate as male peers, which she enforced by refusing lower offers.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">6 yrs</div><div class="pc-stat-l">in trades</div></div>
+          <div><div class="pc-stat-n">GH₵ 120</div><div class="pc-stat-l">daily rate</div></div>
+          <div><div class="pc-stat-n">ECGB</div><div class="pc-stat-l">licensed</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/fatima-welder/350/180" alt="Fatima Ibrahim">
+      <div class="pc-body">
+        <div class="pc-name">Fatima Ibrahim</div>
+        <div class="pc-trade">Welder & Fabricator · Tamale, Northern Region</div>
+        <div class="pc-text">"People said a woman cannot weld. I weld gates, I weld tanks, I weld structures. Now my neighbours send their daughters to apprentice with me." Fatima, 32, trained with the Tamale Technical Institute NAP cohort in 2019. Now runs a 4-person fabrication shop employing three female apprentices.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">7 yrs</div><div class="pc-stat-l">experience</div></div>
+          <div><div class="pc-stat-n">3</div><div class="pc-stat-l">female apprentices</div></div>
+          <div><div class="pc-stat-n">TI cert.</div><div class="pc-stat-l">qualification</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/abena-plumber/350/180" alt="Abena Mensah">
+      <div class="pc-body">
+        <div class="pc-name">Abena Mensah</div>
+        <div class="pc-trade">Plumber · Takoradi, Western Region</div>
+        <div class="pc-text">"In the oil and gas sector here, they don't care if you're a woman — they care if you can do the job safely to standard. That's actually liberating." Abena, 26, specialises in offshore support facility plumbing in Takoradi's energy corridor. HNC-qualified. Earns GH₵ 105/day.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">4 yrs</div><div class="pc-stat-l">in trades</div></div>
+          <div><div class="pc-stat-n">HNC</div><div class="pc-stat-l">qualified</div></div>
+          <div><div class="pc-stat-n">O&G</div><div class="pc-stat-l">sector focus</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/adwoa-mason/350/180" alt="Adwoa Asante">
+      <div class="pc-body">
+        <div class="pc-name">Adwoa Asante</div>
+        <div class="pc-trade">Mason & Site Supervisor · Accra, Greater Accra</div>
+        <div class="pc-text">"I supervise men who have been in the trade longer than me. Some respect it. Some don't. I'm still here and some of them aren't." Adwoa, 35, is one of fewer than 200 women registered as a qualified mason with the Ghana Contractors Association. Site supervisor on a 48-unit social housing project in Tema.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">9 yrs</div><div class="pc-stat-l">experience</div></div>
+          <div><div class="pc-stat-n">Supervisor</div><div class="pc-stat-l">48-unit site</div></div>
+          <div><div class="pc-stat-n">GCA</div><div class="pc-stat-l">registered</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">20 — 21</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 22 — PORTRAIT PROFILES (4-UP cont.)
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Eight Women, Eight Trades — Continued</div>
+    <div class="ph-pn">22</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="profile-grid" style="padding:14px 40px 18px;gap:12px;display:grid;grid-template-columns:1fr 1fr;flex:1;position:relative;z-index:5">
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/esi-auto/350/180" alt="Esi Amoah">
+      <div class="pc-body">
+        <div class="pc-name">Esi Amoah</div>
+        <div class="pc-trade">Auto Mechanic · Cape Coast, Central Region</div>
+        <div class="pc-text">"Women bring their cars to me specifically because they don't want to be talked down to. That's my market advantage." Esi, 29, trained at Cape Coast Polytechnic and specialises in Toyota and Hyundai diagnostics. She charges the same rates as male mechanics and reports 80% female clientele.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">5 yrs</div><div class="pc-stat-l">experience</div></div>
+          <div><div class="pc-stat-n">80%</div><div class="pc-stat-l">female clients</div></div>
+          <div><div class="pc-stat-n">HND</div><div class="pc-stat-l">auto engineering</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/akua-tiler/350/180" alt="Akua Donkor">
+      <div class="pc-body">
+        <div class="pc-name">Akua Donkor</div>
+        <div class="pc-trade">Tiler & Terrazzo Specialist · Ho, Volta Region</div>
+        <div class="pc-text">"Tiling is considered acceptable for women because it's 'decorative.' I don't care what they think — I care that it's the highest-paid finishing trade and I'm very good at it." Akua, 31, charges GH₵ 115/day for commercial tiling contracts and has worked on three hospital projects in the Volta Region.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">8 yrs</div><div class="pc-stat-l">experience</div></div>
+          <div><div class="pc-stat-n">GH₵ 115</div><div class="pc-stat-l">daily rate</div></div>
+          <div><div class="pc-stat-n">Commercial</div><div class="pc-stat-l">specialist</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/mary-painter/350/180" alt="Mary Offei">
+      <div class="pc-body">
+        <div class="pc-name">Mary Offei</div>
+        <div class="pc-trade">Painter & Interior Decorator · Accra</div>
+        <div class="pc-text">"I started in house painting and moved into commercial interior decoration. Now I hire men who could never hire me." Mary, 38, runs a 7-person decoration company with corporate clients including two hotel chains. Revenue: GH₵ 28,000/month average. She employs three female apprentice painters.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">12 yrs</div><div class="pc-stat-l">in trades</div></div>
+          <div><div class="pc-stat-n">7</div><div class="pc-stat-l">employees</div></div>
+          <div><div class="pc-stat-n">GH₵ 28K</div><div class="pc-stat-l">monthly revenue</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <img class="pc-photo" src="https://picsum.photos/seed/afia-solar/350/180" alt="Afia Boakye">
+      <div class="pc-body">
+        <div class="pc-name">Afia Boakye</div>
+        <div class="pc-trade">Solar PV Installer · Kumasi, Ashanti</div>
+        <div class="pc-trade" style="color:var(--forest)">Also: TVET Trainer (KATH Solar Project)</div>
+        <div class="pc-text">"Solar is new enough that there are no old rules about who can do it. I got in early and now I train others — including men who don't know where to start." Afia, 27, is one of the youngest TVET-registered solar installation trainers in Ghana. She holds an NVQ Level 3 in electrical and has installed over 40 residential solar systems.</div>
+        <div class="pc-stat-row">
+          <div><div class="pc-stat-n">4 yrs</div><div class="pc-stat-l">solar spec.</div></div>
+          <div><div class="pc-stat-n">40+</div><div class="pc-stat-l">systems installed</div></div>
+          <div><div class="pc-stat-n">NVQ L3</div><div class="pc-stat-l">qualified</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">22 — 23</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 30 — GRACE SARPONG LONG FORM
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature Portrait</div>
+    <div class="ph-pn">30</div>
+  </div>
+  <div class="h-rule"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;position:relative;z-index:5">
+    <div style="overflow:hidden;position:relative">
+      <img src="https://picsum.photos/seed/grace-full/397/900" alt="Grace Sarpong" style="width:100%;height:100%;object-fit:cover;object-position:top center;filter:sepia(10%) contrast(108%)">
+      <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 70%,var(--cream) 100%)"></div>
+      <div style="position:absolute;bottom:24px;left:20px;right:60px">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase">Adum, Kumasi · March 2026</div>
+      </div>
+    </div>
+
+    <div style="padding:32px 40px 32px 28px;display:flex;flex-direction:column;justify-content:flex-start">
+      <span class="story-tag green">Feature Portrait</span>
+      <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;line-height:1.0;color:var(--ink);margin-bottom:6px;margin-top:10px;letter-spacing:-.5px">"They Ask for the Man in Charge. Then They Watch Me Work."</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:11px;font-style:italic;color:var(--mid);line-height:1.6;margin-bottom:10px">Grace Sarpong, 28, licensed electrician, Kumasi. Six years in the trade. One business. One rule: she doesn't work for less than the men.</div>
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:16px">By Efua Quartey, Lead Correspondent</div>
+
+      <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.76;color:var(--ink-mid)">
+        <p style="margin-bottom:10px">The workshop is a ground-floor room off a courtyard on Adum's market street, and it smells of solder and the electrical cable insulation that hangs in loose coils along one wall. Grace Sarpong arrives from a site job still in her work trousers and safety boots, apologises for the fifteen-minute delay, and immediately begins answering questions with the directness of someone who has spent six years not being heard and has decided to compensate.</p>
+        <p style="margin-bottom:10px">She grew up in Akim Oda, the fifth of seven children, and came to Kumasi at seventeen to live with an aunt. The electrical apprenticeship was not the plan — it was the opportunity. A neighbour was a licensed electrician. He needed a helper. She was available. "He thought I would quit after two weeks," she says. "I didn't quit."</p>
+        <p style="margin-bottom:10px">Four years of informal apprenticeship, followed by two years of evening technical study, produced an ECGB licence in 2022. By then she had already been working independently for a year, relying on the networks her former employer had built and her own reputation, which spread largely by word of mouth among women who wanted an electrician they didn't feel condescended to.</p>
+        <p style="margin-bottom:10px">"Male clients sometimes ask if I've called the man in charge," she says. "I tell them I am the person in charge. Then I fix whatever they called about and usually they don't ask again." She charges GH₵ 120 per day — the Kumasi market rate for a licensed electrician. She has never accepted less. "The first time a client offered me GH₵ 80 because I was a woman, I said no and walked away. Word got around that I didn't discount. That's the best marketing I ever did."</p>
+      </div>
+
+      <div class="pullquote" style="margin-top:12px">
+        <div class="pq-text">"I don't charge less because I'm a woman. If I did, I'd be telling every other woman in this trade that it's acceptable to be paid less. It isn't."</div>
+        <div class="pq-attr">— Grace Sarpong, Licensed Electrician, Kumasi</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">30 — 31</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 32 — GRACE SARPONG CONTINUED
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature Portrait — Grace Sarpong, continued</div>
+    <div class="ph-pn">32</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="two-col" style="padding-top:24px">
+    <div class="col-body">
+      <p>Her second employee, Isaac, came to her two years ago after working for a large electrical contractor for four years. "He said he wanted to learn how to run his own business," Grace says. "I told him that was fine, but first he had to learn to listen to a woman — because in this workshop, I am the person in charge." He agreed. He is, by her account, a careful and reliable worker.</p>
+      <p>The challenge of managing male employees is one that comes up repeatedly in conversations with women who have built businesses in the trades. The social scripts are not designed for female bosses in manual occupations. "Some clients still call Isaac to confirm what I've said," Grace admits. "He always tells them exactly what I told them. And then we have a laugh about it afterwards."</p>
+      <div class="inline-head">The Pricing Stand</div>
+      <p>Grace's refusal to price below the market rate is not simply principle — it is strategy. She describes it as one of the most important business decisions she has made. "If I charge GH₵ 80 when the rate is GH₵ 120, I am not competing. I am subsidising the prejudice. I am telling the market that a woman's work is worth less. Every time a woman does that, it becomes harder for the next woman to charge the right rate."</p>
+      <p>She has had jobs go elsewhere because of it. Three times in 2023, she gave a quote that matched the male-market rate and did not get the work. In each case, she later found the client had hired a cheaper alternative — and in two of the three cases, had subsequently called her back to fix what the cheaper alternative had done incorrectly. "I charged full rate to fix it," she says. "They paid."</p>
+      <p>The ECGB licence — the Electrical Contractors and General Builders registration that qualifies her to take commercial and residential electrical installation contracts — was the turning point. Without it, she was taking small household jobs. With it, she could tender for contracts with property developers, hotels, and commercial builders. Her revenue in 2025 was approximately GH₵ 43,000 — equivalent to about GH₵ 3,580 per month, nearly double the national median for female skilled trade workers.</p>
+      <div class="inline-head">What She Would Change</div>
+      <p>If she could change one thing about the training system, it would be the pathway to certification. "I spent two years studying in the evening after full days on site," she says. "The course cost me GH₵ 4,200 that I didn't have. I borrowed it. There is no stipend for women doing evening technical courses. There is no subsidy for the licensing examination fee. The system assumes you have money and time. Most women in the trades don't have either."</p>
+      <p>She has mentored three women through the early stages of electrical apprenticeships since 2023 — providing informal advice, site visits, and the kind of professional network introduction that male tradespeople give each other without thinking. "No one gave me a network," she says. "I am trying to be the network for someone else."</p>
+    </div>
+    <div class="col-body">
+      <div class="chart-box warm">
+        <div class="chart-lbl">Grace Sarpong — Business Milestones</div>
+        <div style="display:flex;flex-direction:column;gap:0;margin-top:8px">
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--lt-border)">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2019</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">Began informal electrical apprenticeship under neighbourhood licensed electrician, Adum, Kumasi. Unpaid for first 8 months.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--lt-border)">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2021</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">Began evening technical study at Kumasi Technical Institute while continuing site work. Enrolled in Level 2 electrical programme.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--lt-border)">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2022</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">Passed ECGB licensing examination. First independent contractor registration. Revenue Year 1: GH₵ 18,400.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--lt-border)">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2023</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">First commercial contract — 24-unit residential development, Nhyiaeso. Hired first employee (Isaac Adjei). Revenue: GH₵ 29,600.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--lt-border)">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2024</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">Subcontract on hotel renovation, Central Kumasi. First hotel sector client. Began mentoring 2 female apprentices. Revenue: GH₵ 37,200.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:60px 1fr;gap:12px;padding:10px 0">
+            <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:var(--terra);font-weight:700">2025</div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.5">3 commercial contracts. 2-person team. Revenue: GH₵ 43,000. Currently studying for Level 3 (Supervising Electrician) qualification.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="big-pullquote" style="margin-top:14px">
+        <div class="bpq-text">"I am trying to be the network for someone else. No one gave me a network. I had to build mine from nothing."</div>
+        <div class="bpq-attr">— Grace Sarpong, Kumasi</div>
+      </div>
+
+      <div style="margin-top:14px;padding:14px 16px;background:var(--cream-lt);border:1px solid var(--lt-border)">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">What Grace Needs From the System</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--ink-mid);line-height:1.65">Evening course subsidies for working female apprentices; licensing examination fee waivers for women in technical trades; a mentorship directory connecting licensed female tradespeople with female apprentices; and — most urgently — a change to the ECGB tender pre-qualification rules that currently require a GH₵ 10,000 performance bond that effectively excludes most self-employed women from government contracts.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">32 — 33</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 34 — SUNYANI WELDERS COOPERATIVE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature — The Sunyani Welders</div>
+    <div class="ph-pn">34</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Cooperative Profile</span>
+    <div class="story-hl">The Twelve Who Built a Guild</div>
+    <div class="story-deck">In 2021, twelve women who had completed the NAP welding programme in Sunyani found they could not get hired individually. So they stopped trying individually.</div>
+    <div class="story-byline">By Yaw Owusu, Features Writer</div>
+  </div>
+
+  <div style="height:200px;overflow:hidden;position:relative;z-index:5">
+    <img src="https://picsum.photos/seed/sunyani-welders/794/220" alt="Sunyani Welders Cooperative" style="width:100%;height:100%;object-fit:cover;object-position:center 40%;filter:sepia(12%) contrast(108%)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,10,6,.65));padding:14px 40px 10px">
+      <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.7);letter-spacing:1px">Members of the Sunyani Women Welders Cooperative at their shared workshop, Sunyani New Town — January 2026. Photo: Nana Addo Boateng.</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="padding-top:16px">
+    <div class="col-body">
+      <p>When Akosua Poku finished her NAP welding certificate in mid-2021, she went looking for work at the nine fabrication shops in Sunyani. None would hire her. The reasons given varied — "we don't have changing facilities," "clients would be uncomfortable," "the other workers wouldn't accept it" — but the outcome was consistent. After eight rejections, she called the other women from her cohort. They had the same story.</p>
+      <p>"We had twelve women with certificates and no jobs," she says. "We couldn't find an employer who would take us. So we became the employer." The Sunyani Women Welders Cooperative was formally registered in November 2021 with capital of GH₵ 14,400 — GH₵ 1,200 each, much of it borrowed — and a shared workshop space rented for GH₵ 800 per month in Sunyani New Town.</p>
+      <div class="inline-head">Building a Client Base</div>
+      <p>The first year was hard. The cooperative's initial market — household gate and grille fabrication — was dominated by established male-owned shops. The women's strategy was not to compete on price but on quality and reliability. They standardised their welding specifications, introduced a written quotation system (unusual in the local market), and offered a 12-month warranty on structural welds. Within six months, a property developer in Sunyani was placing regular orders.</p>
+    </div>
+    <div class="col-body">
+      <p>By the end of 2022, the cooperative had 18 regular commercial clients, including two government institutions and a construction contractor based in Accra who subcontracts gate and security grille fabrication across Brong-Ahafo. Annual turnover in 2025 was GH₵ 486,000 — up from GH₵ 92,000 in their first full year. Each of the twelve founding members earned an average of GH₵ 2,800 per month in 2025, well above the Sunyani skilled trade median of GH₵ 1,950.</p>
+      <div class="inline-head">What They Changed</div>
+      <p>The cooperative has had a measurable effect on the local skills ecosystem. Two of the twelve members now run NAP mentorship programmes, and fourteen young women from Sunyani have enrolled in welding programmes since 2022 — citing the cooperative as their reason. The Bono Region TVET Service has used the cooperative as a case study in its gender-inclusion training for institutional employers.</p>
+
+      <div style="background:var(--forest);padding:16px 18px;margin-top:12px">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--sage);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">Cooperative Snapshot — 2025</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--terra-lt);line-height:1">12</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Founding members</div></div>
+          <div><div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--terra-lt);line-height:1">GH₵ 486K</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Annual revenue</div></div>
+          <div><div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--terra-lt);line-height:1">GH₵ 2,800</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Avg monthly earnings</div></div>
+          <div><div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--terra-lt);line-height:1">18</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;text-transform:uppercase;margin-top:3px">Regular commercial clients</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">34 — 35</div>
+  </div>
+</div>
+
+<!-- SECTION DIVIDER III -->
+<div class="page sec-div" style="background:#06100a">
+  <div class="sd-bar"></div>
+  <img class="sd-photo" src="https://picsum.photos/seed/construction-site-accra/794/1123" alt="">
+  <div class="sd-veil" style="background:linear-gradient(to bottom,transparent 15%,rgba(6,16,10,.9) 100%)"></div>
+  <div class="sd-dots"></div>
+  <div class="sd-inner">
+    <div class="sd-eyebrow">Part Three</div>
+    <div class="sd-accent"></div>
+    <div class="sd-hl">SECTOR<br><em>ANALYSIS</em></div>
+    <div class="sd-desc">Construction, automotive, manufacturing — where are women entering the hardest trades, and what is actually changing?</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 40 — CONSTRUCTION: THE LAST FRONTIER
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Construction Trades — Sector Analysis</div>
+    <div class="ph-pn">40</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Sector Analysis</span>
+    <div class="story-hl">Construction: The Last Frontier</div>
+    <div class="story-deck">With women at just 4% of construction trade enrolment and less than 1% of registered construction workers, the building sector remains the most resistant to female entry — yet the structural barriers are far more surmountable than cultural narratives suggest.</div>
+    <div class="story-byline">By Adjoa Asante-Twum, TVET &amp; Skills Policy Correspondent</div>
+  </div>
+  <div class="two-col">
+    <div class="col-body">
+      <p>The construction sector has a gender problem that is, at its core, an infrastructure problem. When women visit TVET institutions to enquire about construction programmes, they encounter facilities that were designed entirely without female users in mind: no female-only changing rooms, no female sanitary facilities on training sites, physical environments built around male body norms and male social dynamics. These are not insurmountable barriers — they are design failures that can be fixed with money and will.</p>
+      <p>They are also, it must be said, compounded by cultural assumptions that have been hardened by decades of male-only practice. Contractors report that female applicants face discouragement at every stage: from family members who question the choice, from TVET trainers who have lower expectations, and from employers who simply do not consider them. The Ghana Contractors Association has fewer than 200 registered female members out of more than 8,000 total — a ratio of 2.5%.</p>
+      <div class="inline-head">Where Women Are Entering</div>
+      <p>The picture is not uniformly bleak. Women are entering construction at higher rates in three specific niches: tiling and floor finishes (22% female, rising from 8% in 2018), interior painting and decoration (14%, rising from 5%), and project management and quantity surveying (19% of new QS graduates are women, up from 6% in 2015). These niches share a common characteristic — they are viewed as "clean" or "technical" rather than physically demanding, making social gatekeeping less intense.</p>
+      <p>There is evidence that this entry point matters. Several of the most successful female construction entrepreneurs in Accra entered through tiling or painting, built client relationships and management skills, and expanded into broader contracting. The path exists — but it requires exceptional individual persistence to navigate because the system does not facilitate it.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">The Physical Barrier Myth</div>
+      <p>One argument consistently deployed against female entry into construction trades is physical capacity — the claim that construction work requires upper-body strength that women typically don't possess. This argument does not survive contact with evidence. Modern construction techniques — power tools, mechanical lifting, concrete pumping — have dramatically reduced the role of brute strength in most trades. More importantly, trades like electrical installation, plumbing, tiling, plastering, and painting have never required exceptional physical strength, yet remain male-dominated. Physical capacity is a rationalisation for social preference, not a genuine barrier.</p>
+
+      <div class="chart-box" style="margin-top:12px">
+        <div class="chart-lbl">Female Share of Construction Trade Enrolment — 2018 vs 2025</div>
+        <div class="hbar">
+          <div class="hb-row"><div class="hb-lbl sm">Tiling / Finishes</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:16%;background:rgba(196,84,26,.25)"></div><div style="width:6%;background:var(--terra)"></div></div></div><div class="hb-val">8% → 22%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Painting / Decor</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:10%;background:rgba(196,84,26,.25)"></div><div style="width:4%;background:var(--terra)"></div></div></div><div class="hb-val">5% → 14%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">QS / Project Mgmt</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:24%;background:rgba(31,74,46,.25)"></div><div style="width:7%;background:var(--forest-lt)"></div></div></div><div class="hb-val">6% → 19%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Electrical Install.</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:6%;background:rgba(196,84,26,.2)"></div><div style="width:10%;background:var(--terra)"></div></div></div><div class="hb-val">4% → 16%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Plumbing</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:3%;background:rgba(196,84,26,.2)"></div><div style="width:8%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 11%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Masonry / Carpentry</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(100,100,100,.2)"></div><div style="width:2%;background:var(--mid)"></div></div></div><div class="hb-val">2% → 4%</div></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);margin-top:8px;letter-spacing:.5px">Lighter bar = 2018 baseline. Darker fill = 2025. TVET Service data.</div>
+      </div>
+
+      <div class="pullquote">
+        <div class="pq-text">"The physical strength argument is a red herring. I've trained women who are stronger than most men I've trained, and men who couldn't lift what the women could. It's never been about strength."</div>
+        <div class="pq-attr">— TVET Trainer, Masonry Programme, Accra Technical Training Centre</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">40 — 41</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 44 — AUTOMOTIVE & MANUFACTURING TRADES
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Automotive &amp; Manufacturing — Sector Analysis</div>
+    <div class="ph-pn">44</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Sector Analysis</span>
+    <div class="story-hl">The Workshop Floor: Automotive, Fabrication &amp; Manufacturing</div>
+    <div class="story-deck">Once almost entirely male, Ghana's automotive repair and light manufacturing sectors are seeing a quiet but measurable shift — driven by a new generation of women who trained in polytechnic programmes and are now refusing to be invisible on the workshop floor.</div>
+    <div class="story-byline">By Yaw Owusu, Features Writer &amp; Ama Boateng, Data Analyst</div>
+  </div>
+  <div class="two-col">
+    <div class="col-body">
+      <p>Ghana's automotive repair sector employs an estimated 340,000 workers across formal workshops, roadside mechanics' bays, and the large urban clusters — most notably Suame Magazine in Kumasi and Kokompe in Accra. Women have historically represented less than 2% of this workforce. As of 2025, that figure has risen to approximately 3.2% — modest in absolute terms, but representing a 60% increase in the female automotive workforce since 2020 and a genuine shift in who considers the trade accessible.</p>
+      <p>The change is not evenly distributed. In the formal sector — authorised dealerships, fleet maintenance contractors, and workshop chains with structured employment contracts — female mechanics and auto-electricians now represent 8–12% of intake, driven by polytechnic and HND programmes that have actively recruited women since 2021. In the informal roadside sector, the female presence remains negligible. The training pipeline is improving; the informal market's social barriers are not moving at the same pace.</p>
+      <div class="inline-head">The Diagnostic Advantage</div>
+      <p>One specific shift is worth noting. Modern vehicle diagnostics — the use of OBD-II scanners, oscilloscopes, and manufacturer software to identify faults — has fundamentally changed what auto mechanics do. The old trade was primarily mechanical: physical disassembly and reassembly, often requiring significant upper-body strength for suspension and drivetrain work. The new trade is increasingly electronic and analytical: reading data, interpreting fault codes, understanding engine management systems.</p>
+      <p>Women trained in modern automotive programmes are disproportionately represented in diagnostic specialisms. Esi Amoah (profiled on page 20) built her entire business model around Toyota and Hyundai diagnostics — and built an 80% female clientele in the process. Her observation that female clients come to her specifically to avoid condescension points to a market dynamic that the industry has not caught up with: women are a growing segment of Ghana's vehicle ownership base, and they prefer mechanics who treat them as capable adults.</p>
+
+      <div class="pullquote">
+        <div class="pq-text">"The car doesn't care who plugs in the diagnostic scanner. The data is the data. This is the first trade where being new to it is actually an advantage — there are no old rules to unlearn."</div>
+        <div class="pq-attr">— Lecturer, Automotive Technology, Accra Technical Training Centre</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">Light Manufacturing: Aluminium &amp; Metal Fabrication</div>
+      <p>Ghana's light manufacturing sector — aluminium window and door fabrication, metal furniture, roofing sheet production, PVC fitting — has historically employed women primarily in finishing and quality control roles. The physically demanding cutting, bending, and welding operations have been male by default rather than by design. TVET programme data for 2025 shows 18% female enrolment in aluminium fabrication — the fastest-growing female share of any workshop trade, up from 6% in 2020.</p>
+      <p>The growth is partly explained by the economics. Aluminium fabrication is one of the better-paid workshop trades in Ghana, with licensed fabricators earning GH₵ 98–130 per day. As more women have entered the polytechnic programmes that produce fabricators, the economic case has been made directly to the families and communities who influence young women's training choices. Earnings speak where arguments about gender equality do not always reach.</p>
+
+      <div class="chart-box warm">
+        <div class="chart-lbl">Female Share of Enrolment — Automotive &amp; Manufacturing Trades (2020 vs 2025)</div>
+        <div class="hbar" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl sm">Aluminium Fabrication</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:6%;background:rgba(196,84,26,.22)"></div><div style="width:12%;background:var(--terra)"></div></div></div><div class="hb-val">6% → 18%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Auto Diagnostics</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:3%;background:rgba(196,84,26,.22)"></div><div style="width:9%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 11%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Auto Mechanics (general)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:3%;background:var(--terra-dk)"></div></div></div><div class="hb-val">1.5% → 3.2%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Refrigeration &amp; AC</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:5%;background:rgba(31,74,46,.22)"></div><div style="width:7%;background:var(--forest-lt)"></div></div></div><div class="hb-val">4% → 7%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Welding (MIG/TIG)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:7%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 9%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Solar PV Installation</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:4%;background:rgba(212,160,32,.3)"></div><div style="width:19%;background:var(--ochre)"></div></div></div><div class="hb-val">3% → 22%</div></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);margin-top:7px">Lighter bar = 2020. Darker = 2025. TVET Service data; solar from COTVET / KATH programme records.</div>
+      </div>
+
+      <div style="background:rgba(212,160,32,.07);border-left:3px solid var(--ochre);padding:12px 14px;margin-top:8px">
+        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--ochre);margin-bottom:5px">Solar PV: The New Frontier</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Solar photovoltaic installation is the fastest-growing trade for women in Ghana. With 22% female TVET enrolment — up from 3% in 2020 — it outperforms every other technical trade. The reason, as Afia Boakye explains on page 22, is that solar is new enough to have no established male culture. The trade formed after the modern gender equality discourse, and its training programmes were designed with diversity as a stated goal. It is a model for how trade training systems can be built differently from the start.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">44 — 45</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 48 — REGIONAL SPOTLIGHT
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Regional Spotlight — Northern Region</div>
+    <div class="ph-pn">48</div>
+  </div>
+  <div class="h-rule"></div>
+  <div style="padding:14px 40px 0;position:relative;z-index:5">
+    <div class="terra-rule"></div>
+    <div class="story-hl">The Northern Paradox: Higher Barriers, Stronger Community</div>
+    <div class="story-deck">Ghana's northern regions present a contradiction — social resistance to women in trades is more vocal, yet community apprenticeship structures often prove more accommodating than the formal system.</div>
+  </div>
+  <div class="region-grid" style="margin-top:14px">
+    <div class="region-card">
+      <div class="rc-name">Tamale / Northern Region</div>
+      <div class="rc-sub">+34% materials premium · 14% female TVET share</div>
+      <img class="rc-img" src="https://picsum.photos/seed/tamale-market/383/90" alt="Tamale">
+      <div class="rc-txt">The Northern Region has seen the fastest growth in female technical TVET enrolment of any region — 88% increase since 2020 — yet still has the lowest absolute female share. The community apprenticeship model, where master craftspeople take on female apprentices within established social networks, has proven more permeable than the formal institutional model. Fatima Ibrahim's welding shop (profiled on page 20) now has three female apprentices — recruited through family networks rather than the formal NAP structure. The informal pipeline works where the formal one fails.</div>
+      <div class="rc-kpi">
+        <div><div class="rc-kpi-n">88%</div><div class="rc-kpi-l">Enrolment growth since 2020</div></div>
+        <div><div class="rc-kpi-n">14%</div><div class="rc-kpi-l">Female TVET share (2025)</div></div>
+        <div><div class="rc-kpi-n">67%</div><div class="rc-kpi-l">Female completion rate</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Bolgatanga / Upper East</div>
+      <div class="rc-sub">+30% materials premium · 13% female TVET share</div>
+      <img class="rc-img" src="https://picsum.photos/seed/bolgatanga-craft/383/90" alt="Bolgatanga">
+      <div class="rc-txt">The Upper East's 74% female completion rate — the highest in Ghana — is driven by a specific feature of the regional apprenticeship ecosystem: community accountability. In Bolgatanga, women who begin apprenticeships are publicly supported by family and community networks in a way that makes dropping out socially costly as well as economically difficult. The TVET Service has noted that the community accountability model compensates for the region's relative lack of institutional support infrastructure. It is a model worth studying nationally.</div>
+      <div class="rc-kpi">
+        <div><div class="rc-kpi-n">74%</div><div class="rc-kpi-l">Female completion — highest in Ghana</div></div>
+        <div><div class="rc-kpi-n">13%</div><div class="rc-kpi-l">Female TVET share</div></div>
+        <div><div class="rc-kpi-n">GH₵ 117</div><div class="rc-kpi-l">Cement price premium (vs GH₵ 90 Accra)</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Kumasi / Ashanti Region</div>
+      <div class="rc-sub">+12% materials premium · 19% female TVET share</div>
+      <img class="rc-img" src="https://picsum.photos/seed/kumasi-workshop/383/90" alt="Kumasi">
+      <div class="rc-txt">Kumasi's Suame Magazine — Ghana's largest informal manufacturing cluster — has 6,000+ registered workshops and an estimated 200,000 workers. Women are approximately 4% of Suame's skilled workforce, concentrated in aluminium fabrication and light manufacturing. A 2024 ILO study found that women in Suame Magazine earned median daily rates 22% below male counterparts. The cluster has no gender inclusion policy and no female facilities in most workshop areas — but some individual master craftspeople are beginning to take female apprentices as demand for skilled workers outstrips supply.</div>
+      <div class="rc-kpi">
+        <div><div class="rc-kpi-n">4%</div><div class="rc-kpi-l">Female workforce, Suame Magazine</div></div>
+        <div><div class="rc-kpi-n">22%</div><div class="rc-kpi-l">Gender pay gap in cluster</div></div>
+        <div><div class="rc-kpi-n">200K</div><div class="rc-kpi-l">Total Suame workforce (est.)</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Takoradi / Western Region</div>
+      <div class="rc-sub">+8% materials premium · 18% female TVET share</div>
+      <img class="rc-img" src="https://picsum.photos/seed/takoradi-port/383/90" alt="Takoradi">
+      <div class="rc-txt">Takoradi presents the clearest evidence that industry demand shapes gender norms in skilled trades. The oil and gas sector's need for qualified technical workers — plumbers, electricians, mechanical technicians — has created employer demand that overrides social preference. Companies operating in the Western Region's energy corridor actively recruit qualified female workers because the qualified pool is too small to be selective about gender. Abena Mensah (profiled on page 20) is representative: her gender is irrelevant to clients who need a licensed plumber and can't find one.</div>
+      <div class="rc-kpi">
+        <div><div class="rc-kpi-n">18%</div><div class="rc-kpi-l">Female TVET share</div></div>
+        <div><div class="rc-kpi-n">O&amp;G</div><div class="rc-kpi-l">Primary demand driver</div></div>
+        <div><div class="rc-kpi-n">72%</div><div class="rc-kpi-l">Female completion rate</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">48 — 49</div>
+  </div>
+</div>
+
+<!-- SECTION DIVIDER IV -->
+<div class="page sec-div" style="background:#0a0e06">
+  <div class="sd-bar"></div>
+  <img class="sd-photo" src="https://picsum.photos/seed/policy-meeting-gh/794/1123" alt="">
+  <div class="sd-veil" style="background:linear-gradient(to bottom,transparent 15%,rgba(10,14,6,.92) 100%)"></div>
+  <div class="sd-dots"></div>
+  <div class="sd-inner">
+    <div class="sd-eyebrow">Part Four</div>
+    <div class="sd-accent" style="background:var(--forest)"></div>
+    <div class="sd-hl">POLICY<br>&amp; <em>OUTLOOK</em></div>
+    <div class="sd-desc">What must change — in TVET design, procurement rules, pay equity, and the systems that shape women's access to skilled work</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 56 — INTERVIEW (COTVET)
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="itv-band">
+    <div class="itv-tag">Policy Interview</div>
+    <div class="itv-name">Ms. Comfort Asante</div>
+    <div class="itv-role">Director, TVET Service, Ministry of Education, Ghana</div>
+  </div>
+  <div class="itv-body">
+    <img class="itv-photo" src="https://picsum.photos/seed/comfort-director/180/235" alt="Ms. Comfort Asante">
+    <div>
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">On gender-responsive TVET, the NAP apprenticeship programme, and what reform must deliver — Interviewed by Adjoa Asante-Twum</div>
+      <div class="qa-block">
+        <div class="qa-q">Female TVET enrolment is up 61% since 2020. Is this a success story?</div>
+        <div class="qa-a">It is progress, and I don't want to dismiss it. The work done by TVET institutions and the COTVET NAP programme to reach more women has been real and difficult. But when we disaggregate that 61% growth, we find that almost all of it is in programme categories that were already female-dominated — hairdressing, catering, fashion. The share of women in technical and engineering programmes has grown, but from a very low base. We went from 4% female enrolment in electrical installation to 16%. That's fourfold growth — but it's still 16%. No one building a gender-equitable skills system should be satisfied with 16%.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">The dropout rate for women in TVET is 31%, compared to 17% for men. What is driving that, and what can the system do about it?</div>
+        <div class="qa-a">We know exactly what is driving it. The research is unambiguous. Women drop out because they cannot afford to stay enrolled — stipends are inadequate, accommodation costs are high, and many women have dependants. They drop out because there are no childcare provisions. And they drop out because the training environment in some programmes is not safe or welcoming for them. These are all fixable problems. The first requires money — we need to double the female stipend in technical programmes, full stop. The second requires infrastructure investment — every public TVET centre should have crèche provision. The third requires a culture change that starts with trainer selection and training. None of this is rocket science. It's a question of whether it's a priority.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">The gender pay gap in skilled trades averages 23% even for equivalent qualifications. Is TVET reform enough, or does pay equity require different interventions?</div>
+        <div class="qa-a">TVET reform addresses the supply side — getting more qualified women into the market. The pay gap is a demand-side problem. It reflects employer and client preferences — the willingness to pay a woman less for the same work. Two things can change that. First, more women in the trades — when women are a larger share of the qualified workforce, the market can't systematically underpay them without losing access to them. Second, public sector procurement can set the standard. Government contracts should require equal pay as a condition of award. If the government is your biggest construction client and it requires equal pay, the market shifts. We don't have that yet, but it's a policy lever that costs nothing to implement.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">56 — 57</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 60 — OPINION
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="op-band">
+    <div class="op-lbl">Opinion</div>
+    <div class="op-rule"></div>
+    <div class="op-by">By Dr. Akosua Darkwah<br>Department of Sociology, University of Ghana</div>
+  </div>
+  <div style="padding:18px 40px 8px;position:relative;z-index:5">
+    <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:var(--ink);line-height:1.1;letter-spacing:-.5px;margin-bottom:4px">The Stipend Is Not the Problem. The System Is.</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:10px;font-style:italic;color:var(--mid);margin-bottom:8px">Ghana's TVET reform agenda is right about the solutions and wrong about the causes. Until we understand why women are excluded from skilled trades, we cannot fix it.</div>
+    <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--forest);letter-spacing:2px;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid var(--ink)">Dr. Akosua Darkwah &nbsp;·&nbsp; Dept. of Sociology, University of Ghana &nbsp;·&nbsp; Legon</div>
+  </div>
+  <div class="op-body" style="padding-top:14px">
+    <div class="op-text">
+      <p>Every six months, someone publishes a report on women and TVET in Ghana that recommends increasing stipends, building female toilets, and running awareness campaigns. These are good recommendations. They are also insufficient — and the reason they are insufficient is that they treat a structural problem as an individual or logistical one.</p>
+      <p>The question we should be asking is not: what practical barriers prevent women from enrolling in TVET? The question is: why, in a society where women perform the majority of physical and manual labour, have the skilled trades been constructed as male space? The answer to that question is not about toilets or stipends. It is about how economic value has been systematically assigned to male labour and denied to female labour — and how that assignment has been reproduced, generation after generation, in training systems, labour markets, and the domestic economy.</p>
+      <p>Consider the asymmetry at the heart of Ghana's gender and trades data. Women at 18% of TVET enrolment is described as a problem. Women at 92% of hairdressing enrolment is not described as a problem. We notice the male-dominated spaces and ask how women can enter them. We do not notice the female-dominated spaces and ask why the work that happens in them is paid less, valued less, and excluded from the "skilled trades" framework that receives policy attention.</p>
+      <p>Until we are willing to acknowledge that the designation of certain labour as skilled — and therefore deserving of investment, certification, and decent wages — has historically tracked gender rather than actual complexity, we will keep adding women to a system built to extract value from them, rather than building a system that distributes value fairly.</p>
+      <div style="border-left:4px solid var(--terra);padding:13px 16px;margin:16px 0;background:rgba(196,84,26,.04)">
+        <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:600;font-style:italic;color:var(--ink);line-height:1.4">"The real reform is not getting women into the trades as they exist. It is asking what the trades would look like if they had always included women — and building those."</div>
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:1.5px;margin-top:8px">— Dr. Akosua Darkwah</div>
+      </div>
+      <p>This is not an argument against stipend increases or better sanitation facilities. It is an argument for a deeper reform agenda — one that includes reclassifying hairdressing and dressmaking as skilled trades deserving of the same NVQ framework and wage standards as electrical installation; that includes requiring gender pay audits as a condition of TVET programme certification; that includes designing community apprenticeship standards that recognise and formalise the informal training that women already provide to each other, invisibly and without payment.</p>
+      <p>Ghana has the data. It has the TVET infrastructure. It has, in the cooperative model and the individual stories in this magazine, proof that women are not the problem and never were. What it needs is the political will to build a system in which their skill is recognised for what it is worth.</p>
+    </div>
+    <div class="op-sb">
+      <div class="op-sb-head">Key Arguments</div>
+      <div class="osb-stat">
+        <div class="osb-n">Structural</div>
+        <div class="osb-l">The exclusion of women from skilled trades is a feature of how economic value is assigned, not a logistical problem</div>
+      </div>
+      <div class="osb-stat">
+        <div class="osb-n">The Hidden Trades</div>
+        <div class="osb-l">Hairdressing and dressmaking employ more women than all technical trades combined — yet receive no NVQ framework equivalent</div>
+      </div>
+      <div class="osb-stat">
+        <div class="osb-n">Pay Audit Req.</div>
+        <div class="osb-l">Gender pay audits as a condition of TVET programme certification would create systemic incentive for equal pay</div>
+      </div>
+      <div class="osb-stat">
+        <div class="osb-n">Informal Training</div>
+        <div class="osb-l">Women informally train other women in trades constantly — this labour is unrecognised, uncertified, and unpaid</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">60 — 61</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 66 — FIVE POLICY PRIORITIES
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Policy Priorities — 2026</div>
+    <div class="ph-pn">66</div>
+  </div>
+  <div class="h-rule-green"></div>
+  <div style="padding:20px 40px 0;position:relative;z-index:5">
+    <div class="forest-rule"></div>
+    <div class="story-hl" style="color:var(--forest)">Five Policy Priorities for 2026</div>
+    <div class="story-deck">Concrete, costed, and overdue — what government, TVET institutions, and the private sector must do to turn progress into transformation.</div>
+  </div>
+  <div class="pol-layout" style="padding-top:16px">
+    <div class="pol-main">
+      <div class="col-body" style="padding-right:0">
+        <!-- Priority 1 -->
+        <div style="border-left:4px solid var(--terra);padding:12px 16px;margin-bottom:14px;background:rgba(196,84,26,.04)">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+            <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--terra);line-height:1">01</div>
+            <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)">Double the Female TVET Stipend in Technical Programmes</div>
+          </div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.7;color:var(--ink-mid)">The current monthly stipend of GH₵ 380 for women in technical TVET programmes does not cover accommodation in any urban training centre. We recommend an immediate increase to GH₵ 800 per month for women enrolled in programmes classified as Level 3 or above in the NVQ framework. Estimated annual cost: GH₵ 28 million. This is less than 0.4% of the national education budget.</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Lead Agency: MoE / COTVET · Timeline: 2026 Budget</div>
+        </div>
+        <!-- Priority 2 -->
+        <div style="border-left:4px solid var(--forest);padding:12px 16px;margin-bottom:14px;background:rgba(31,74,46,.04)">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+            <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--forest);line-height:1">02</div>
+            <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)">Mandate Crèche Provision at All Public TVET Centres</div>
+          </div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.7;color:var(--ink-mid)">No public TVET centre in Ghana currently provides crèche or childcare facilities. 52% of female TVET dropouts cite childcare obligations as a contributing reason for leaving. We recommend mandating childcare provision — either on-site or via subsidy to registered community childcare providers — for all TVET institutions with 100+ female students. Where new construction is required, a cost-per-centre of GH₵ 85,000 to GH₵ 140,000 is estimated. World Bank Skills Development Fund eligibility should be sought.</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--forest);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Lead Agency: TVET Service / GETFund · Timeline: 2026–2027</div>
+        </div>
+        <!-- Priority 3 -->
+        <div style="border-left:4px solid var(--ochre);padding:12px 16px;margin-bottom:14px;background:rgba(212,160,32,.04)">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+            <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--ochre);line-height:1">03</div>
+            <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)">Require Gender Pay Equity in Public Sector Construction Contracts</div>
+          </div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.7;color:var(--ink-mid)">All PPA-governed construction contracts above GH₵ 500,000 should require contractors to certify that female workers on the project are paid equivalent daily rates to male workers with equivalent qualifications and experience. Non-compliance should result in retention of 5% of contract value pending audit. Implementation cost: minimal. Impact: immediate signalling to the market that the government does not accept a gender pay gap as a cost of procurement.</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--ochre);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Lead Agency: PPA / MoF · Timeline: PPA Act Amendment 2026</div>
+        </div>
+        <!-- Priority 4 -->
+        <div style="border-left:4px solid var(--terra);padding:12px 16px;margin-bottom:14px;background:rgba(196,84,26,.04)">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+            <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--terra);line-height:1">04</div>
+            <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)">Extend the NVQ Framework to Hairdressing, Dressmaking and Catering</div>
+          </div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.7;color:var(--ink-mid)">These three trade categories employ the majority of Ghana's female skilled workers but sit outside the NVQ framework that governs certification, wage benchmarks, and career progression for technical trades. Extending the NVQ to these categories would formalise the skills of 400,000+ women, create career pathways from trade worker to supervisor to trainer, and — critically — bring these occupations into the pay equity framework that public sector procurement requirements would enforce.</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Lead Agency: COTVET / GES · Timeline: NVQ Review 2026</div>
+        </div>
+        <!-- Priority 5 -->
+        <div style="border-left:4px solid var(--forest);padding:12px 16px;background:rgba(31,74,46,.04)">
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+            <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:var(--forest);line-height:1">05</div>
+            <div style="font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)">Fund and Formalise the Women's Cooperative Apprenticeship Model</div>
+          </div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:10px;line-height:1.7;color:var(--ink-mid)">The Sunyani Women Welders Cooperative demonstrates a model that works. Women-led cooperatives provide the social safety, peer support, and collective economic power that individual women lack when entering male-dominated trades. We recommend a GH₵ 40 million Women's Trade Cooperative Fund — channelled through COTVET — to provide startup capital, certification support, and business development assistance to women's trade cooperatives. First cohort: 50 cooperatives across all regions by end 2026.</div>
+          <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--forest);letter-spacing:2px;text-transform:uppercase;margin-top:8px">Lead Agency: COTVET / MoF / GIZ · Timeline: 2026 Budget Inclusion</div>
+        </div>
+      </div>
+    </div>
+    <div class="pol-sb">
+      <div class="psw">
+        <div class="psw-head">Priority Matrix</div>
+        <ul class="psw-list">
+          <li>Stipend Increase <span>URGENT · 2026</span></li>
+          <li>Crèche Provision <span>HIGH · 2026–27</span></li>
+          <li>Procurement Equity <span>URGENT · 2026</span></li>
+          <li>NVQ Extension <span>HIGH · 2026</span></li>
+          <li>Cooperative Fund <span>MEDIUM · 2026</span></li>
+        </ul>
+      </div>
+      <div class="psw">
+        <div class="psw-head">Estimated Costs</div>
+        <ul class="psw-list">
+          <li>Stipend (annual) <span>GH₵ 28M</span></li>
+          <li>Crèche (capex) <span>GH₵ 12–20M</span></li>
+          <li>Pay Equity <span>GH₵ 0 (policy)</span></li>
+          <li>NVQ Extension <span>GH₵ 4M</span></li>
+          <li>Coop. Fund <span>GH₵ 40M</span></li>
+          <li><strong>Total (5-yr)</strong> <span>~GH₵ 220M</span></li>
+        </ul>
+      </div>
+      <div class="psw">
+        <div class="psw-head">International Benchmarks</div>
+        <ul class="psw-list">
+          <li>Rwanda <span>40% female TVET target set 2023</span></li>
+          <li>South Africa <span>BBBEE skills levy gender targets</span></li>
+          <li>India <span>Skill India — women 40% quota</span></li>
+          <li>UK <span>Construction levy gender reporting</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">66 — 67</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 70 — PHOTO ESSAY
+██████████████████████████████████████████ -->
+<div class="page">
+  <div style="background:var(--ink);padding:12px 40px 10px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:5">
+    <div>
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--terra-lt);letter-spacing:4px;text-transform:uppercase;margin-bottom:3px">Photo Essay</div>
+      <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:900;color:var(--white);line-height:1;letter-spacing:-.3px">Women Who Build</div>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.25);letter-spacing:1px">Photographs: Nana Addo Boateng &nbsp;·&nbsp; November 2025 – March 2026</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr;flex:1;gap:2px;position:relative;z-index:5">
+    <div class="pc-cell tall" style="grid-row:span 2">
+      <img src="https://picsum.photos/seed/woman-site-hero/480/800" alt="Woman on construction site">
+      <div class="cap">Adwoa Asante, site supervisor, 48-unit social housing development, Tema — Jan 2026</div>
+    </div>
+    <div class="pc-cell">
+      <img src="https://picsum.photos/seed/woman-weld-spark/310/280" alt="Woman welding">
+      <div class="cap">Fatima Ibrahim at her welding shop, Tamale New Town — Nov 2025</div>
+    </div>
+    <div class="pc-cell">
+      <img src="https://picsum.photos/seed/woman-electrical/310/280" alt="Woman working on electrical panel">
+      <div class="cap">Grace Sarpong, licensed electrician, client site, Adum, Kumasi — Feb 2026</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;height:220px;gap:2px;position:relative;z-index:5">
+    <div class="pc-cell">
+      <img src="https://picsum.photos/seed/woman-tiler/263/220" alt="Woman tiling">
+      <div class="cap">Akua Donkor, tiler, Ho hospital project — Dec 2025</div>
+    </div>
+    <div class="pc-cell">
+      <img src="https://picsum.photos/seed/sunyani-welder2/263/220" alt="Sunyani cooperative member">
+      <div class="cap">Sunyani Women Welders Cooperative, workshop — Jan 2026</div>
+    </div>
+    <div class="pc-cell">
+      <img src="https://picsum.photos/seed/solar-installer/263/220" alt="Solar panel installation">
+      <div class="cap">Afia Boakye, solar installer, residential site, Kumasi — Mar 2026</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">70 — 71</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 74 — LOOKING AHEAD / BIG PULLQUOTE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Looking Ahead — 2026 &amp; Beyond</div>
+    <div class="ph-pn">74</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="big-pullquote" style="margin:0;position:relative;z-index:5">
+    <div class="bpq-text">"Ghana cannot close its skills gap while ignoring half the people who could close it. The trades need women. The question is whether the system will make room."</div>
+    <div class="bpq-attr">— Kwame A. Mensah, Editor-in-Chief, LocalLink Economist</div>
+  </div>
+
+  <div class="two-col" style="padding-top:18px">
+    <div class="col-body">
+      <div class="inline-head" style="font-family:'Fraunces',serif;font-size:18px;font-weight:900;color:var(--ink);margin-bottom:10px">The Economic Case — Plainly Stated</div>
+      <p>Ghana has a labour shortage in skilled trades that is structurally embedded and worsening. The construction sector needs an estimated 120,000 additional qualified skilled workers by 2028 to meet the government's infrastructure targets. The manufacturing sector estimates a shortage of 80,000 technical workers. These are not projections — they are current gaps that are already delaying projects, inflating costs, and reducing the capacity of the economy to build what it has committed to build.</p>
+      <p>Women are 51% of Ghana's population. They are 18% of the formal TVET system and far less than that of the qualified technical workforce. There is no demographic, technological, or economic reason for this. It is a choice — expressed through system design, cultural practice, and policy neglect — and it is an extraordinarily expensive one. If Ghana raised female participation in technical TVET to 40% by 2030 — a goal that Rwanda has already set — it would add an estimated 180,000 qualified technical workers to the economy over the same period. At median skilled trade earnings of GH₵ 1,820 per month, that represents over GH₵ 3.9 billion in annual household income that currently doesn't exist.</p>
+      <p>This is not a social justice argument, though the social justice case is compelling. It is an economic argument. Ghana needs the workers. Women can be those workers. The barriers that prevent them are man-made and removable.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head" style="font-family:'Fraunces',serif;font-size:18px;font-weight:900;color:var(--ink);margin-bottom:10px">What We Will Track in 2026</div>
+      <p>LocalLink Economist will return to the women and trades data annually. In our next special report — scheduled for March 2027 — we will track whether the five policy priorities outlined in this edition have been implemented, and if so, whether they are delivering measurable change in enrolment, completion, employment, and pay equity metrics.</p>
+      <p>We will specifically track the following indicators: female share of NVQ Level 3 technical programme enrolment (target: 25% by end 2026, 40% by 2030); average female TVET stipend in technical programmes (target: GH₵ 800/month by 2026 Budget); gender pay gap across 18 trade occupations (target: narrowing to 15% by 2027, with clear sector-by-sector trajectory); and number of women's trade cooperatives registered under COTVET (target: 50 by end 2026).</p>
+      <p>If government acts on these priorities, the numbers will move. If they do not act, the numbers will tell that story too. We will be watching, and we will report what we find.</p>
+
+      <div class="chart-box warm" style="margin-top:10px">
+        <div class="chart-lbl">LocalLink Tracking Targets — Female Technical TVET Share (Actual vs Target)</div>
+        <div class="hbar" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl sm">2020 (actual)</div><div class="hb-track"><div class="hb-fill" style="width:28%;background:var(--mid)"></div></div><div class="hb-val">11%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2025 (actual)</div><div class="hb-track"><div class="hb-fill" style="width:46%;background:var(--terra)"></div></div><div class="hb-val">18%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2026 target</div><div class="hb-track"><div class="hb-fill" style="width:64%;background:rgba(31,74,46,.4);border:1px dashed var(--forest)"></div></div><div class="hb-val">25%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2028 target</div><div class="hb-track"><div class="hb-fill" style="width:82%;background:rgba(31,74,46,.35);border:1px dashed var(--forest)"></div></div><div class="hb-val">32%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">2030 target</div><div class="hb-track"><div class="hb-fill" style="width:100%;background:rgba(31,74,46,.3);border:1px dashed var(--forest)"></div></div><div class="hb-val">40%</div></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);margin-top:8px">Targets set by LocalLink Economist research unit aligned with Rwanda TVET gender benchmarks. Dashed bars = projected.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">74 — 75</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 78 — SUBSCRIBE / COMING NEXT
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Subscribe &amp; Coming Next</div>
+    <div class="ph-pn">78</div>
+  </div>
+  <div class="h-rule"></div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;flex:1;position:relative;z-index:5">
+    <!-- Photo mosaic left -->
+    <div style="display:grid;grid-template-rows:1fr 1fr 1fr;gap:3px;overflow:hidden">
+      <div class="pc-cell"><img src="https://picsum.photos/seed/woman-tools/397/200" alt=""><div class="cap">Esi Amoah, auto mechanic, Cape Coast — Feb 2026</div></div>
+      <div class="pc-cell"><img src="https://picsum.photos/seed/tvet-class-gh/397/200" alt=""><div class="cap">TVET electrical class, Accra Technical Training Centre</div></div>
+      <div class="pc-cell"><img src="https://picsum.photos/seed/women-workshop/397/200" alt=""><div class="cap">Sunyani Women Welders Cooperative, members at work</div></div>
+    </div>
+
+    <!-- Subscribe + Next Issue right -->
+    <div style="padding:36px 40px;display:flex;flex-direction:column;gap:28px">
+      <div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:var(--ink);margin-bottom:14px;letter-spacing:-.5px">Subscribe to LocalLink Economist</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="border:2px solid var(--lt-border);padding:16px 18px;background:var(--cream-lt)">
+            <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">Digital</div>
+            <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--terra);margin-bottom:6px">GH₵ 80 <span style="font-size:12px;color:var(--mid);font-weight:300">/ month</span></div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid)">All editions, full data sets, CIPI access</div>
+          </div>
+          <div style="border:2px solid var(--terra);padding:16px 18px;background:rgba(196,84,26,.04)">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">Print + Digital</div>
+                <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--terra);margin-bottom:6px">GH₵ 180 <span style="font-size:12px;color:var(--mid);font-weight:300">/ month</span></div>
+                <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid)">Home delivery + full digital access</div>
+              </div>
+              <div style="background:var(--terra);color:var(--white);font-family:'Space Mono',monospace;font-size:7px;letter-spacing:2px;padding:3px 8px;text-transform:uppercase">Popular</div>
+            </div>
+          </div>
+          <div style="border:2px solid var(--forest);padding:16px 18px;background:rgba(31,74,46,.04)">
+            <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--ink);margin-bottom:3px">Corporate</div>
+            <div style="font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--forest);margin-bottom:6px">GH₵ 1,200 <span style="font-size:12px;color:var(--mid);font-weight:300">/ year</span></div>
+            <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid)">10 seats · API data access · custom reports</div>
+          </div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--terra);letter-spacing:1px;margin-top:14px">subscribe.locallink.com.gh &nbsp;·&nbsp; +233 30 270 4400</div>
+      </div>
+
+      <div style="border-top:2px solid var(--forest);padding-top:20px">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Next Issue — April 2026</div>
+        <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:900;color:var(--ink);line-height:1.1;letter-spacing:-.5px;margin-bottom:8px">Youth & Employment:<br>Ghana's Generation at Work</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--mid);line-height:1.6">The youth unemployment rate, the gig economy, TVET vs university outcomes, apprenticeship completion and employment rates by age cohort — our annual deep dive into Ghana's youngest workers and what the data says about their economic prospects.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">78</div>
+  </div>
+</div>
+
+<div class="p-sep">── extended editorial ──</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 82 — FINANCING & BUSINESS DEVELOPMENT
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Finance &amp; Business — Women in Trades</div>
+    <div class="ph-pn">82</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Business Analysis</span>
+    <div class="story-hl">The Capital Gap: Why Women Can't Scale</div>
+    <div class="story-deck">Getting the qualification is hard. Getting hired is harder. But the hardest step of all for women in Ghana's skilled trades is getting the capital to move from employee to business owner — the step that most dramatically changes economic outcomes.</div>
+    <div class="story-byline">By Abena Osei-Kuffour, Deputy Editor, Economics</div>
+  </div>
+  <div class="two-col">
+    <div class="col-body">
+      <p>There is a point in the career of every skilled tradesperson where the most significant income leap becomes possible: the transition from employee or apprentice to independent operator. For men in Ghana's skilled trades, this transition — setting up a small workshop, registering a business, building a client list — typically happens with the help of family networks, informal credit, and the accumulated contacts of several years working under a master craftsperson who passes introductions along. For women, almost none of these pathways are reliably available.</p>
+      <p>The data is stark. A LocalLink survey of 62 women in skilled trades found that only 14% had accessed any formal financial product to start or grow their trade business. Of those who had sought formal credit, 71% reported being refused by at least one financial institution, with the primary reasons given: lack of collateral (68%), "insufficient business history" (44%), and — in 22% of cases — explicit statements from loan officers that the trade was "not appropriate" for a woman.</p>
+      <p>Informal credit — from savings groups (susu), family, or money lenders — has been the primary source of startup capital for the majority of the women we interviewed. The Sunyani Welders Cooperative started with GH₵ 14,400 pooled from twelve members, most of it borrowed. Grace Sarpong borrowed the GH₵ 4,200 for her licensing course from a cousin. Abena Mensah in Takoradi funded her first plumbing tools through a susu group with seven other women from her TVET cohort.</p>
+      <div class="inline-head">The Bank's Mental Model Problem</div>
+      <p>The formal financial sector's reluctance to lend to women in manual trades is not purely about collateral or credit history. It reflects a mental model problem — the same one that pervades the trades themselves. Bank loan officers, in interview after interview, expressed surprise at the concept of a female plumber or welder seeking a business loan. The cognitive framework that makes female tradespeople invisible in the labour market makes them invisible to credit officers too.</p>
+      <p>Several women reported being offered smaller loan amounts than requested without explanation. Two reported being directed to the women's enterprise loan products — micro-finance products designed for market traders and artisanal producers — rather than the business development loans available to trade contractors. The mental model is coherent: women do micro-enterprise, men do trade contracting. Breaking that model requires either individual persistence or system change.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">What Finance Products Actually Exist</div>
+      <p>The formal financial products available to women in Ghana's skilled trades are limited but not zero. The MASLOC (Microfinance and Small Loans Centre) programme has a women's enterprise strand that can provide working capital for registered businesses. Several rural and community banks in the Ashanti and Brong-Ahafo regions have begun offering trade-specific business loans following advocacy from COTVET. The GIZ-supported Skills Development Fund has piloted women's cooperative lending at below-market rates.</p>
+      <p>None of these reach the majority of women in the trades. Awareness is low, application requirements are complex, and the underlying premise of most products — that women in manual trades are micro-entrepreneurs rather than small business operators — means the loan sizes are often inadequate for what women actually need to grow.</p>
+
+      <div class="tbl-wrap" style="margin-top:12px">
+        <table class="dtbl">
+          <thead>
+            <tr>
+              <th>Source of Startup Capital</th>
+              <th>% of Women (survey)</th>
+              <th>Avg. Amount (GH₵)</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="cat">Susu / savings group</td><td>38%</td><td>2,400</td><td class="mid">No interest, short-term</td></tr>
+            <tr><td class="cat">Family loan</td><td>29%</td><td>3,100</td><td class="mid">Informal, variable</td></tr>
+            <tr><td class="cat">Personal savings</td><td>22%</td><td>1,800</td><td class="mid">Accumulated from wage work</td></tr>
+            <tr><td class="cat">Formal bank / MFI</td><td>14%</td><td>6,200</td><td class="mid">Low uptake; high refusal rate</td></tr>
+            <tr><td class="cat">MASLOC / government</td><td>6%</td><td>3,800</td><td class="mid">Application process cited as barrier</td></tr>
+            <tr><td class="cat">NGO / development grant</td><td>4%</td><td>4,500</td><td class="mid">Geographically uneven</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background:rgba(31,74,46,.06);border-left:3px solid var(--forest);padding:12px 14px;margin-top:10px">
+        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--forest);margin-bottom:5px">What Would Change This</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Three interventions would materially shift capital access for women in trades: (1) A government-backed trade contractor loan product with NVQ qualification as primary eligibility criterion — removing the collateral barrier; (2) Mandatory financial literacy and business development modules in all Level 3+ TVET programmes; (3) Recognition of cooperative membership as a credit-worthiness factor by MASLOC and participating commercial banks. None of these requires new institutional infrastructure — only policy will.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">82 — 83</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 86 — INTERNATIONAL BENCHMARKS
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">International Benchmarks — Gender &amp; TVET</div>
+    <div class="ph-pn">86</div>
+  </div>
+  <div class="h-rule-green"></div>
+  <div class="data-page">
+    <div class="data-hl">How Ghana Compares: Women in Skilled Trades — Selected Countries</div>
+    <div class="data-sub">Female share of TVET enrolment, gender pay gap in trades, and policy interventions. Sources: ILO Skills and Employment datasets, UNESCO TVET statistics 2024, national TVET authority data, World Bank Skills Development indicators. Figures are most recent available (2024–2025).</div>
+
+    <div class="kpi-row" style="margin-bottom:18px">
+      <div class="kpi-cell"><div class="kpi-num up">18%</div><div class="kpi-lbl">Ghana — Female TVET share (2025)</div></div>
+      <div class="kpi-cell"><div class="kpi-num forest">40%</div><div class="kpi-lbl">Rwanda — Female TVET target (2023–2027)</div></div>
+      <div class="kpi-cell"><div class="kpi-num">38%</div><div class="kpi-lbl">South Africa — Female TVET share (2024)</div></div>
+      <div class="kpi-cell"><div class="kpi-num dn">42%</div><div class="kpi-lbl">Vietnam — Female TVET share (2024)</div></div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th style="width:18%">Country</th>
+            <th>Female TVET Share</th>
+            <th>Technical Trades (F %)</th>
+            <th>Gender Pay Gap (trades)</th>
+            <th>Key Policy Lever</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sec-row"><td colspan="6">SUB-SAHARAN AFRICA</td></tr>
+          <tr><td class="cat">Ghana</td><td>18%</td><td>12%</td><td class="up"><span class="pill-up">−23%</span></td><td class="sub">NAP apprenticeship expansion</td><td class="dn">↑ Improving</td></tr>
+          <tr><td class="cat">Rwanda</td><td>36%</td><td>28%</td><td class="up"><span class="pill-up">−14%</span></td><td class="sub">40% female TVET mandate 2023</td><td class="dn">↑↑ Fast growth</td></tr>
+          <tr><td class="cat">South Africa</td><td>38%</td><td>22%</td><td class="up"><span class="pill-up">−18%</span></td><td class="sub">BBBEE gender skills levy targets</td><td class="dn">↑ Steady</td></tr>
+          <tr><td class="cat">Kenya</td><td>32%</td><td>19%</td><td class="up"><span class="pill-up">−21%</span></td><td class="sub">Technical Training Act 2023 — gender quotas</td><td class="dn">↑ Improving</td></tr>
+          <tr><td class="cat">Nigeria</td><td>14%</td><td>8%</td><td class="up"><span class="pill-up">−28%</span></td><td class="sub">Limited; ad hoc NGO programmes</td><td class="mid">→ Flat</td></tr>
+          <tr><td class="cat">Ethiopia</td><td>21%</td><td>14%</td><td class="up"><span class="pill-up">−25%</span></td><td class="sub">TVET expansion incl. rural women</td><td class="dn">↑ Improving</td></tr>
+          <tr class="sec-row"><td colspan="6">ASIA-PACIFIC</td></tr>
+          <tr><td class="cat">Vietnam</td><td>42%</td><td>34%</td><td class="dn"><span class="pill-dn">−9%</span></td><td class="sub">State TVET system — gender neutral design</td><td class="mid">→ Stable</td></tr>
+          <tr><td class="cat">Bangladesh</td><td>35%</td><td>26%</td><td class="up"><span class="pill-up">−16%</span></td><td class="sub">SEIP skills programme gender targets</td><td class="dn">↑ Fast growth</td></tr>
+          <tr><td class="cat">India</td><td>40%</td><td>29%</td><td class="up"><span class="pill-up">−20%</span></td><td class="sub">Skill India Mission — 40% female quota</td><td class="dn">↑ Improving</td></tr>
+          <tr class="sec-row"><td colspan="6">EUROPE &amp; HIGH INCOME</td></tr>
+          <tr><td class="cat">Germany</td><td>44%</td><td>18%</td><td class="up"><span class="pill-up">−22%</span></td><td class="sub">Apprenticeship law — anti-discrimination</td><td class="mid">→ Slow change</td></tr>
+          <tr><td class="cat">UK</td><td>46%</td><td>12%</td><td class="up"><span class="pill-up">−24%</span></td><td class="sub">Construction levy gender reporting req.</td><td class="dn">↑ Improving</td></tr>
+          <tr><td class="cat">Australia</td><td>44%</td><td>16%</td><td class="up"><span class="pill-up">−21%</span></td><td class="sub">Trades women rebate scheme (apprenticeship)</td><td class="dn">↑ Improving</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+      <div class="chart-box">
+        <div class="chart-lbl">Female Share of Technical (Non-Service) TVET — Ranked (2024–25)</div>
+        <div class="hbar" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl sm">Vietnam</div><div class="hb-track"><div class="hb-fill" style="width:97%;background:var(--forest)"></div></div><div class="hb-val">34%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">India</div><div class="hb-track"><div class="hb-fill" style="width:83%;background:var(--forest-lt)"></div></div><div class="hb-val">29%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Rwanda</div><div class="hb-track"><div class="hb-fill" style="width:80%;background:var(--forest-lt)"></div></div><div class="hb-val">28%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Bangladesh</div><div class="hb-track"><div class="hb-fill" style="width:74%;background:var(--ochre)"></div></div><div class="hb-val">26%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">South Africa</div><div class="hb-track"><div class="hb-fill" style="width:63%;background:var(--ochre)"></div></div><div class="hb-val">22%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Kenya</div><div class="hb-track"><div class="hb-fill" style="width:54%;background:var(--terra)"></div></div><div class="hb-val">19%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Ethiopia</div><div class="hb-track"><div class="hb-fill" style="width:40%;background:var(--terra)"></div></div><div class="hb-val">14%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Ghana ★</div><div class="hb-track"><div class="hb-fill" style="width:34%;background:var(--red)"></div></div><div class="hb-val">12%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Nigeria</div><div class="hb-track"><div class="hb-fill" style="width:23%;background:var(--mid)"></div></div><div class="hb-val">8%</div></div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--terra);margin-top:7px">★ Ghana — technical trades only. Overall female TVET share = 18% but skewed by service trades.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:rgba(31,74,46,.06);border-left:3px solid var(--forest);padding:12px 14px">
+          <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--forest);margin-bottom:5px">The Rwanda Model</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid);line-height:1.6">Rwanda's 40% female TVET mandate, introduced in 2023, requires all TVET institutions receiving public funding to achieve 40% female enrolment within four years. Early data shows the policy is working: Rwanda's female share in technical programmes rose from 19% in 2021 to 28% in 2024. The mechanism is straightforward: institutions that miss targets lose funding. Ghana has no equivalent incentive structure.</div>
+        </div>
+        <div style="background:rgba(196,84,26,.05);border-left:3px solid var(--terra);padding:12px 14px">
+          <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--terra);margin-bottom:5px">The Germany Lesson</div>
+          <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid);line-height:1.6">Germany has one of the world's most comprehensive apprenticeship systems and a persistent gender pay gap in skilled trades of 22% — nearly identical to Ghana's. The lesson: system quality does not automatically produce gender equity. Anti-discrimination in training is necessary but not sufficient. Pay equity requires specific market and procurement interventions regardless of how well the training system functions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">86 — 87</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 90 — INFORMAL ECONOMY PIPELINE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">The Informal Pipeline — Women's Hidden Skills Economy</div>
+    <div class="ph-pn">90</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag green">Special Report</span>
+    <div class="story-hl">The Hidden Economy: Women Who Train Without Being Counted</div>
+    <div class="story-deck">Ghana's formal TVET system enrols 74,000 women. But informal apprenticeship — women training women in shared spaces, marketplaces, and home workshops — reaches an estimated ten times that number and receives almost no policy attention.</div>
+    <div class="story-byline">By Efua Quartey, Lead Correspondent, Gender &amp; Labour</div>
+  </div>
+
+  <div style="height:180px;overflow:hidden;position:relative;z-index:5">
+    <img src="https://picsum.photos/seed/informal-workshop-gh/794/200" alt="Informal workshop" style="width:100%;height:100%;object-fit:cover;object-position:center 55%;filter:sepia(12%) contrast(108%)">
+    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,16,8,.7));padding:14px 40px 10px">
+      <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.7);letter-spacing:1px">A dressmaking workshop, Makola Market, Accra — February 2026. Photo: Nana Addo Boateng.</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="padding-top:16px">
+    <div class="col-body">
+      <p>In a market stall in Makola, Accra, a woman named Adiza sits with four apprentices around a cutting table. She is teaching them pattern-making. She has no formal qualification as a teacher. Her apprentices have no formal enrolment record. None of them will appear in the TVET Service's annual statistics. And yet what is happening in that stall is, in all functional respects, vocational education and training — the transfer of economically valuable skills from an experienced practitioner to a new generation.</p>
+      <p>Informal apprenticeship — the traditional system of learning a trade under a master practitioner without formal institutional enrolment — has been the dominant mode of skills transmission in Ghana for generations. For women, it has historically been the only available pathway into the trades that were already coded as female: dressmaking, food preparation, hairdressing, batik and textile production. Research by the Ghana Statistical Service estimates that between 600,000 and 800,000 women are currently in active informal apprenticeships across Ghana — compared to 74,382 in formal TVET.</p>
+      <div class="inline-head">The Counting Problem</div>
+      <p>The informal apprenticeship system is invisible to policy for a simple reason: it is not counted. GLSS 8 data provides broad estimates, but the informal trades do not generate the administrative records — enrolment registers, assessment records, certification data — that formal systems produce. As a result, the skills of women in informal apprenticeship cannot be certified, cannot be used to access formal employment, and cannot be built upon through the NVQ progression framework that provides career pathways in the formal system.</p>
+      <p>This is not an accident. The designation of trades as "formal" — and therefore worthy of the NVQ framework, certification infrastructure, and policy attention — has historically tracked the trades that men dominated. The trades where women were already the majority have remained outside the formal skills architecture. The consequence is that the vast majority of Ghana's skilled female workforce exists in an economic space where their skills are real but officially unrecognised.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">The Formalisation Opportunity</div>
+      <p>There are models for bringing informal apprenticeship into formal recognition frameworks. Kenya's Recognition of Prior Learning (RPL) system allows practitioners with demonstrable competence — regardless of how they acquired it — to sit assessments and receive NVQ equivalent certification. South Africa's SETA system includes informal trade recognition pathways. Both have had mixed results, but both rest on the correct premise: that certification should follow demonstrated competence, not institutional enrolment.</p>
+      <p>Ghana's COTVET has a Recognition of Prior Learning policy on paper. In practice, it is almost inaccessible to women in informal trades. The assessment fees are prohibitive (GH₵ 150–400 per level), the assessment centres are urban and inaccessible to rural practitioners, and — critically — the trades where women are concentrated (dressmaking, hairdressing, catering) sit outside the NVQ framework that RPL feeds into, making the pathway circular and pointless. Fixing RPL for women requires fixing the NVQ coverage gap first.</p>
+
+      <div class="num-feat" style="margin:14px 0">
+        <div class="nf-cell"><div class="nf-num">600<span>K+</span></div><div class="nf-lbl">Women in informal apprenticeship (est.)</div></div>
+        <div class="nf-cell"><div class="nf-num">74<span>K</span></div><div class="nf-lbl">Women in formal TVET enrolment</div></div>
+        <div class="nf-cell"><div class="nf-num">8<span>×</span></div><div class="nf-lbl">Informal vs formal system ratio</div></div>
+      </div>
+
+      <div class="pullquote">
+        <div class="pq-text">"I have trained 23 women in pattern-making in eight years. None of them have a piece of paper that says so. None of them could use what they learned here to get a job in a formal fashion house. That is not their failure. That is the system's failure."</div>
+        <div class="pq-attr">— Master Dressmaker, Makola Market, Accra (name withheld by request)</div>
+      </div>
+
+      <div style="background:rgba(31,74,46,.05);border-left:3px solid var(--forest);padding:12px 14px;margin-top:10px">
+        <div style="font-family:'Fraunces',serif;font-size:11.5px;font-weight:700;color:var(--forest);margin-bottom:6px">What Formalisation Could Deliver</div>
+        <div style="font-family:'DM Sans',sans-serif;font-size:9px;color:var(--mid);line-height:1.6">If 20% of women currently in informal apprenticeship gained RPL certification over five years — 120,000 to 160,000 women — and if those certifications were in an NVQ framework that carried wage floor protection, the income effect at median skilled trade wages would represent approximately GH₵ 2.6 billion in additional annual household income. This is not a marginal intervention. It is one of the highest-return skills policy actions available to the Ghanaian government at relatively low institutional cost.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">90 — 91</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 94 — SECOND INTERVIEW: COTVET / FIELD VOICE
+██████████████████████████████████████████ -->
+<div class="page">
+  <div style="background:var(--forest);padding:28px 40px 22px;position:relative;overflow:hidden">
+    <div style="position:absolute;right:20px;bottom:-30px;font-family:'Fraunces',serif;font-size:200px;color:rgba(255,255,255,.05);line-height:1;font-weight:900">"</div>
+    <div style="font-family:'Space Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.45);letter-spacing:4px;text-transform:uppercase;margin-bottom:8px">Field Interview</div>
+    <div style="font-family:'Fraunces',serif;font-weight:900;font-size:36px;color:var(--white);line-height:1;margin-bottom:5px;letter-spacing:-.5px">Akosua Poku</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:12px;font-style:italic;color:rgba(255,255,255,.5)">Founding Member &amp; Chair, Sunyani Women Welders Cooperative — Brong-Ahafo Region</div>
+  </div>
+  <div style="padding:22px 40px;flex:1;display:grid;grid-template-columns:180px 1fr;gap:26px;position:relative;z-index:5">
+    <img src="https://picsum.photos/seed/akosua-poku/180/235" alt="Akosua Poku" style="width:180px;height:235px;object-fit:cover;object-position:top;border:3px solid var(--forest)">
+    <div>
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">On building the cooperative, the first year of failure, and what other women need to know — Interviewed by Yaw Owusu</div>
+
+      <div class="qa-block">
+        <div class="qa-q" style="color:var(--forest)">You've described the cooperative's founding as coming from desperation rather than vision. How do you see it now, four years later?</div>
+        <div class="qa-a">In the beginning it was pure desperation — twelve women with certificates and zero job offers. We did not sit down and say, let us build a model cooperative to inspire the nation. We said, we have to eat, so what can we do together that we cannot do separately? Looking back, the desperation was actually the right starting point. We had nothing to protect, so we were not afraid to try things. We made our first real money from a church grille order that we quoted for because none of us thought we'd get it. Then we got it, and we had to work three weekends in a row to deliver it on time. That's how you build confidence — not by thinking about it, but by doing it under pressure.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q" style="color:var(--forest)">What was the hardest part of the first year?</div>
+        <div class="qa-a">Trust. Not trust from the outside world — we expected them to doubt us. The hardest thing was trust among ourselves. Twelve women who had been through the same NAP cohort — we thought we knew each other. Then you put money and work and reputation on the same table and you find out who keeps their word. We lost one member in the first six months over a pricing dispute. We nearly lost two more over how to split a large contract. We had to write rules for things we hadn't thought about because we'd never run a business before. The COTVET field officer who visited us in month four — she was the one who told us to write everything down. That was the best advice we received. Write everything down before there is a dispute, not after.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q" style="color:var(--forest)">What would you say to women considering a cooperative model versus trying to build individually?</div>
+        <div class="qa-a">I would say: the cooperative is not for everyone, and it requires you to share things that are uncomfortable to share — money, credit, the work itself. But for women entering male-dominated trades without networks, without capital, without anyone who looks like them to introduce them to clients — the cooperative solves all of those problems at once. I had eleven people I could call when a big order came in. I had eleven people whose networks connected to mine. When a client tried to negotiate our rate down because we were women, there were twelve of us to say no — and twelve of us to walk away if he didn't respect it. You can say no much more easily when you're not alone.</div>
+      </div>
+    </div>
+  </div>
+  <div style="background:rgba(31,74,46,.06);border-top:1px solid var(--lt-border);padding:14px 40px;position:relative;z-index:5">
+    <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--forest);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">The Cooperative in Numbers — 2025</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--lt-border)">
+      <div style="padding:12px;border-right:1px solid var(--lt-border);text-align:center"><div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--forest);line-height:1">4 yrs</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Operating</div></div>
+      <div style="padding:12px;border-right:1px solid var(--lt-border);text-align:center"><div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--terra);line-height:1">GH₵ 486K</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Revenue 2025</div></div>
+      <div style="padding:12px;border-right:1px solid var(--lt-border);text-align:center"><div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--ink);line-height:1">11</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Current members</div></div>
+      <div style="padding:12px;border-right:1px solid var(--lt-border);text-align:center"><div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--forest);line-height:1">14</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Women enrolled in welding since 2022 (inspired by coop.)</div></div>
+      <div style="padding:12px;text-align:center"><div style="font-family:'Fraunces',serif;font-size:24px;font-weight:700;color:var(--terra);line-height:1">GH₵ 2,800</div><div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;margin-top:4px;line-height:1.4">Avg monthly earnings per member</div></div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">94 — 95</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 98 — HEALTH, SAFETY & WORKPLACE RIGHTS
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Workplace Rights &amp; Safety — Women in Trades</div>
+    <div class="ph-pn">98</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="story-head">
+    <span class="story-tag">Investigation</span>
+    <div class="story-hl">Unsafe by Design: Workplace Standards and the Gender Gap</div>
+    <div class="story-deck">Ghana's Factories, Offices and Shops Act was last substantively amended in 2003. Its provisions on workplace health and safety were written for male workers in male workplaces. Women entering the trades are navigating legal and physical environments designed without them.</div>
+    <div class="story-byline">By Adjoa Asante-Twum, TVET &amp; Skills Policy Correspondent</div>
+  </div>
+  <div class="two-col">
+    <div class="col-body">
+      <p>When Abena Mensah joined her first plumbing crew in Takoradi's energy corridor, she found that the standard-issue PPE — gloves, overalls, safety boots — came in one size range. The boots were a minimum size 8. Her feet are a size 5. The overalls were cut for a male torso. "I wore them rolled up and belted for three months until I could afford to buy my own," she says. "It wasn't dangerous — it was just a daily reminder that no one had imagined me in this role."</p>
+      <p>The PPE problem is symptomatic of a wider issue: Ghana's construction and trades workplace safety standards are built on an assumed male worker. The Labour Act 2003 and the Factories, Offices and Shops Act 1970 (partially updated 2003) set minimum standards for workplace facilities that include no gender-disaggregated provisions for sanitary facilities, changing rooms, or rest areas. Employers are not legally required to provide female-specific facilities for workers in any trade category, and most do not.</p>
+      <div class="inline-head">Harassment and the Unreported Reality</div>
+      <p>Our survey of 62 women in skilled trades included questions about workplace harassment. The results were sobering: 74% reported experiencing verbal harassment related to gender at some point in their trade career; 42% reported it occurring regularly in their current work environment; and 28% reported an incident that constituted sexual harassment under the Labour Act definition. Of that 28%, fewer than 10% had made any formal complaint — the remainder citing fear of job loss, belief that nothing would change, or absence of any reporting mechanism.</p>
+      <p>The Labour Commission handles workplace harassment complaints, but its capacity in Ghana's regions outside Accra is limited. In the Northern Region, there is one Labour Commission officer covering four districts. The practical reality is that women in skilled trades who experience harassment have no effective formal recourse and know it. This is not a cultural inevitability — it is a resource allocation failure.</p>
+    </div>
+    <div class="col-body">
+      <div class="inline-head">Physical Environment: The Training Centre Problem</div>
+      <p>TVET training centres present a specific challenge. Female students in trades programmes report — consistently across all six regions visited — that the physical environment of training workshops was not designed for them. This includes: workshop changing and toilet facilities shared with male students (or, in several cases, no female toilet facilities at all); training tools and equipment scaled for male hand sizes; protective equipment not available in female sizes; and workshop cultures where female students are expected to observe before participating, on timelines that exceed those applied to male students.</p>
+      <p>The TVET Service has a gender-inclusive design standard — published in 2022 — that sets minimum facility requirements for institutions seeking or renewing programme accreditation. In practice, compliance is uneven. Of the 14 TVET institutions visited in our field research, six had no dedicated female changing or sanitary facilities in their technical workshops. Three of those six held current accreditation from the TVET Service.</p>
+
+      <div class="chart-box warm" style="margin-top:12px">
+        <div class="chart-lbl">Workplace Experiences Reported by Women in Trades (n=62, 2025 survey)</div>
+        <div class="hbar" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl sm">Verbal gender harassment (ever)</div><div class="hb-track"><div class="hb-fill" style="width:74%;background:var(--red)"></div></div><div class="hb-val">74%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Inadequate PPE sizing</div><div class="hb-track"><div class="hb-fill" style="width:68%;background:var(--terra)"></div></div><div class="hb-val">68%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">No female-specific facilities (training)</div><div class="hb-track"><div class="hb-fill" style="width:58%;background:var(--terra)"></div></div><div class="hb-val">58%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Offered lower rate than male peer</div><div class="hb-track"><div class="hb-fill" style="width:62%;background:var(--terra-dk)"></div></div><div class="hb-val">62%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Regular harassment in current role</div><div class="hb-track"><div class="hb-fill" style="width:42%;background:var(--red)"></div></div><div class="hb-val">42%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Sexual harassment incident (ever)</div><div class="hb-track"><div class="hb-fill" style="width:28%;background:var(--mid)"></div></div><div class="hb-val">28%</div></div>
+          <div class="hb-row"><div class="hb-lbl sm">Formal complaint made</div><div class="hb-track"><div class="hb-fill" style="width:3%;background:var(--forest)"></div></div><div class="hb-val">3% (of 28%)</div></div>
+        </div>
+      </div>
+
+      <div class="pullquote" style="margin-top:12px">
+        <div class="pq-text">"The law exists. The standards exist. What doesn't exist is enforcement. And without enforcement, the standards are just paper."</div>
+        <div class="pq-attr">— Labour Commission Officer, Kumasi (quoted with permission)</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">98 — 99</div>
+  </div>
+</div>
+
+<div class="p-sep">── back cover ──</div>
+
+
+<!-- ██████████████████████████████████████████
+     BACK COVER
+██████████████████████████████████████████ -->
+<div class="page" id="back-cover">
+  <div class="bc-dots"></div>
+  <div class="bc-bar"></div>
+
+  <div class="bc-top">
+    <div>
+      <div class="bc-brand-name"><span>LOCAL</span>LINK<br>Economist</div>
+      <div class="bc-tagline">Rigorous. Local. Essential.</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.18);letter-spacing:2px">Vol. 03 · Issue 03</div>
+      <div style="font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.18);letter-spacing:1px;margin-top:3px">March 2026</div>
+    </div>
+  </div>
+
+  <div class="bc-body">
+    <div class="bc-quote">
+      "The trades have always needed<br><span>skilled hands.</span> Ghana is finally<br>discovering that half<br>its skilled hands have been<br><span>overlooked.</span>"
+    </div>
+    <div class="bc-attrib">— LocalLink Economist, Vol. 03 · Women in Skilled Trades</div>
+
+    <div class="bc-img-strip">
+      <img src="https://picsum.photos/seed/bc-women1/263/170" alt="">
+      <img src="https://picsum.photos/seed/bc-women2/263/170" alt="">
+      <img src="https://picsum.photos/seed/bc-women3/263/170" alt="">
+    </div>
+  </div>
+
+  <div class="bc-bottom">
+    <div class="bc-contact">
+      <h4>Contact &amp; Subscriptions</h4>
+      <p>LocalLink Media Group<br>14 Independence Avenue, Accra Central<br>P.O. Box AN 5561, Accra-North, Ghana<br><br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5336373a273c213a323f133f3c30323f3f3a3d387d303c3e7d343b">[email&#160;protected]</a><br>subscribe.locallink.com.gh<br>+233 30 270 4400</p>
+    </div>
+    <div class="bc-next">
+      <div class="bc-next-lbl">Next Issue — April 2026</div>
+      <div class="bc-next-title">Youth &amp; Employment:<br>Ghana's Generation at Work</div>
+      <div style="margin-top:16px;font-family:'Space Mono',monospace;font-size:7px;color:rgba(255,255,255,.15);letter-scolor:rgba(255,255,255,.15);letter-spacing:1px"></div></div></div></div></body></html>

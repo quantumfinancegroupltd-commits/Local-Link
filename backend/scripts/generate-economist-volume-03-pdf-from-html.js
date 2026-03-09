@@ -15,6 +15,7 @@ import { createRequire } from 'node:module'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 const DESIGN_HTML_PATH = path.resolve(__dirname, 'economist-volume-03-design.html')
+const COVER_IMAGE_PATH = path.resolve(__dirname, 'economist-assets/vol03-cover-woman.png')
 const OUT_PDF_PATH = path.resolve(__dirname, '../../frontend/public/economist-volume-03.pdf')
 const OUT_COVER_PNG_PATH = path.resolve(__dirname, '../../frontend/public/economist-volume-03-cover.png')
 
@@ -35,6 +36,13 @@ async function main() {
   }
 
   let html = fs.readFileSync(DESIGN_HTML_PATH, 'utf8')
+  if (fs.existsSync(COVER_IMAGE_PATH)) {
+    const coverBuf = fs.readFileSync(COVER_IMAGE_PATH)
+    const coverDataUrl = `data:image/png;base64,${coverBuf.toString('base64')}`
+    html = html.replace('REPLACE_COVER_IMAGE_DATA_URL', coverDataUrl)
+  } else {
+    html = html.replace('REPLACE_COVER_IMAGE_DATA_URL', 'https://picsum.photos/seed/women-trades-ghana/794/1123')
+  }
   html = html.replace('</head>', `<style>${PRINT_CSS}</style></head>`)
 
   const puppeteer = require('puppeteer')

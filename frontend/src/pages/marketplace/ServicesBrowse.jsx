@@ -7,6 +7,7 @@ import { EmptyState } from '../../components/ui/EmptyState.jsx'
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { BrowseLayout } from '../../components/layout/BrowseLayout.jsx'
 import { BrowseMap } from '../../components/maps/BrowseMap.jsx'
+import { coordsFromLocationText, spreadDuplicatePinsGrid } from '../../lib/geo.js'
 import { ui } from '../../components/ui/tokens.js'
 
 const CATEGORY_ORDER = ['Domestic Services', 'Events & Catering', 'Plumbing', 'Electrical', 'Masonry']
@@ -104,19 +105,24 @@ export function ServicesBrowse() {
   }, [filteredServices])
 
   const serviceMapPins = useMemo(() => {
-    return filteredServices
-      .filter((s) => {
+    const pins = filteredServices
+      .map((s) => {
         const rawLat = s?.service_lat ?? s?.serviceLat ?? null
         const rawLng = s?.service_lng ?? s?.serviceLng ?? null
-        const lat = rawLat != null ? Number(rawLat) : NaN
-        const lng = rawLng != null ? Number(rawLng) : NaN
-        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+        let lat = rawLat != null ? Number(rawLat) : NaN
+        let lng = rawLng != null ? Number(rawLng) : NaN
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+          const fallback = coordsFromLocationText(s?.service_area ?? '')
+          if (fallback) {
+            lat = fallback.lat
+            lng = fallback.lng
+          }
+        }
+        if (Number.isNaN(lat) || Number.isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+        return { s, lat, lng }
       })
-      .map((s) => {
-        const rawLat = s?.service_lat ?? s?.serviceLat ?? 0
-        const rawLng = s?.service_lng ?? s?.serviceLng ?? 0
-        const lat = Number(rawLat) || 0
-        const lng = Number(rawLng) || 0
+      .filter(Boolean)
+      .map(({ s, lat, lng }) => {
         const subtitle = [s?.artisan_name, s?.service_area].filter(Boolean).join(' · ') || undefined
         const serviceImg = s?.image_url || s?.imageUrl || s?.photo_url || null
         const artisanPic = s?.artisan?.profile_pic ?? s?.artisan_profile_pic ?? s?.user?.profile_pic ?? null
@@ -141,6 +147,7 @@ export function ServicesBrowse() {
           priceLabel,
         }
       })
+    return spreadDuplicatePinsGrid(pins)
   }, [filteredServices])
 
   const filtersSidebar = (

@@ -27,6 +27,7 @@ export function BrowseMap({ pins = [], defaultCenter, defaultZoom = DEFAULT_ZOOM
   const lastContainerRef = useRef(null)
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [loadingHint, setLoadingHint] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isExpandedOverlay, setIsExpandedOverlay] = useState(false)
 
@@ -91,15 +92,47 @@ export function BrowseMap({ pins = [], defaultCenter, defaultZoom = DEFAULT_ZOOM
   useEffect(() => {
     let cancelled = false
     const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+    if (!apiKey) {
+      setFailed(true)
+      return
+    }
     loadGoogleMaps(apiKey).then((ok) => {
       if (cancelled) return
       setReady(Boolean(ok))
-      setFailed(!ok && Boolean(apiKey))
+      setFailed(!ok)
     })
+    const timeout = setTimeout(() => {
+      if (cancelled) return
+      setReady((r) => { if (!r) setFailed(true); return r })
+    }, 12000)
+    const hintTimeout = setTimeout(() => {
+      if (cancelled) return
+      setLoadingHint(true)
+    }, 4000)
     return () => {
       cancelled = true
+      clearTimeout(timeout)
+      clearTimeout(hintTimeout)
     }
   }, [])
+
+  // When map is inside a scrollable container (e.g. BrowseLayout sidebar), trigger resize when it becomes visible so tiles/pins render.
+  useEffect(() => {
+    if (!ready || isExpandedOverlay) return
+    const el = fullscreenWrapperRef.current
+    if (!el || !mapRef.current || typeof window.google?.maps?.event?.trigger !== 'function') return
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0]
+        if (e?.isIntersecting && mapRef.current) {
+          window.google.maps.event.trigger(mapRef.current, 'resize')
+        }
+      },
+      { root: null, rootMargin: '0px', threshold: 0.1 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [ready, isExpandedOverlay, pinsWithCoords.length])
 
   useEffect(() => {
     const activeContainer = isExpandedOverlay ? overlayContainerRef.current : containerRef.current
@@ -140,7 +173,8 @@ export function BrowseMap({ pins = [], defaultCenter, defaultZoom = DEFAULT_ZOOM
     if (pinsWithCoords.length === 0) {
       map.setCenter(center)
       map.setZoom(defaultZoom)
-      return
+      const t0 = setTimeout(() => g?.event && mapRef.current && g.event.trigger(mapRef.current, 'resize'), 150)
+      return () => clearTimeout(t0)
     }
 
     const bounds = new g.LatLngBounds()
@@ -202,23 +236,37 @@ export function BrowseMap({ pins = [], defaultCenter, defaultZoom = DEFAULT_ZOOM
     } else if (pinsWithCoords.length > 1) {
       map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 })
     }
+
+    // Resize after layout so map gets correct dimensions in scrollable/flex parents (e.g. BrowseLayout sidebar).
+    const t = setTimeout(() => {
+      if (g?.event && mapRef.current) {
+        g.event.trigger(mapRef.current, 'resize')
+        if (pinsWithCoords.length > 1) map.fitBounds(bounds, { top: 24, right: 24, bottom: 24, left: 24 })
+      }
+    }, 150)
+    return () => clearTimeout(t)
   }, [ready, isExpandedOverlay, center.lat, center.lng, defaultZoom, pinsWithCoords])
 
   if (failed) {
     return (
       <div className={`rounded-xl border border-slate-200 bg-slate-50 p-4 min-h-[200px] flex flex-col items-center justify-center text-center dark:border-white/10 dark:bg-white/5 ${className}`}>
         <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Map unavailable</p>
-        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-[240px]">
-          If you see <strong>ApiNotActivatedMapError</strong>, enable <strong>Maps JavaScript API</strong> in Google Cloud Console: APIs &amp; Services → Library → Maps JavaScript API → Enable. Also check your API key and referrer restrictions.
+        <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 max-w-[280px]">
+          Set <strong>VITE_GOOGLE_MAPS_API_KEY</strong> in <code className="text-[11px]">frontend/.env</code> and rebuild. In Google Cloud enable <strong>Maps JavaScript API</strong> and <strong>Places API</strong>, and check referrer restrictions.
         </p>
       </div>
     )
   }
 
-  if (!ready) {
+  if (!ready && !failed) {
     return (
-      <div className={`rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center h-64 dark:border-white/10 dark:bg-white/5 ${className}`}>
+      <div className={`rounded-xl border border-slate-200 bg-slate-50 flex flex-col items-center justify-center h-64 gap-2 dark:border-white/10 dark:bg-white/5 ${className}`}>
         <p className="text-sm text-slate-500 dark:text-slate-400">Loading map…</p>
+        {loadingHint ? (
+          <p className="text-xs text-slate-400 dark:text-slate-500 max-w-[260px] text-center">
+            If the map doesn’t load, hard-refresh (Cmd+Shift+R or Ctrl+Shift+R) to get the latest version.
+          </p>
+        ) : null}
       </div>
     )
   }

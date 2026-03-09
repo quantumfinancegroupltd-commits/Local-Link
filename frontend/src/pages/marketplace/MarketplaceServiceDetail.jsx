@@ -5,6 +5,7 @@ import { imageProxySrc } from '../../lib/imageProxy.js'
 import { Button, Card } from '../../components/ui/FormControls.jsx'
 import { VerificationBadge } from '../../components/ui/VerificationBadge.jsx'
 import { BrowseMap } from '../../components/maps/BrowseMap.jsx'
+import { coordsFromLocationText } from '../../lib/geo.js'
 import { ui } from '../../components/ui/tokens.js'
 import { useAuth } from '../../auth/useAuth.js'
 import { EmptyState } from '../../components/ui/EmptyState.jsx'
@@ -44,19 +45,17 @@ export function MarketplaceServiceDetail() {
     }
   }, [id])
 
-  const hasCoords = useMemo(() => {
+  const mapCenter = useMemo(() => {
     const lat = service?.service_lat ?? service?.serviceLat ?? null
     const lng = service?.service_lng ?? service?.serviceLng ?? null
-    return lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))
+    if (lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+      return { lat: Number(lat), lng: Number(lng) }
+    }
+    const area = service?.service_area ?? service?.serviceArea ?? ''
+    return coordsFromLocationText(area) || null
   }, [service])
 
-  const mapCenter = useMemo(() => {
-    if (!hasCoords) return null
-    return {
-      lat: Number(service?.service_lat ?? service?.serviceLat),
-      lng: Number(service?.service_lng ?? service?.serviceLng),
-    }
-  }, [hasCoords, service])
+  const showMap = mapCenter != null
 
   const artisanId = service?.artisan_user_id ?? service?.artisanUserId
   const title = service?.title ?? 'Service'
@@ -118,7 +117,7 @@ export function MarketplaceServiceDetail() {
               loading="eager"
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-violet-400 via-indigo-300 to-sky-400" />
+            <div className="h-full w-full bg-gradient-to-br from-slate-700 via-emerald-600 to-slate-800" />
           )}
           <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
             {category ? (
@@ -154,9 +153,12 @@ export function MarketplaceServiceDetail() {
         </div>
       </div>
 
-      {hasCoords && mapCenter ? (
-        <Card className="p-4">
-          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Map</h2>
+      {showMap && mapCenter ? (
+        <Card className="p-4 dark:bg-white/5 dark:border-white/10">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Location</h2>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {serviceArea ? `Service area: ${serviceArea}` : 'Approximate service area'}
+          </p>
           <div className="mt-3 h-56 w-full overflow-hidden rounded-xl border border-slate-200 dark:border-white/10">
             <BrowseMap
               pins={[
@@ -166,6 +168,8 @@ export function MarketplaceServiceDetail() {
                   lng: mapCenter.lng,
                   title,
                   subtitle: [artisanName, serviceArea].filter(Boolean).join(' · ') || undefined,
+                  imageUrl: imageUrl ?? undefined,
+                  priceLabel: currency && (price != null || price === 0) ? `${currency} ${Number(price).toFixed(0)}` : undefined,
                 },
               ]}
               defaultCenter={mapCenter}

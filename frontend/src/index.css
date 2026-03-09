@@ -2,29 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LocalLink baseline */
+/* LocalLink baseline — keep layout within viewport on mobile */
 html {
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+html {
+  /* Prevent horizontal scroll on mobile; 100% avoids 100vw scrollbar issues */
+  max-width: 100%;
 }
 
 html,
 body,
 #root {
   height: 100%;
+  min-width: 0;
 }
 
 body {
   @apply bg-slate-50 text-slate-900 font-sans antialiased;
   overflow-x: hidden;
+  max-width: 100%;
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .dark body {
   @apply bg-black text-slate-100;
 }
 
-/* Subtle brand accent on selection */
+/* Subtle brand accent on selection (no pink) */
 ::selection {
-  @apply bg-orange-100 text-slate-900;
+  @apply bg-slate-200 text-slate-900;
+}
+.dark ::selection {
+  @apply bg-slate-600 text-slate-100;
 }
 
 /* Hero headlines: better line-wrap on narrow viewports */

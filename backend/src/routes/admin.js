@@ -480,6 +480,7 @@ adminRouter.get('/queues/webhooks/export/failures', requireAuth, requireRole(['a
 }))
 
 // --- System / configuration status (safe to show in Admin UI; no secrets) ---
+// Includes data_summary so admins can confirm which DB is connected and whether it has data.
 adminRouter.get('/system/status', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
   const appBase = env.APP_BASE_URL ? String(env.APP_BASE_URL).replace(/\/$/, '') : null
   const uptimeSec = Math.floor(Number(process.uptime?.() ?? 0))
@@ -501,6 +502,25 @@ adminRouter.get('/system/status', requireAuth, requireRole(['admin']), asyncHand
     .then((r) => r.rows[0])
     .catch(() => null)
 
+  // Row counts for main tables — confirms which DB is connected and if it has data
+  let dataSummary = null
+  try {
+    const [users, jobs, orders, products] = await Promise.all([
+      pool.query('select count(*)::int as n from users where deleted_at is null'),
+      pool.query('select count(*)::int as n from jobs'),
+      pool.query('select count(*)::int as n from orders'),
+      pool.query('select count(*)::int as n from products'),
+    ])
+    dataSummary = {
+      users: users.rows[0]?.n ?? 0,
+      jobs: jobs.rows[0]?.n ?? 0,
+      orders: orders.rows[0]?.n ?? 0,
+      products: products.rows[0]?.n ?? 0,
+    }
+  } catch (e) {
+    dataSummary = { error: e?.message || 'Failed to count' }
+  }
+
   return res.json({
     now: new Date().toISOString(),
     node_env: env.NODE_ENV,
@@ -508,6 +528,7 @@ adminRouter.get('/system/status', requireAuth, requireRole(['admin']), asyncHand
     app_base_url: appBase,
     cors_origins: env.CORS_ORIGINS,
     db,
+    data_summary: dataSummary,
     workers: {
       schedulers_enabled: !!env.SCHEDULERS_ENABLED,
       webhook_queue_enabled: !!env.WEBHOOK_QUEUE_ENABLED,
@@ -521,6 +542,46 @@ adminRouter.get('/system/status', requireAuth, requireRole(['admin']), asyncHand
       paystack_webhook_url: appBase ? `${appBase}/api/webhooks/paystack` : null,
       flutterwave_webhook_url: appBase ? `${appBase}/api/webhooks/flutterwave` : null,
     },
+  })
+}))
+
+// --- Data audit: row counts + date ranges for key tables (to decide if restore needed) ---
+adminRouter.get('/data-audit', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const tables = [
+    { name: 'users', countCol: 'id', dateCol: 'created_at', extra: 'where deleted_at is null' },
+    { name: 'jobs', countCol: 'id', dateCol: 'created_at' },
+    { name: 'orders', countCol: 'id', dateCol: 'created_at' },
+    { name: 'products', countCol: 'id', dateCol: 'created_at' },
+    { name: 'analytics_events', countCol: 'id', dateCol: 'created_at' },
+    { name: 'posts', countCol: 'id', dateCol: 'created_at' },
+    { name: 'escrow_transactions', countCol: 'id', dateCol: 'created_at' },
+    { name: 'support_tickets', countCol: 'id', dateCol: 'created_at' },
+    { name: 'admin_audit_logs', countCol: 'id', dateCol: 'created_at' },
+    { name: 'companies', countCol: 'id', dateCol: 'created_at' },
+    { name: 'job_posts', countCol: 'id', dateCol: 'created_at' },
+  ]
+  const audit = {}
+  for (const t of tables) {
+    try {
+      const where = t.extra ? ` ${t.extra}` : ''
+      const r = await pool.query(
+        `select count(*)::int as n, min(${t.dateCol})::text as min_at, max(${t.dateCol})::text as max_at from ${t.name}${where}`,
+      )
+      const row = r.rows?.[0]
+      audit[t.name] = {
+        rows: row?.n ?? 0,
+        earliest: row?.min_at ?? null,
+        latest: row?.max_at ?? null,
+      }
+    } catch (e) {
+      const code = String(e?.code ?? '')
+      if (code === '42P01') audit[t.name] = { error: 'table_missing', rows: 0, earliest: null, latest: null }
+      else audit[t.name] = { error: e?.message || 'query_failed', rows: 0, earliest: null, latest: null }
+    }
+  }
+  return res.json({
+    note: 'Use this to see if the connected DB has data and its date range. Empty or very old latest = consider restore.',
+    tables: audit,
   })
 }))
 
@@ -2747,6 +2808,119 @@ adminRouter.post('/support/tickets/:id/confirm-no-show', requireAuth, requireRol
   await pool.query(`update support_tickets set last_activity_at=now(), updated_at=now() where id=$1`, [ticket.id])
 
   return res.status(201).json({ ok: true, ...r, artisan_user_id: artisanUserId })
+}))
+
+// ——— LocalLink Economist (admin CRUD) ———
+const EconomistIssueSchema = z.object({
+  slug: z.string().min(1).max(200),
+  volume_number: z.number().int().positive(),
+  issue_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  theme: z.string().max(500).optional().nullable(),
+  title: z.string().min(1).max(500),
+  summary: z.string().max(2000).optional().nullable(),
+  pdf_url: z.string().url().optional().nullable().or(z.literal('')),
+  cover_image_url: z.string().url().optional().nullable().or(z.literal('')),
+  page_count: z.number().int().min(0).optional().nullable(),
+  featured_headline_1: z.string().max(300).optional().nullable(),
+  featured_headline_2: z.string().max(300).optional().nullable(),
+  featured_headline_3: z.string().max(300).optional().nullable(),
+  is_published: z.boolean().optional(),
+})
+
+adminRouter.get('/economist', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query(
+    `select id, slug, volume_number, issue_date, theme, title, summary, pdf_url, cover_image_url,
+            page_count, featured_headline_1, featured_headline_2, featured_headline_3, is_published, created_at
+     from economist_issues
+     order by issue_date desc`,
+  )
+  return res.json(r.rows)
+}))
+
+adminRouter.get('/economist/:id', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query('select * from economist_issues where id = $1', [req.params.id])
+  if (!r.rows[0]) return res.status(404).json({ message: 'Issue not found' })
+  return res.json(r.rows[0])
+}))
+
+adminRouter.post('/economist', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const parsed = EconomistIssueSchema.safeParse(req.body ?? {})
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const d = parsed.data
+  const slug = String(d.slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+  const existing = await pool.query('select id from economist_issues where slug = $1', [slug])
+  if (existing.rows[0]) return res.status(409).json({ message: 'An issue with this slug already exists' })
+
+  await pool.query(
+    `insert into economist_issues (
+       slug, volume_number, issue_date, theme, title, summary, pdf_url, cover_image_url,
+       page_count, featured_headline_1, featured_headline_2, featured_headline_3, is_published, created_by
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+    [
+      slug,
+      d.volume_number,
+      d.issue_date,
+      d.theme ?? null,
+      d.title,
+      d.summary ?? null,
+      d.pdf_url || null,
+      d.cover_image_url || null,
+      d.page_count ?? null,
+      d.featured_headline_1 ?? null,
+      d.featured_headline_2 ?? null,
+      d.featured_headline_3 ?? null,
+      d.is_published ?? false,
+      req.user.sub,
+    ],
+  )
+  const r = await pool.query('select * from economist_issues where slug = $1', [slug])
+  return res.status(201).json(r.rows[0])
+}))
+
+adminRouter.put('/economist/:id', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const parsed = EconomistIssueSchema.partial().safeParse(req.body ?? {})
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues })
+  const r = await pool.query('select id, slug from economist_issues where id = $1', [req.params.id])
+  if (!r.rows[0]) return res.status(404).json({ message: 'Issue not found' })
+  const d = parsed.data
+  let slug = r.rows[0].slug
+  if (d.slug !== undefined) {
+    slug = String(d.slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+    const ex = await pool.query('select id from economist_issues where slug = $1 and id != $2', [slug, req.params.id])
+    if (ex.rows[0]) return res.status(409).json({ message: 'An issue with this slug already exists' })
+  }
+  await pool.query(
+    `update economist_issues set
+       slug = coalesce($2, slug), volume_number = coalesce($3, volume_number), issue_date = coalesce($4, issue_date),
+       theme = $5, title = coalesce($6, title), summary = $7, pdf_url = $8, cover_image_url = $9,
+       page_count = $10, featured_headline_1 = $11, featured_headline_2 = $12, featured_headline_3 = $13,
+       is_published = coalesce($14, is_published), updated_at = now()
+     where id = $1`,
+    [
+      req.params.id,
+      slug,
+      d.volume_number,
+      d.issue_date,
+      d.theme ?? null,
+      d.title,
+      d.summary ?? null,
+      d.pdf_url ?? null,
+      d.cover_image_url ?? null,
+      d.page_count ?? null,
+      d.featured_headline_1 ?? null,
+      d.featured_headline_2 ?? null,
+      d.featured_headline_3 ?? null,
+      d.is_published,
+    ],
+  )
+  const out = await pool.query('select * from economist_issues where id = $1', [req.params.id])
+  return res.json(out.rows[0])
+}))
+
+adminRouter.delete('/economist/:id', requireAuth, requireRole(['admin']), asyncHandler(async (req, res) => {
+  const r = await pool.query('delete from economist_issues where id = $1 returning id', [req.params.id])
+  if (!r.rows[0]) return res.status(404).json({ message: 'Issue not found' })
+  return res.status(204).send()
 }))
 
 

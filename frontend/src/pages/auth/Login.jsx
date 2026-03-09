@@ -82,8 +82,8 @@ export function Login() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <Card>
+    <div className="mx-auto w-full min-w-[320px] max-w-2xl sm:max-w-3xl md:max-w-4xl px-4 sm:px-6">
+      <Card className="min-w-0 w-full">
         <h1 className="text-xl font-bold">Login</h1>
         <p className="mt-1 text-sm text-slate-600">Welcome back.</p>
 

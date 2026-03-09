@@ -7,6 +7,7 @@ import { Button, Card, Input, Label, Select } from '../../components/ui/FormCont
 import { PageHeader } from '../../components/ui/PageHeader.jsx'
 import { BrowseLayout } from '../../components/layout/BrowseLayout.jsx'
 import { BrowseMap } from '../../components/maps/BrowseMap.jsx'
+import { coordsFromLocationText, spreadDuplicatePins } from '../../lib/geo.js'
 
 function moneyRange(j) {
   const min = j?.pay_min != null ? Number(j.pay_min) : null
@@ -218,19 +219,24 @@ export function JobsBoard() {
   }
 
   const jobMapPins = useMemo(() => {
-    return (filtered || [])
-      .filter((j) => {
+    const pins = (filtered || [])
+      .map((j) => {
         const rawLat = j?.location_lat ?? j?.locationLat ?? null
         const rawLng = j?.location_lng ?? j?.locationLng ?? null
-        const lat = rawLat != null ? Number(rawLat) : NaN
-        const lng = rawLng != null ? Number(rawLng) : NaN
-        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+        let lat = rawLat != null ? Number(rawLat) : NaN
+        let lng = rawLng != null ? Number(rawLng) : NaN
+        if (Number.isNaN(lat) || Number.isNaN(lng)) {
+          const fallback = coordsFromLocationText(j?.location ?? j?.company_location ?? '')
+          if (fallback) {
+            lat = fallback.lat
+            lng = fallback.lng
+          }
+        }
+        if (Number.isNaN(lat) || Number.isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null
+        return { j, lat, lng }
       })
-      .map((j) => {
-        const rawLat = j?.location_lat ?? j?.locationLat ?? 0
-        const rawLng = j?.location_lng ?? j?.locationLng ?? 0
-        const lat = Number(rawLat) || 0
-        const lng = Number(rawLng) || 0
+      .filter(Boolean)
+      .map(({ j, lat, lng }) => {
         const loc = j?.location ?? j?.company_location ?? ''
         const imgUrl = j?.image_url || j?.company_logo_url || null
         const payLabel = moneyRange(j) || undefined
@@ -241,10 +247,11 @@ export function JobsBoard() {
           title: j?.title ?? 'Job',
           subtitle: String(loc).trim() || undefined,
           href: `/jobs/${j.id}`,
-          imageUrl: imgUrl || undefined,
+          imageUrl: imgUrl ?? undefined,
           priceLabel: payLabel,
         }
       })
+    return spreadDuplicatePins(pins)
   }, [filtered])
 
   const mapCard = (

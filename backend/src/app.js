@@ -44,6 +44,7 @@ import { trustRouter } from './routes/trust.js'
 import { idVerificationRouter } from './routes/idVerification.js'
 import { corporateRouter } from './routes/corporate.js'
 import { newsRouter } from './routes/news.js'
+import { economistRouter } from './routes/economist.js'
 import { eventsRouter } from './routes/events.js'
 import { followsRouter } from './routes/follows.js'
 import { endorsementsRouter } from './routes/endorsements.js'
@@ -182,6 +183,7 @@ export function createApp() {
   app.use('/api/analytics', analyticsRouter)
   app.use('/api/assistant', assistantRouter)
   app.use('/api/news', newsRouter)
+  app.use('/api/economist', economistRouter)
   app.use('/api/events', eventsRouter)
   app.use('/api/match', matchRouter)
   app.use('/api/search', searchRouter)

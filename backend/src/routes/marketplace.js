@@ -35,8 +35,8 @@ marketplaceRouter.get('/services', asyncHandler(async (req, res) => {
     created_at: row.created_at,
     artisan_name: row.artisan_name ?? null,
     service_area: row.service_area ?? null,
-    service_lat: row.service_lat ?? null,
-    service_lng: row.service_lng ?? null,
+    service_lat: row.service_lat != null ? Number(row.service_lat) : null,
+    service_lng: row.service_lng != null ? Number(row.service_lng) : null,
     verification_tier: row.verification_tier ?? 'unverified',
   }))
   return res.json(list)
@@ -78,8 +78,8 @@ marketplaceRouter.get('/services/:id', asyncHandler(async (req, res) => {
     created_at: row.created_at,
     artisan_name: row.artisan_name ?? null,
     service_area: row.service_area ?? null,
-    service_lat: row.service_lat ?? null,
-    service_lng: row.service_lng ?? null,
+    service_lat: row.service_lat != null ? Number(row.service_lat) : null,
+    service_lng: row.service_lng != null ? Number(row.service_lng) : null,
     verification_tier: row.verification_tier ?? 'unverified',
   }
   return res.json(service)

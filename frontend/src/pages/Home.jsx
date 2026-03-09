@@ -63,6 +63,8 @@ export function Home() {
   const [services, setServices] = useState([])
   const [jobs, setJobs] = useState([])
   const [carouselsLoading, setCarouselsLoading] = useState(true)
+  const [economistIssues, setEconomistIssues] = useState([])
+  const [economistLoading, setEconomistLoading] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -100,6 +102,16 @@ export function Home() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setEconomistLoading(true)
+    http.get('/economist')
+      .then((r) => { if (!cancelled) setEconomistIssues(Array.isArray(r.data) ? r.data : []) })
+      .catch(() => { if (!cancelled) setEconomistIssues([]) })
+      .finally(() => { if (!cancelled) setEconomistLoading(false) })
+    return () => { cancelled = true }
   }, [])
 
   // Events & Domestic are always live on the front page. B2B and Logistics show as "Coming soon" tiles.
@@ -669,6 +681,82 @@ export function Home() {
             <Button variant="secondary" className="px-5 py-2.5">Create company account</Button>
           </Link>
         </div>
+
+        {/* LocalLink Economist — same section as on /news */}
+        <section className="mt-10 pt-10 border-t border-slate-200 dark:border-white/10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h3 className="font-serif text-2xl font-bold tracking-tight text-[#111111] dark:text-white md:text-3xl">
+                LocalLink Economist
+              </h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                A monthly digital magazine analysing Ghana&apos;s local labour, trade, produce and SME economy.
+              </p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              {economistIssues.length > 0 ? (
+                <Link
+                  to={`/economist/${economistIssues[0].slug}`}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#b9141a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9a1116]"
+                >
+                  Read Latest Issue
+                </Link>
+              ) : null}
+              <Link
+                to="/economist"
+                className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
+              >
+                Browse Archive
+              </Link>
+            </div>
+          </div>
+          {economistLoading ? (
+            <div className="mt-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">Loading issues…</div>
+          ) : economistIssues.length > 0 ? (
+            <div className="mt-6 flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
+              {economistIssues.map((issue) => (
+                <Link
+                  key={issue.id}
+                  to={`/economist/${issue.slug}`}
+                  className="group flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-[#b9141a]/30 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-[#b9141a]/40"
+                >
+                  <div className="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    {issue.cover_image_url ? (
+                      <img
+                        src={issue.cover_image_url.startsWith('/') ? issue.cover_image_url : issue.cover_image_url}
+                        alt=""
+                        className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-slate-400 dark:text-slate-500 text-4xl font-serif">Vol {issue.volume_number}</div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2 text-xs font-semibold uppercase tracking-wider text-white">
+                      Volume {String(issue.volume_number).padStart(2, '0')} — {issue.issue_date ? new Date(issue.issue_date).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''}
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <h4 className="font-serif text-lg font-bold text-slate-900 dark:text-white line-clamp-2">
+                      {issue.title}
+                    </h4>
+                    {issue.summary ? (
+                      <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{issue.summary}</p>
+                    ) : (
+                      <ul className="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                        {[issue.featured_headline_1, issue.featured_headline_2, issue.featured_headline_3].filter(Boolean).slice(0, 2).map((h, i) => (
+                          <li key={i} className="line-clamp-1">• {h}</li>
+                        ))}
+                      </ul>
+                    )}
+                    <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#b9141a]">
+                      Read Issue →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </section>
       </div>
 
       {/* OFFLINE FIRST */}

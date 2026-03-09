@@ -1,0 +1,2048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalLink Economist — Vol 01, January 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&display=swap" rel="stylesheet">
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+  --ink: #0d0d0d; --cream: #f5f0e8; --gold: #c8972a; --gold-light: #e8c66a;
+  --red: #c0392b; --dark-red: #8b1a1a; --slate: #2c3e50;
+  --mid-grey: #888; --light-grey: #e8e4dc; --white: #ffffff;
+  --green: #1a5c3a; --green-light: #2d7a52;
+}
+html { scroll-behavior: smooth; }
+body { background: #111; font-family: 'Source Serif 4', Georgia, serif; color: var(--ink); display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+/* ── PAGE SHELL ── */
+.page { width: 794px; min-height: 1123px; position: relative; overflow: hidden; background: var(--cream); display: flex; flex-direction: column; }
+
+/* ── PHOTO PANELS (CSS-only imagery) ── */
+.img-panel { width: 100%; display: block; position: relative; overflow: hidden; }
+.img-panel .pcap { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,.65)); padding: 20px 14px 8px; font-family: 'DM Mono', monospace; font-size: 8px; color: rgba(255,255,255,.7); letter-spacing: .5px; }
+
+/* Construction workers scene */
+.scene-construction {
+  background: linear-gradient(160deg, #8b7355 0%, #6b5a3e 25%, #4a3728 50%, #2d2015 70%, #1a0e08 100%);
+      position: relative;
+    }
+.scene-construction::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 60%, rgba(255,180,60,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 70% 30%, rgba(100,140,180,.15) 0%, transparent 60%),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 18px, rgba(0,0,0,.08) 18px, rgba(0,0,0,.08) 19px),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 22px, rgba(0,0,0,.06) 22px, rgba(0,0,0,.06) 23px);
+}
+.scene-construction::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,.5) 0%, rgba(0,0,0,.1) 40%, rgba(0,0,0,.6) 100%);
+}
+.scene-construction .silhouette {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 55%;
+  background: linear-gradient(to top,
+    #1a0e08 0%, #2d1a08 20%,
+    transparent 100%);
+  clip-path: polygon(0 100%, 5% 65%, 10% 68%, 15% 55%, 20% 60%, 25% 45%, 30% 50%, 35% 40%, 40% 55%, 45% 38%, 50% 42%, 55% 35%, 60% 50%, 65% 38%, 70% 55%, 75% 42%, 80% 58%, 85% 45%, 90% 60%, 95% 48%, 100% 62%, 100% 100%);
+  z-index: 1;
+}
+.scene-construction .crane {
+  position: absolute; top: 8%; right: 20%;
+  width: 4px; height: 60%;
+  background: rgba(200,151,42,.6);
+  z-index: 2;
+}
+.scene-construction .crane::after {
+  content: '';
+  position: absolute; top: 0; left: -30px;
+  width: 60px; height: 3px;
+  background: rgba(200,151,42,.5);
+}
+.scene-construction .scaffold {
+  position: absolute; bottom: 20%; left: 10%;
+  width: 120px; height: 200px;
+  background: repeating-linear-gradient(0deg, rgba(255,200,100,.25) 0px, rgba(255,200,100,.25) 2px, transparent 2px, transparent 24px),
+              repeating-linear-gradient(90deg, rgba(255,200,100,.25) 0px, rgba(255,200,100,.25) 2px, transparent 2px, transparent 20px);
+  z-index: 2;
+}
+
+/* TVET / Workshop scene */
+.scene-workshop {
+  background: linear-gradient(135deg, #1a2535 0%, #243040 30%, #1c2a3a 60%, #0d1520 100%);
+      position: relative;
+    }
+.scene-workshop::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 60% at 35% 55%, rgba(255,120,0,.22) 0%, transparent 55%),
+    radial-gradient(ellipse 30% 40% at 75% 40%, rgba(100,200,255,.1) 0%, transparent 50%),
+    radial-gradient(circle 8px at 35% 55%, rgba(255,160,0,.8) 0%, transparent 100%);
+}
+.scene-workshop::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(45deg, transparent 0px, transparent 8px, rgba(255,255,255,.015) 8px, rgba(255,255,255,.015) 9px);
+}
+.scene-workshop .spark {
+  position: absolute;
+  background: rgba(255,200,50,.9);
+  border-radius: 50%;
+  z-index: 3;
+}
+.scene-workshop .spark:nth-child(1) { width:3px;height:3px;top:52%;left:34%; box-shadow:0 0 8px 4px rgba(255,150,0,.8); }
+.scene-workshop .spark:nth-child(2) { width:2px;height:2px;top:48%;left:36%; box-shadow:0 0 6px 3px rgba(255,200,0,.7); }
+.scene-workshop .spark:nth-child(3) { width:2px;height:2px;top:55%;left:32%; box-shadow:0 0 5px 2px rgba(255,100,0,.6); }
+.scene-workshop .bench {
+  position: absolute; bottom: 15%; left: 15%; right: 30%;
+  height: 8px; background: rgba(150,120,80,.6); border-radius: 2px;
+  z-index: 2;
+}
+.scene-workshop .bench::after {
+  content: '';
+  position: absolute; top: -40px; left: 20%; right: 30%;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(100,80,50,.4));
+}
+
+/* Airport / emigration scene */
+.scene-airport {
+  background: linear-gradient(160deg, #e8eef5 0%, #c5d4e8 30%, #9ab5d0 60%, #6890b8 100%);
+      position: relative;
+    }
+.scene-airport::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 80%, rgba(255,255,255,.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 50% 20%, rgba(200,220,255,.5) 0%, transparent 70%);
+}
+.scene-airport .plane {
+  position: absolute; top: 30%; left: 55%;
+  width: 80px; height: 20px;
+  background: rgba(255,255,255,.9);
+  clip-path: polygon(0 50%, 15% 20%, 60% 20%, 75% 0, 85% 20%, 100% 35%, 85% 50%, 60% 50%, 15% 80%, 0 50%);
+  transform: rotate(-20deg);
+  z-index: 3;
+}
+.scene-airport .runway {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+  background: linear-gradient(to top, #2d3035, #3d4550 80%, transparent);
+  z-index: 2;
+}
+.scene-airport .runway::after {
+  content: '';
+  position: absolute; top: 30%; left: 10%; right: 10%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255,220,0,.8) 0px, rgba(255,220,0,.8) 20px, transparent 20px, transparent 40px);
+}
+.scene-airport .figures {
+  position: absolute; bottom: 30%; left: 5%; z-index: 3;
+  display: flex; gap: 6px;
+}
+.scene-airport .figure {
+  width: 4px; height: 20px;
+  background: rgba(0,0,0,.5);
+  border-radius: 2px;
+}
+.scene-airport .figure::before {
+  content: ''; display: block;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(0,0,0,.4);
+  margin: -6px -2px 0;
+}
+
+/* Female engineer scene */
+.scene-engineer {
+  background: linear-gradient(135deg, #2a3545 0%, #344055 40%, #1e2c3a 100%);
+  position: relative;
+}
+.scene-engineer::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 70% at 40% 50%, rgba(200,151,42,.15) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 40% at 75% 30%, rgba(255,255,255,.08) 0%, transparent 60%);
+}
+.scene-engineer .hardhat {
+  position: absolute; top: 12%; left: 30%;
+  width: 60px; height: 30px;
+  background: rgba(255,200,0,.85);
+  border-radius: 50% 50% 10% 10%;
+  z-index: 3;
+}
+.scene-engineer .hardhat::after {
+  content: '';
+  position: absolute; bottom: -4px; left: -6px; right: -6px;
+  height: 8px; background: rgba(200,160,0,.8);
+  border-radius: 0 0 4px 4px;
+}
+.scene-engineer .torso {
+  position: absolute; top: 42%; left: 20%; right: 30%;
+  height: 45%;
+  background: linear-gradient(to bottom, rgba(40,60,100,.7), rgba(20,35,60,.9));
+  clip-path: polygon(20% 0, 80% 0, 95% 100%, 5% 100%);
+  z-index: 2;
+}
+.scene-engineer .clipboard {
+  position: absolute; top: 45%; left: 55%;
+  width: 50px; height: 65px;
+  background: rgba(245,235,200,.8);
+  border-radius: 3px;
+  z-index: 3;
+}
+.scene-engineer .clipboard::before {
+  content: '';
+  position: absolute; top: 6px; left: 6px; right: 6px;
+  height: 2px; background: rgba(0,0,0,.3);
+  box-shadow: 0 6px 0 rgba(0,0,0,.2), 0 12px 0 rgba(0,0,0,.2), 0 18px 0 rgba(0,0,0,.15);
+}
+
+/* Kumasi market scene */
+.scene-kumasi {
+  background: linear-gradient(135deg, #5c3d1a 0%, #7a5228 30%, #4a2e10 60%, #2d1a06 100%);
+  position: relative;
+}
+.scene-kumasi::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 70%, rgba(255,180,60,.25) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 30% at 20% 30%, rgba(255,150,30,.2) 0%, transparent 50%);
+}
+.scene-kumasi::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 30%;
+  background: repeating-linear-gradient(90deg, rgba(255,180,60,.08) 0px, rgba(255,180,60,.08) 1px, transparent 1px, transparent 30px);
+}
+.scene-kumasi .canopy {
+  position: absolute; top: 10%; left: -5%; right: -5%;
+  height: 30px;
+  background: linear-gradient(to bottom, rgba(200,100,30,.8), transparent);
+  clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+  z-index: 2;
+}
+.scene-kumasi .shelves {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+  background: repeating-linear-gradient(0deg,
+    rgba(100,60,20,.5) 0px, rgba(100,60,20,.5) 20px,
+    rgba(80,45,15,.5) 20px, rgba(80,45,15,.5) 22px);
+  z-index: 2;
+}
+
+/* Oil/industrial scene */
+.scene-oil {
+  background: linear-gradient(160deg, #0d1a2a 0%, #1a2e42 30%, #0a1520 70%, #050e18 100%);
+  position: relative;
+}
+.scene-oil::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 40% 50% at 60% 50%, rgba(255,120,0,.2) 0%, transparent 60%),
+    radial-gradient(ellipse 20% 30% at 20% 30%, rgba(100,180,255,.12) 0%, transparent 50%);
+}
+.scene-oil .rig {
+  position: absolute; top: 5%; right: 20%;
+  width: 80px; height: 75%;
+  background: repeating-linear-gradient(0deg, rgba(200,160,60,.3) 0px, rgba(200,160,60,.3) 3px, transparent 3px, transparent 20px),
+              repeating-linear-gradient(90deg, rgba(200,160,60,.3) 0px, rgba(200,160,60,.3) 3px, transparent 3px, transparent 20px);
+  z-index: 2;
+}
+.scene-oil .flame {
+  position: absolute; top: 8%; right: 18%;
+  width: 20px; height: 40px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255,60,0,.9), rgba(255,180,0,.6) 40%, transparent 70%);
+  border-radius: 50% 50% 30% 30%;
+  z-index: 3;
+  animation: flicker 1.5s ease-in-out infinite alternate;
+}
+@keyframes flicker { 0%{opacity:.8;transform:scaleX(1)} 100%{opacity:1;transform:scaleX(1.15)} }
+.scene-oil .sea {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 35%;
+  background: linear-gradient(to top, #0a1a2a, #1a3048 60%, transparent);
+  z-index: 2;
+}
+
+/* Northern Ghana scene */
+.scene-north {
+  background: linear-gradient(135deg, #c8a04a 0%, #e8c870 25%, #d4a840 60%, #b88020 100%);
+  position: relative;
+}
+.scene-north::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 100% 40% at 50% 100%, rgba(180,100,20,.6) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 50% 15%, rgba(255,230,150,.4) 0%, transparent 70%);
+}
+.scene-north .tree {
+  position: absolute; bottom: 20%; z-index: 3;
+  width: 10px; background: rgba(80,50,20,.8);
+}
+.scene-north .tree::after {
+  content: '';
+  position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%);
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 40px solid rgba(30,80,30,.7);
+}
+.scene-north .tree:nth-child(1) { height: 60px; left: 10%; }
+.scene-north .tree:nth-child(2) { height: 80px; left: 75%; }
+.scene-north .tree:nth-child(3) { height: 50px; left: 85%; }
+.scene-north .ground {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 25%;
+  background: linear-gradient(to top, #7a5010, #b88020 60%, transparent);
+  z-index: 2;
+}
+.scene-north .hut {
+  position: absolute; bottom: 22%; left: 30%;
+  width: 60px; height: 40px;
+  background: rgba(150,100,50,.8);
+  z-index: 3;
+}
+.scene-north .hut::after {
+  content: '';
+  position: absolute; bottom: 100%; left: -10px; right: -10px;
+  height: 30px;
+  background: rgba(180,120,40,.9);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+/* Portrait / person scene */
+.scene-portrait {
+  background: linear-gradient(145deg, #1e2a20 0%, #2c3e2a 40%, #1a2a1a 100%);
+  position: relative;
+}
+.scene-portrait::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 50% 40%, rgba(200,160,60,.12) 0%, transparent 70%);
+}
+.scene-portrait .person-head {
+  position: absolute; top: 18%; left: 50%; transform: translateX(-50%);
+  width: 70px; height: 80px;
+  background: radial-gradient(ellipse at 50% 40%, #8a6840, #6a4828);
+  border-radius: 50% 50% 40% 40%;
+  z-index: 3;
+}
+.scene-portrait .person-head::after {
+      content: '';
+  position: absolute; top: -15px; left: -8px; right: -8px;
+  height: 30px;
+  background: #1a1008;
+  border-radius: 50%;
+}
+.scene-portrait .person-body {
+  position: absolute; top: 55%; left: 25%; right: 25%;
+  height: 45%;
+  background: linear-gradient(to bottom, #2a3560, #1a2248);
+  clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+  z-index: 2;
+}
+
+/* Generic editorial photo */
+.scene-editorial {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  position: relative;
+}
+.scene-editorial::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 50% 50% at 30% 60%, rgba(200,151,42,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 70% 30%, rgba(255,255,255,.06) 0%, transparent 60%);
+}
+.scene-editorial::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(135deg, transparent, transparent 20px, rgba(255,255,255,.015) 20px, rgba(255,255,255,.015) 21px);
+}
+
+/* Photo grid cells */
+.photo-grid { display: grid; gap: 3px; }
+.photo-grid.two-col { grid-template-columns: 1fr 1fr; }
+.photo-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+.photo-grid.hero-side { grid-template-columns: 1.5fr 1fr; }
+
+/* ── PAGE HEADER / FOOTER ── */
+.page-header { border-bottom: 2px solid var(--ink); padding: 14px 40px; display: flex; align-items: center; justify-content: space-between; background: var(--cream); }
+.ph-brand { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px; color: var(--ink); }
+.ph-brand span { color: var(--gold); }
+.ph-section { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--mid-grey); text-transform: uppercase; }
+.ph-page { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--mid-grey); }
+.page-footer { border-top: 1px solid var(--light-grey); padding: 10px 40px; display: flex; align-items: center; justify-content: space-between; margin-top: auto; background: var(--cream); }
+.pf-text { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--mid-grey); letter-spacing: 1px; }
+
+/* ── COVER ── */
+#cover { background: transparent; min-height: 1123px; }
+.cover-bg-scene {
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, #1a1208 0%, #2a1c08 20%, #180e05 50%, #0a0600 100%);
+}
+.cover-bg-scene::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 40% 55%, rgba(180,120,40,.25) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 50% at 75% 35%, rgba(100,160,220,.1) 0%, transparent 60%),
+    radial-gradient(circle 150px at 40% 55%, rgba(255,160,30,.15) 0%, transparent 100%);
+}
+.cover-bg-scene::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(0,0,0,.75) 0%, rgba(0,0,0,.15) 30%, rgba(0,0,0,.1) 55%, rgba(0,0,0,.92) 100%),
+    repeating-linear-gradient(0deg, transparent 0px, transparent 40px, rgba(255,255,255,.012) 40px, rgba(255,255,255,.012) 41px),
+    repeating-linear-gradient(90deg, transparent 0px, transparent 40px, rgba(255,255,255,.012) 40px, rgba(255,255,255,.012) 41px);
+}
+/* Skyline removed so birds-eye aerial view is visible on cover */
+.cover-skyline { display: none; }
+/* No tint overlay on cover (removes pink/warm cast) */
+.cover-lights {
+  position: absolute; inset: 0; z-index: 2;
+  background: transparent;
+}
+/* Photo pages: black translucent overlay only (no mix-blend-mode to avoid pink cast in PDF). */
+.cover-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{COVER_IMAGE_FILE_URL}}');
+  background-size: 200% 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+}
+.cover-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+.page2-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{COVER_IMAGE_FILE_URL}}');
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  background-repeat: no-repeat;
+}
+.page2-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+#page-6 .page6-hero-wrap {
+  background: #0a0a0a;
+  isolation: isolate;
+}
+#page-6 .page6-photo-bg {
+  position: absolute; left: 0; right: 0; top: 0; height: 320px; z-index: 0;
+  background-image: url('{{PAGE6_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#page-6 .page6-photo-overlay {
+  position: absolute; left: 0; right: 0; top: 0; height: 320px; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Inside front cover = PDF page 2, right half of photo spread */
+.page.inside-front-cover { background: transparent; display: flex; align-items: center; justify-content: center; }
+.p-sep.p-sep-on-photo { background: transparent; color: rgba(255,255,255,.45); }
+#page-2 .page-header,
+#page-2 .page-footer,
+#page-2 .page2-body { position: relative; z-index: 2; }
+#page-2 .page2-body { background: rgba(245,240,232,.92); }
+.cover-content { position: relative; z-index: 10; height: 100%; display: flex; flex-direction: column; padding: 0; }
+.cover-masthead { padding: 28px 40px 20px; border-bottom: 1px solid rgba(200,151,42,.4); display: flex; align-items: center; justify-content: space-between; }
+.cover-local { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--gold); letter-spacing: 4px; line-height: 1; }
+.cover-link-word { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: var(--white); letter-spacing: 4px; line-height: 1; }
+.cover-economist-sub { font-family: 'Cormorant Garamond', serif; font-size: 12px; color: rgba(255,255,255,.45); letter-spacing: 7px; text-transform: uppercase; margin-top: 2px; }
+.cover-vol { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 2px; display: block; text-align: right; }
+.cover-date { font-family: 'DM Mono', monospace; font-size: 9px; color: rgba(255,255,255,.35); letter-spacing: 1px; display: block; text-align: right; }
+.cover-center { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 40px 48px; }
+.cover-overline { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--gold); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 18px; display: flex; align-items: center; gap: 14px; }
+.cover-overline::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
+.cover-headline { font-family: 'Playfair Display', serif; font-size: 76px; font-weight: 900; color: var(--white); line-height: .92; letter-spacing: -2px; margin-bottom: 26px; }
+.cover-headline span { color: var(--gold); font-style: italic; }
+.cover-sub { font-family: 'Source Serif 4', serif; font-size: 15px; color: rgba(255,255,255,.65); font-style: italic; line-height: 1.65; max-width: 500px; margin-bottom: 36px; }
+.cover-teasers { border-top: 1px solid rgba(200,151,42,.3); padding-top: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.ct-label { font-family: 'DM Mono', monospace; font-size: 7px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+.ct-title { font-family: 'Playfair Display', serif; font-size: 12px; color: var(--white); font-weight: 700; line-height: 1.3; }
+.cover-rule { position: absolute; left: 0; top: 0; width: 5px; height: 100%; background: linear-gradient(to bottom, var(--gold), #1a1a1a); }
+
+/* ── CONTENTS ── */
+#contents { background: var(--ink); }
+.cts-header { padding: 48px 50px 0; }
+.cts-eyebrow { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 10px; }
+.cts-title { font-family: 'Playfair Display', serif; font-size: 58px; font-weight: 900; color: var(--cream); line-height: 1; border-bottom: 1px solid rgba(200,151,42,.3); padding-bottom: 28px; margin-bottom: 32px; }
+.cts-grid { padding: 0 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.cts-sec { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 4px; text-transform: uppercase; padding: 16px 0 8px; border-top: 1px solid rgba(255,255,255,.07); margin-top: 6px; }
+.cts-item { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.cts-num { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gold); min-width: 24px; padding-top: 2px; }
+.cts-t { font-family: 'Playfair Display', serif; font-size: 12.5px; color: var(--cream); font-weight: 700; line-height: 1.25; }
+.cts-d { font-family: 'Source Serif 4', serif; font-size: 9.5px; color: rgba(245,240,232,.4); line-height: 1.4; margin-top: 2px; }
+.cts-foot { padding: 28px 50px; display: flex; gap: 20px; align-items: flex-end; }
+.cts-note { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-style: italic; color: rgba(245,240,232,.38); line-height: 1.65; max-width: 340px; }
+
+/* ── SECTION DIVIDERS ── */
+.sec-div { min-height: 1123px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; }
+.div-bg-fill { position: absolute; inset: 0; }
+.div-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,.75) 100%); }
+/* Part One — The Big Picture: black page base + photo + solid black overlay (no cream, no pink) */
+#part-one {
+  background: #000;
+}
+#part-one .part1-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PART1_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#part-one .part1-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Part Two — Brain Drain: full-page photo (black base + solid black overlay, no pink) */
+#part-two {
+  background: #000;
+}
+#part-two .part2-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PART2_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#part-two .part2-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Part Three — TVET: full-bleed photo + solid black overlay (no tint) */
+#part-three {
+  background: #000;
+}
+#part-three .part3-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PART3_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#part-three .part3-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Part Four — Regional Spotlight: full-bleed photo + solid black overlay */
+#part-four {
+  background: #000;
+}
+#part-four .part4-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PART4_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#part-four .part4-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Part Five — Policy, Plans & Politics: full-bleed photo + solid black overlay */
+#part-five {
+  background: #000;
+}
+#part-five .part5-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PART5_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#part-five .part5-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.55);
+  pointer-events: none;
+}
+/* Page 14 — Brain Drain feature: Kotoka / nation's export photo panel (black base = no pink) */
+#page-14 .page14-photo-wrap {
+  position: relative; width: 100%; height: 220px; overflow: hidden;
+  background: #000;
+}
+#page-14 .page14-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PAGE14_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#page-14 .page14-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.45);
+  pointer-events: none;
+}
+/* Page 14: no caption bar on photo panel */
+#page-14 .img-panel .pcap {
+  display: none;
+}
+/* Page 22 — TVET Feature: welding workshop / Accra Technical University photo panel */
+#page-22 .page22-photo-wrap {
+  position: relative; width: 100%; height: 210px; overflow: hidden;
+  background: #000;
+}
+#page-22 .page22-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PAGE22_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#page-22 .page22-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.45);
+  pointer-events: none;
+}
+/* Page 22: no caption bar on photo panel (avoids pink bar) */
+#page-22 .img-panel .pcap {
+  display: none;
+}
+/* Page 44 — Sidebar photo under "Binding employer standards / Proposed" */
+#page-44 .page44-sidebar-photo {
+  position: relative; width: 100%; overflow: hidden; background: #000;
+}
+#page-44 .page44-sidebar-photo-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PAGE44_NAP_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#page-44 .page44-sidebar-photo-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.35);
+  pointer-events: none;
+}
+/* Page 44 — Full-width weaving panel (replaces black square below content) */
+#page-44 .page44-weaving-full {
+  position: relative; width: 100%; height: 680px; overflow: hidden; background: #000; flex-shrink: 0;
+}
+#page-44 .page44-weaving-full-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{PAGE44_WEAVING_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+#page-44 .page44-weaving-full-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.3);
+  pointer-events: none;
+}
+/* Page 30 & 71 — Grace Sarpong, licensed electrician (shared image) */
+.page30-grace-wrap, .page71-grace-wrap { position: relative; overflow: hidden; background: #000; }
+.page30-grace-bg, .page71-grace-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{GRACE_ELECTRICIAN_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.page30-grace-overlay { position: absolute; inset: 0; z-index: 1; background: rgba(0,0,0,.4); pointer-events: none; }
+/* Page 71: no overlay and no caption bar on any panel (no pink) */
+.page71-grace-overlay { position: absolute; inset: 0; z-index: 1; background: transparent; pointer-events: none; }
+.page30-grace-wrap .pcap, .page71-grace-wrap .pcap { display: none; }
+/* Suame Magazine — Kumasi industrial cluster photo panel */
+.suame-magazine-wrap { position: relative; overflow: hidden; background: #000; }
+.suame-magazine-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{SUAME_MAGAZINE_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.suame-magazine-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: rgba(0,0,0,.5);
+  pointer-events: none;
+}
+/* Suame Magazine: no caption bar (avoids pink bar) */
+.suame-magazine-wrap .pcap { display: none; }
+/* Page 70 — Photo Essay: Hands That Build Ghana (Foreman, Welder, Artisan) */
+.page70-foreman-wrap, .page70-welder-wrap, .page70-artisan-wrap { position: relative; overflow: hidden; background: #000; }
+.page70-foreman-bg, .page70-welder-bg, .page70-artisan-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.page70-foreman-bg { background-image: url('{{PAGE70_FOREMAN_IMAGE_FILE_URL}}'); }
+.page70-welder-bg { background-image: url('{{PAGE70_WELDER_IMAGE_FILE_URL}}'); }
+.page70-artisan-bg { background-image: url('{{PAGE70_ARTISAN_IMAGE_FILE_URL}}'); }
+/* Page 70: no overlay and no caption bar (no pink) */
+.page70-foreman-overlay, .page70-welder-overlay, .page70-artisan-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: transparent;
+  pointer-events: none;
+}
+.page70-foreman-wrap .pcap, .page70-welder-wrap .pcap, .page70-artisan-wrap .pcap { display: none; }
+/* Artisan: position image higher so the face is visible */
+.page70-artisan-bg { background-position: center top; }
+/* Page 71 — Photo Essay continued: Nurse, Technician, The North (images, no overlay, no bar) */
+.page71-nurse-wrap, .page71-technician-wrap, .page71-north-wrap { position: relative; overflow: hidden; background: #000; }
+.page71-nurse-bg, .page71-technician-bg, .page71-north-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.page71-nurse-bg { background-image: url('{{PAGE71_NURSE_IMAGE_FILE_URL}}'); }
+.page71-technician-bg { background-image: url('{{PAGE71_TECHNICIAN_IMAGE_FILE_URL}}'); }
+.page71-north-bg { background-image: url('{{PAGE71_NORTH_IMAGE_FILE_URL}}'); }
+.page71-nurse-overlay, .page71-technician-overlay, .page71-north-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: transparent;
+  pointer-events: none;
+}
+.page71-nurse-wrap .pcap, .page71-technician-wrap .pcap, .page71-north-wrap .pcap { display: none; }
+/* Hon. Cecilia Dapaah-Ntim — Minister portrait (Interview page) */
+.cecilia-dapaah-wrap { position: relative; overflow: hidden; background: #000; border: 3px solid var(--gold); }
+.cecilia-dapaah-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{CECILIA_DAPAAH_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.cecilia-dapaah-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.6) 100%);
+  pointer-events: none;
+}
+.div-body { position: relative; z-index: 5; padding: 50px; }
+.div-part { font-family: 'DM Mono', monospace; font-size: 9px; color: rgba(255,255,255,.45); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 14px; }
+.div-rule { width: 48px; height: 3px; background: var(--gold); margin-bottom: 18px; }
+.div-rule.light { background: rgba(255,255,255,.5); }
+.div-title { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; color: #fff; line-height: .92; letter-spacing: -2px; margin-bottom: 20px; }
+.div-sub { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; color: rgba(255,255,255,.58); max-width: 420px; line-height: 1.5; }
+
+/* ── TYPOGRAPHY ── */
+.article-tag { display: inline-block; background: var(--gold); color: #fff; font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 3px; padding: 3px 8px; text-transform: uppercase; margin-bottom: 12px; }
+.story-tag { display: inline-block; border: 1px solid var(--gold); color: var(--gold); font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 3px; padding: 2px 7px; text-transform: uppercase; margin-bottom: 12px; }
+.story-hl { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; line-height: 1.08; color: var(--ink); margin-bottom: 8px; }
+.story-hl.xl { font-size: 34px; }
+.story-hl.sm { font-size: 22px; }
+.story-deck { font-family: 'Source Serif 4', serif; font-size: 12.5px; font-style: italic; color: var(--mid-grey); line-height: 1.55; margin-bottom: 12px; }
+.story-byline { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; padding-bottom: 14px; border-bottom: 2px solid var(--ink); margin-bottom: 0; }
+.story-head { padding: 28px 40px 0; }
+.inline-hl { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; color: var(--ink); margin: 18px 0 8px; line-height: 1.25; }
+p.body { font-family: 'Source Serif 4', serif; font-size: 10.5px; line-height: 1.78; margin-bottom: 12px; color: #1a1a1a; }
+p.body:first-child::first-letter { font-family: 'Playfair Display', serif; font-size: 46px; font-weight: 900; float: left; line-height: .78; margin-right: 8px; margin-top: 6px; color: var(--gold); }
+p.body-sm { font-family: 'Source Serif 4', serif; font-size: 9.5px; line-height: 1.7; margin-bottom: 10px; color: #1a1a1a; }
+.pullquote { border-left: 3px solid var(--gold); padding: 14px 18px; margin: 18px 0; background: rgba(200,151,42,.05); }
+.pq-text { font-family: 'Playfair Display', serif; font-size: 14.5px; font-style: italic; font-weight: 700; color: var(--ink); line-height: 1.42; }
+.pq-attr { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 2px; margin-top: 8px; }
+
+/* ── LAYOUT HELPERS ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px 40px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; padding: 20px 40px; }
+.side-layout { display: grid; grid-template-columns: 1fr 200px; gap: 0; padding: 20px 40px; }
+.side-main { padding-right: 26px; }
+.side-bar { border-left: 2px solid var(--light-grey); padding-left: 18px; }
+
+/* ── CALLOUT STATS ── */
+.callout-row { display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid var(--light-grey); margin: 0 40px 20px; }
+.callout-cell { padding: 18px 14px; border-right: 1px solid var(--light-grey); text-align: center; }
+.callout-cell:last-child { border-right: none; }
+.cal-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; color: var(--ink); line-height: 1; }
+.cal-num.g { color: var(--green); }
+.cal-num.r { color: var(--red); }
+.cal-num span { color: var(--gold); }
+.cal-label { font-family: 'Source Serif 4', serif; font-size: 9px; color: var(--mid-grey); margin-top: 5px; line-height: 1.4; }
+
+/* ── CHARTS ── */
+.chart-box { background: #fafaf6; border: 1px solid var(--light-grey); padding: 18px 20px; margin-bottom: 16px; }
+.chart-title { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--mid-grey); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 14px; }
+.bar-chart { display: flex; flex-direction: column; gap: 9px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-lbl { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--ink); min-width: 100px; text-align: right; }
+.bar-track { flex: 1; height: 13px; background: var(--light-grey); }
+.bar-fill { height: 100%; background: var(--green); }
+.bar-fill.gld { background: var(--gold); }
+.bar-fill.red { background: var(--red); }
+.bar-fill.slt { background: var(--slate); }
+.bar-val { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--mid-grey); min-width: 42px; }
+
+/* ── SIDEBAR WIDGETS ── */
+.sw { margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--light-grey); }
+.sw:last-child { border-bottom: none; }
+.sw-head { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+.sw-list { list-style: none; }
+.sw-list li { font-family: 'Source Serif 4', serif; font-size: 9.5px; color: var(--ink); padding: 5px 0; border-bottom: 1px solid var(--light-grey); line-height: 1.4; }
+.sw-list li:last-child { border-bottom: none; }
+.sw-list li span { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 8px; display: block; }
+.stat-block { margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--light-grey); }
+.stat-block:last-child { border-bottom: none; }
+.stat-n { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; color: var(--ink); line-height: 1; }
+.stat-n span { color: var(--gold); }
+.stat-l { font-family: 'Source Serif 4', serif; font-size: 10px; color: var(--mid-grey); margin-top: 4px; line-height: 1.45; }
+
+/* ── MISC ── */
+.gold-rule { width: 38px; height: 2px; background: var(--gold); margin-bottom: 12px; }
+.hl-rule { height: 3px; background: linear-gradient(to right, var(--gold), var(--light-grey)); margin-bottom: 10px; }
+.divider-rule { width: 100%; height: 1px; background: var(--light-grey); margin: 14px 0; }
+.number-feature { display: flex; gap: 0; margin: 0 40px 20px; border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); background: #fafaf6; }
+.nf-item { flex: 1; text-align: center; padding: 16px 8px; border-right: 1px solid var(--light-grey); }
+.nf-item:last-child { border-right: none; }
+.nf-num { font-family: 'Bebas Neue', sans-serif; font-size: 44px; color: var(--ink); line-height: 1; letter-spacing: 1px; }
+.nf-num span { color: var(--gold); }
+.nf-lbl { font-family: 'DM Mono', monospace; font-size: 7.5px; color: var(--mid-grey); letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.45; }
+.advert-strip { border: 2px solid var(--gold); padding: 14px 16px; display: flex; gap: 16px; margin: 14px 0; background: rgba(200,151,42,.04); }
+.ad-label { font-family: 'DM Mono', monospace; font-size: 7px; color: var(--gold); letter-spacing: 3px; writing-mode: vertical-rl; text-transform: uppercase; padding-right: 8px; border-right: 1px solid rgba(200,151,42,.3); }
+.ad-hl { font-family: 'Playfair Display', serif; font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.ad-body { font-family: 'Source Serif 4', serif; font-size: 9px; color: var(--mid-grey); line-height: 1.5; }
+.data-hl { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 900; margin-bottom: 5px; }
+.data-sub { font-family: 'Source Serif 4', serif; font-size: 10.5px; color: var(--mid-grey); font-style: italic; margin-bottom: 18px; }
+table.glt { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+table.glt th { font-family: 'DM Mono', monospace; font-size: 7.5px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--ink); padding: 7px 5px; text-align: left; }
+table.glt td { font-family: 'Source Serif 4', serif; padding: 6px 5px; border-bottom: 1px solid var(--light-grey); color: var(--ink); line-height: 1.45; }
+table.glt tr:last-child td { border-bottom: none; }
+table.glt td.n { font-family: 'DM Mono', monospace; color: var(--green); font-size: 9px; text-align: right; }
+table.glt td.ng { color: var(--red); }
+.region-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 12px 40px; flex: 1; }
+.region-card { border: 1px solid var(--light-grey); padding: 16px; }
+.region-card:nth-child(even) { border-left: none; }
+.region-card:nth-child(n+3) { border-top: none; }
+.rg-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 900; color: var(--ink); }
+.rg-sub { font-family: 'DM Mono', monospace; font-size: 7.5px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+.rg-text { font-family: 'Source Serif 4', serif; font-size: 9.5px; line-height: 1.65; color: #222; }
+.rg-stat { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--light-grey); font-family: 'DM Mono', monospace; font-size: 8px; color: var(--mid-grey); letter-spacing: 1px; }
+.rg-stat strong { color: var(--ink); font-size: 15px; display: block; font-family: 'Playfair Display', serif; margin-bottom: 2px; }
+.qa-block { margin-bottom: 16px; }
+.qa-q { font-family: 'Playfair Display', serif; font-size: 11px; font-weight: 700; font-style: italic; color: var(--gold); margin-bottom: 5px; line-height: 1.4; }
+.qa-a { font-family: 'Source Serif 4', serif; font-size: 10.5px; line-height: 1.72; color: var(--ink); }
+.credits-box { background: var(--light-grey); padding: 16px 20px; margin-bottom: 16px; }
+.credits-box h4 { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 9px; }
+.credits-box p { font-family: 'Source Serif 4', serif; font-size: 9px; color: var(--mid-grey); line-height: 1.6; }
+.disclaimer { font-family: 'Source Serif 4', serif; font-size: 8.5px; color: var(--mid-grey); line-height: 1.65; }
+.p-sep { text-align: center; padding: 8px 0; background: var(--ink); font-family: 'DM Mono', monospace; font-size: 8px; color: rgba(255,255,255,.2); letter-spacing: 3px; text-transform: uppercase; width: 794px; }
+/* opinion banner */
+.op-banner { background: var(--dark-red); padding: 18px 40px; display: flex; align-items: center; gap: 16px; }
+.op-label { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #fff; letter-spacing: 3px; }
+.op-rule { flex: 1; height: 1px; background: rgba(255,255,255,.2); }
+.op-auth { font-family: 'DM Mono', monospace; font-size: 8px; color: rgba(255,255,255,.5); letter-spacing: 2px; text-transform: uppercase; text-align: right; }
+/* interview header */
+.int-header { background: var(--ink); padding: 32px 40px 26px; position: relative; overflow: hidden; }
+.int-header::after { content: '"'; position: absolute; right: 24px; bottom: -30px; font-family: 'Playfair Display', serif; font-size: 220px; font-weight: 900; color: rgba(200,151,42,.1); line-height: 1; }
+.int-tag { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
+.int-name { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 900; color: #fff; line-height: 1; margin-bottom: 7px; }
+.int-title { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-style: italic; color: rgba(255,255,255,.45); }
+/* back cover — img in DOM so PDF always shows it; CSS background as fallback */
+#back-cover {
+  min-height: 1123px; display: flex; flex-direction: column; position: relative; overflow: hidden;
+  background-image: url('{{BACK_COVER_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.back-cover-img {
+  position: absolute; inset: 0; z-index: 0;
+  width: 100%; height: 100%; object-fit: cover; object-position: center;
+  pointer-events: none;
+}
+.back-cover-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image: url('{{BACK_COVER_IMAGE_FILE_URL}}');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.back-cover-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: transparent;
+  pointer-events: none;
+}
+#back-cover .bc-rule, #back-cover .bc-top, #back-cover .bc-body, #back-cover .bc-bottom { position: relative; z-index: 2; }
+/* Back cover text readability: dark text-shadow so text reads on photo */
+#back-cover .bc-brand, #back-cover .bc-tagline, #back-cover .bc-quote, #back-cover .bc-attr,
+#back-cover .bc-top div, #back-cover .bc-contact h4, #back-cover .bc-contact p,
+#back-cover .bc-next > div { text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 14px rgba(0,0,0,.85), 0 2px 4px rgba(0,0,0,.9); }
+#back-cover .bc-quote { text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 20px rgba(0,0,0,.9), 0 2px 6px rgba(0,0,0,.95); }
+.bc-rule { position: absolute; left: 0; top: 0; width: 5px; height: 100%; background: linear-gradient(to bottom, var(--gold), var(--dark-red)); }
+.bc-top { padding: 36px 48px 26px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; justify-content: space-between; align-items: flex-start; }
+.bc-brand { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 3px; color: #fff; }
+.bc-brand span { color: var(--gold); }
+.bc-tagline { font-family: 'Cormorant Garamond', serif; font-size: 12px; font-style: italic; color: rgba(255,255,255,.92); letter-spacing: 1px; }
+.bc-body { flex: 1; padding: 44px 48px 0; }
+.bc-quote { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 900; font-style: italic; color: #fff; line-height: 1.2; max-width: 560px; margin-bottom: 16px; }
+.bc-attr { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; }
+.bc-bottom { padding: 28px 48px 38px; display: flex; justify-content: space-between; align-items: flex-end; }
+.bc-contact h4 { font-family: 'DM Mono', monospace; font-size: 8px; color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 9px; }
+.bc-contact p { font-family: 'Source Serif 4', serif; font-size: 10px; color: rgba(255,255,255,.9); line-height: 1.6; }
+.bc-next { text-align: right; }
+.bc-next-lbl { font-family: 'DM Mono', monospace; font-size: 8px; color: rgba(255,255,255,.9); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+.bc-next-t { font-family: 'Playfair Display', serif; font-size: 15px; font-style: italic; color: rgba(255,255,255,.95); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     FRONT COVER
+══════════════════════════════════════════════════════════════ -->
+<div class="page" id="cover">
+  <div class="cover-photo-bg" aria-hidden="true"></div>
+  <div class="cover-photo-overlay" aria-hidden="true"></div>
+  <div class="cover-rule"></div>
+  <div class="cover-skyline"></div>
+  <div class="cover-lights"></div>
+
+  <div class="cover-content">
+    <div class="cover-masthead">
+    <div>
+        <div style="display:flex;align-items:baseline">
+          <span class="cover-local">LOCAL</span><span class="cover-link-word">LINK</span>
+    </div>
+        <div class="cover-economist-sub">Economist</div>
+      </div>
+      <div>
+        <span class="cover-vol">Vol. 01 &nbsp;·&nbsp; Issue 01</span>
+        <span class="cover-date">January 2026 &nbsp;·&nbsp; GH₵ 25.00 / $3.50</span>
+      </div>
+  </div>
+
+    <div class="cover-center">
+      <div class="cover-overline">Special Report</div>
+      <div class="cover-headline">
+        The State of<br><span>Skilled Labour</span><br>in Ghana
+      </div>
+      <div class="cover-sub">
+        From the artisan quarters of Kumasi to the construction sites of Accra, Ghana's 13 million-strong workforce stands at a crossroads — trapped between ambition and infrastructure, talent and opportunity.
+      </div>
+      <div class="cover-teasers">
+        <div>
+          <div class="ct-label">Also Inside</div>
+          <div class="ct-title">The Brain Drain Crisis: Why Ghana's Best Are Leaving</div>
+        </div>
+        <div>
+          <div class="ct-label">Regional Focus</div>
+          <div class="ct-title">Kumasi vs Accra: Two Cities, One Labour Market</div>
+        </div>
+        <div>
+          <div class="ct-label">Interview</div>
+          <div class="ct-title">Minister of Employment on TVET Reform &amp; the Future of Work</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:22px;right:40px;text-align:right;z-index:10;">
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.25);letter-spacing:1px;">ISSN 0000-0000 &nbsp;·&nbsp; GH₵ 25.00</div>
+  </div>
+  </div>
+
+<!-- Page 2 of PDF = inside front cover (right half of Ghana photo spread) -->
+<div class="page inside-front-cover">
+  <div class="page2-photo-bg" aria-hidden="true"></div>
+  <div class="page2-photo-overlay" aria-hidden="true"></div>
+  <div class="p-sep p-sep-on-photo" style="position:relative;z-index:2;">— inside front cover —</div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 3 — MASTHEAD
+══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-2">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Masthead</div>
+    <div class="ph-page">02</div>
+    </div>
+  <div class="page2-body" style="padding:36px 40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1;">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--light-grey);padding-bottom:8px;margin-bottom:14px;">Editorial</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Kwame A. Mensah</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Editor-in-Chief</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Abena Osei-Kuffour</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Deputy Editor, Economics</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Kofi Darko Asante</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Senior Correspondent, Labour &amp; Industry</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Ama Boateng</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Data Journalist</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Prince Nkrumah-Yeboah</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Regional Editor, Northern Ghana</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Efua Quartey</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Policy Correspondent</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Yaw Owusu</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:18px;">Features Writer</div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--light-grey);padding-bottom:8px;margin-bottom:14px;">Photography &amp; Design</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Nana Addo Boateng</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Photo Editor</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Adjoa Mensah-Ankrah</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Art Director</div>
+  </div>
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--light-grey);padding-bottom:8px;margin-bottom:14px;">Business &amp; Operations</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Sophia Asamoah</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Managing Director</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Daniel Ofori</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">Head of Advertising</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Grace Asante</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:18px;">Circulation Manager</div>
+
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--light-grey);padding-bottom:8px;margin-bottom:14px;">Advisory Board</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Prof. Kojo Ennin Aryeetey</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">ISSER, University of Ghana</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Dr. Edith Dankwa</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:10px;">GIMPA, Accra</div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:var(--ink);">Ing. Kwabena Asante-Poku</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-bottom:20px;">Ghana Institution of Engineers</div>
+
+      <div class="credits-box">
+        <h4>About LocalLink Economist</h4>
+        <p>LocalLink Economist is Ghana's premier business and economic intelligence publication, connecting professionals, policymakers, and entrepreneurs with rigorous, locally grounded analysis. Published monthly from Accra, we cover the economic forces shaping West Africa's most dynamic nation.</p>
+      </div>
+      <div class="disclaimer">© 2026 LocalLink Media Group, Accra. All rights reserved. Reproduction of any content without prior written permission is prohibited. The views expressed in opinion pieces are those of their authors and do not represent the editorial position of LocalLink Economist. Printed in Ghana on FSC-certified paper.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">LOCALLINK MEDIA GROUP · ACCRA, GHANA</div>
+  </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 3–4 — CONTENTS
+══════════════════════════════════════════════════════════════ -->
+<div class="page" id="contents">
+  <div class="cts-header">
+    <div class="cts-eyebrow">Table of Contents</div>
+    <div class="cts-title">Vol. 01<br>January 2026</div>
+  </div>
+  <div class="cts-grid">
+    <div>
+      <div class="cts-sec">Features</div>
+      <div class="cts-item"><div class="cts-num">06</div><div><div class="cts-t">The State of Skilled Labour in Ghana</div><div class="cts-d">A sweeping survey of Ghana's workforce — who they are, where they work, and what they earn</div></div></div>
+      <div class="cts-item"><div class="cts-num">14</div><div><div class="cts-t">The Brain Drain Paradox</div><div class="cts-d">Why Ghana's best-trained workers keep leaving — and what it costs the economy</div></div></div>
+      <div class="cts-item"><div class="cts-num">22</div><div><div class="cts-t">TVET: The Forgotten Ladder</div><div class="cts-d">Technical education holds the key. So why has it remained stigmatised for decades?</div></div></div>
+      <div class="cts-item"><div class="cts-num">30</div><div><div class="cts-t">Women in the Trades</div><div class="cts-d">Female artisans, engineers, and electricians are transforming what skilled labour looks like</div></div></div>
+      <div class="cts-sec">Analysis</div>
+      <div class="cts-item"><div class="cts-num">38</div><div><div class="cts-t">Wage Data Deep-Dive</div><div class="cts-d">Charts and breakdowns of pay across sectors and regions</div></div></div>
+      <div class="cts-item"><div class="cts-num">44</div><div><div class="cts-t">Policy Watch: The National Apprenticeship Programme</div><div class="cts-d">A promising scheme — but implementation gaps threaten its potential</div></div></div>
+    </div>
+    <div>
+      <div class="cts-sec">Regional Spotlight</div>
+      <div class="cts-item"><div class="cts-num">50</div><div><div class="cts-t">Accra: The White-Collar Magnet</div><div class="cts-d">How the capital's services economy is reshaping national labour flows</div></div></div>
+      <div class="cts-item"><div class="cts-num">54</div><div><div class="cts-t">Kumasi: The Artisan Capital</div><div class="cts-d">The Ashanti craftsman tradition meets 21st-century market demands</div></div></div>
+      <div class="cts-item"><div class="cts-num">58</div><div><div class="cts-t">The North: Talent Without Infrastructure</div><div class="cts-d">Tamale and beyond — abundant workers, scarce opportunity</div></div></div>
+      <div class="cts-sec">Interview &amp; Opinion</div>
+      <div class="cts-item"><div class="cts-num">62</div><div><div class="cts-t">In Conversation: Minister of Employment</div><div class="cts-d">On TVET reform, youth unemployment, and the 2030 skills agenda</div></div></div>
+      <div class="cts-item"><div class="cts-num">66</div><div><div class="cts-t">Opinion: Stop Romanticising the Informal Sector</div><div class="cts-d">By Prof. Kojo E. Aryeetey — the informal economy is a symptom, not a solution</div></div></div>
+      <div class="cts-item"><div class="cts-num">70</div><div><div class="cts-t">Photo Essay: Hands That Build Ghana</div><div class="cts-d">A visual celebration of artisans, engineers, and everyday workers</div></div></div>
+      <div class="cts-item"><div class="cts-num">74</div><div><div class="cts-t">Reference Data: Key Labour Statistics</div><div class="cts-d">Tables, indicators, and sectoral breakdowns for 2023–2025</div></div></div>
+      <div class="cts-item"><div class="cts-num">76</div><div><div class="cts-t">Five Priorities for Ghana's Labour Market in 2026</div><div class="cts-d">The editors' assessment of what must happen next</div></div></div>
+    </div>
+  </div>
+  <div class="cts-foot">
+    <div class="cts-note">"The conversation about Ghana's labour market has for too long been dominated by statistics alone. This edition puts faces to the numbers."<br><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:2px;display:block;margin-top:8px;">— Kwame A. Mensah, Editor-in-Chief</span></div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGE 5 — EDITOR'S LETTER
+══════════════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">From the Editor</div>
+    <div class="ph-page">05</div>
+  </div>
+  <div style="padding:26px 40px 0;margin-bottom:14px;">
+    <div class="gold-rule"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;line-height:1.12;color:var(--ink);margin-bottom:6px;">A Nation of Builders Waiting to Be Built</div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;">Letter from the Editor-in-Chief</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 240px;gap:30px;padding:20px 40px;flex:1;">
+    <div>
+      <p class="body">Ghana is not short of talent. Walk through the workshops of Suame Magazine in Kumasi — the largest informal industrial cluster on the African continent — and you will encounter mechanics who can diagnose a diesel engine by ear, welders whose joints could hold a bridge together, and carpenters whose work graces the finest homes in Cantonments. The hands that built this country are extraordinary.</p>
+      <p class="body">And yet something is broken. Ghana's unemployment rate among those aged 15 to 35 hovers around 12 percent — but the youth underemployment figure, capturing those working far below their potential, stretches to nearly 40 percent. Across the country, employers report critical skills shortages in fields from construction to healthcare, from software engineering to electrical installation. Supply and demand have become tragically misaligned.</p>
+      <p class="body">This inaugural edition of the LocalLink Economist sets out to understand why. Over the past three months, our team has travelled to Accra, Kumasi, Tamale, Takoradi, and Cape Coast. We have spoken to 200 workers, 60 employers, 15 policymakers, and a dozen academics. The picture that emerges is complex, human, and urgent.</p>
+      <p class="body">There is genuine cause for optimism. Ghana's TVET sector, long stigmatised as the destination of those who failed the university entrance exam, is experiencing a quiet renaissance. The National Apprenticeship Programme has registered over 300,000 apprentices since 2022. Women are entering skilled trades in rising numbers. The digital economy is creating entirely new categories of skilled work that did not exist a decade ago.</p>
+      <p class="body">But the obstacles are formidable. Brain drain continues to bleed the country of its most expensively trained professionals. Wage inequality between Accra and the north is widening, not narrowing. And the informal economy — lauded by some as proof of Ghanaian entrepreneurialism — too often means exploited workers with no protections and no path to advancement.</p>
+      <p class="body">We launch this magazine because we believe the conversation about Ghana's labour market deserves more than policy briefs and development-bank reports. It deserves rigour, narrative, and honesty. We hope this first volume earns your trust and your challenge.</p>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--light-grey);">
+        <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--ink);">Kwame A. Mensah</div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:2px;margin-top:3px;">Editor-in-Chief, LocalLink Economist</div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:1px;margin-top:2px;">Accra, January 2026</div>
+      </div>
+    </div>
+    <div style="border-left:2px solid var(--gold);padding-left:18px;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;margin-bottom:16px;">By the Numbers</div>
+      <div class="stat-block"><div class="stat-n">12.4<span>%</span></div><div class="stat-l">Youth unemployment rate (ages 15–35), Q3 2025</div></div>
+      <div class="stat-block"><div class="stat-n">39<span>%</span></div><div class="stat-l">Youth underemployment rate — working below skill level</div></div>
+      <div class="stat-block"><div class="stat-n">2.1<span>M</span></div><div class="stat-l">Workers in informal apprenticeships nationwide</div></div>
+      <div class="stat-block"><div class="stat-n"><span style="font-size:16px">GH₵</span> 2,400</div><div class="stat-l">Median monthly wage, urban skilled worker, 2025</div></div>
+      <div class="stat-block"><div class="stat-n">68<span>%</span></div><div class="stat-l">Share of Ghana's workforce in the informal economy</div></div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">05</div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION DIVIDER 1 — The Big Picture (photo: food processing / workforce)
+══════════════════════════════════════════════════════════════ -->
+<div class="page sec-div" id="part-one">
+  <div class="part1-photo-bg" aria-hidden="true"></div>
+  <div class="part1-photo-overlay" aria-hidden="true"></div>
+  <div class="div-body">
+    <div class="div-part">Part One</div>
+    <div class="div-rule"></div>
+    <div class="div-title">The Big<br>Picture</div>
+    <div class="div-sub">Mapping Ghana's workforce — its scale, its structure, and its silent crisis</div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PAGES 6–7 — COVER STORY OPENER (photo hero: same treatment as cover)
+══════════════════════════════════════════════════════════════ -->
+<div class="page" id="page-6">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Special Report — Skilled Labour</div>
+    <div class="ph-page">06</div>
+  </div>
+  <!-- Hero: pottery/workshop photo, same neutral overlay as cover (no pink) -->
+  <div class="page6-hero-wrap" style="position:relative;height:320px;">
+    <div class="page6-photo-bg" aria-hidden="true"></div>
+    <div class="page6-photo-overlay" aria-hidden="true"></div>
+    <div style="position:absolute;bottom:30px;left:40px;z-index:5;">
+      <div style="font-family:'Playfair Display',serif;font-size:10px;color:rgba(255,255,255,.55);font-style:italic;">Pottery workshop, Ghana — artisan at work</div>
+    </div>
+    <div class="article-tag" style="position:absolute;top:24px;left:40px;z-index:5;">Special Report</div>
+    <div style="position:absolute;bottom:60px;left:40px;right:40px;z-index:5;">
+      <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:900;color:#fff;line-height:.95;letter-spacing:-1px;">A Nation of Hands:<br>Ghana's Skilled Labour<br>Economy in 2026</div>
+    </div>
+    <div class="pcap" style="position:absolute;bottom:12px;left:40px;z-index:5;">Photo: Nana Addo Boateng / LocalLink Economist</div>
+  </div>
+  <div style="padding:24px 40px 0;">
+    <div style="font-family:'Source Serif 4',serif;font-size:13px;font-style:italic;color:var(--mid-grey);line-height:1.55;margin-bottom:12px;">Ghana has 13 million working-age adults in the formal and informal economy. Fewer than a third have recognised qualifications. The rest — the majority — work by instinct, by apprenticeship, and by necessity. Understanding them is the only way to build an economy that works.</div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;padding-bottom:14px;border-bottom:2px solid var(--ink);">By Kofi Darko Asante &nbsp;·&nbsp; Senior Correspondent, Labour &amp; Industry</div>
+  </div>
+  <div class="three-col" style="padding-top:18px;">
+    <div>
+      <p class="body">The morning shift at the Tema Industrial Area begins before sunrise. By 5:45am, hundreds of workers in overalls and hard hats are threading through the gates of factories, workshops, and depots. Some have travelled two hours from Ashaiman; others live in compounds that crowd the estate itself. All of them are, in some sense, skilled: they operate lathes, read blueprints, mix chemicals. Most have never held a certificate that says so.</p>
+      <p class="body-sm">Ghana's skilled labour market is, above all else, enormous and informal. Of approximately 13 million people in the active workforce, the Ghana Statistical Service estimates that just 31 percent hold any nationally recognised qualification. The remaining 69 percent have acquired their skills through traditional apprenticeships, on-the-job learning, or family transmission going back generations.</p>
+    </div>
+    <div>
+      <div class="pullquote">
+        <div class="pq-text">"We have been training artisans in this country for 400 years. We just forgot to give them certificates for it."</div>
+        <div class="pq-attr">— Ing. Kwabena Asante-Poku, Ghana Institution of Engineers</div>
+      </div>
+      <p class="body-sm">This is not unusual in sub-Saharan Africa. But Ghana's particular challenge is that the gap between informal competence and formal recognition is growing wider at exactly the moment when global supply chains demand traceable, certifiable workforces. A Ghanaian contractor bidding for a World Bank project must provide certified tradespeople. The informal skills that built the country are, quietly, becoming commercially insufficient.</p>
+    </div>
+    <div>
+      <p class="body-sm">Nowhere is this tension more visible than in construction — Ghana's second-largest employer of skilled labour after agriculture. The sector employs an estimated 800,000 people: masons, carpenters, plumbers, electricians, steel fixers — the overwhelming majority of whom learned their trade from a master craftsman in an arrangement unchanged since the colonial era.</p>
+      <p class="body-sm">"I have been building houses for twenty-two years," says Kwesi Agyei, 46, foreman in Spintex. "I have built over 200 structures. But if I apply for a senior site manager job on a formal project, they ask for my NVQ certificate. I do not have one. So I am invisible to them."</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">06 — 07</div>
+    </div>
+  </div>
+
+<!-- PAGE 08 — Numbers + continued -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Special Report — Skilled Labour</div>
+    <div class="ph-page">08</div>
+  </div>
+  <div style="padding:20px 40px 0;">
+    <div class="number-feature">
+      <div class="nf-item"><div class="nf-num">13<span>M</span></div><div class="nf-lbl">Active workforce</div></div>
+      <div class="nf-item"><div class="nf-num">68<span>%</span></div><div class="nf-lbl">Informally employed</div></div>
+      <div class="nf-item"><div class="nf-num">2.1<span>M</span></div><div class="nf-lbl">Apprentices active</div></div>
+      <div class="nf-item"><div class="nf-num">800<span>K</span></div><div class="nf-lbl">Construction workers</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="inline-hl">The Sector Breakdown</div>
+      <p class="body">Ghana's formal skilled labour market is dominated by four sectors. Construction and real estate accounts for roughly 19 percent of skilled employment. The broader services sector — encompassing banking, telecoms, retail, hospitality, and the rapidly expanding tech industry — employs around 28 percent. Manufacturing contributes 16 percent. Healthcare employs approximately 8 percent of formally recognised skilled workers.</p>
+      <p class="body-sm">Agriculture, which remains Ghana's largest sector by workforce share (41 percent of total employment), presents a paradox. Cocoa farming requires extraordinary skill: grafting, pest management, fermentation, post-harvest handling. But agricultural workers are almost entirely classified as "unskilled" in national statistics — a categorisation that enrages rural economists and reflects a deep urban bias in how Ghana defines and values labour.</p>
+      <p class="body-sm">"If you can manage a 10-hectare cocoa farm, negotiate with LBC buyers, maintain soil health, and predict yield — that is not unskilled work," says Dr. Edith Dankwa of GIMPA. "We have made a category error that distorts our entire labour policy."</p>
+      <div class="inline-hl">The Wage Ladder</div>
+      <p class="body-sm">Among formally employed skilled workers, wages vary dramatically. Software engineers in Accra's tech ecosystem command GH₵ 8,000–15,000 per month. Junior doctors and nurses in public hospitals earn GH₵ 4,000–7,000. A certified electrician working for a construction firm earns perhaps GH₵ 1,800–2,500 monthly. A plumber on daily rates might clear GH₵ 80–120 per day when work is available — which is rarely five days a week, year-round.</p>
+    </div>
+    <div>
+      <p class="body">The regional disparity is stark. The median monthly wage for a skilled urban worker in Greater Accra is GH₵ 2,780. In the Northern Region, the figure falls to GH₵ 1,340 — barely half. In the Upper East and Upper West regions, the median drops further still. The North is not lacking in skilled workers; it is lacking in employers willing to pay skilled wages.</p>
+      <div class="pullquote">
+        <div class="pq-text">"The North is not lacking in skilled workers — it is lacking in employers willing to pay skilled wages."</div>
+        <div class="pq-attr">— Ama Boateng, Data Journalist, LocalLink Economist</div>
+      </div>
+      <p class="body-sm">This geographic wage gap has a predictable consequence: southward migration. The Ghana Living Standards Survey of 2024 found that 38 percent of Northern Region youth aged 18–30 had relocated or planned to relocate to Greater Accra, Ashanti, or Western regions within three years. The towns and villages of the north are aging. The skilled young are leaving.</p>
+      <div class="advert-strip">
+        <div class="ad-label">Advertisement</div>
+        <div>
+          <div class="ad-hl">Accra Technical University — TVET Excellence Since 1949</div>
+          <div class="ad-body">Enrol in our nationally accredited programmes in Electrical Engineering, Mechanical Technology, and Construction Management. HND, BTech, and MTech available. Visit atu.edu.gh</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">08 — 09</div>
+    </div>
+  </div>
+
+<!-- PAGE 10 — DATA -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Data &amp; Analysis</div>
+    <div class="ph-page">10</div>
+  </div>
+  <div style="padding:24px 40px;">
+    <div class="data-hl">Ghana's Labour Market at a Glance</div>
+    <div class="data-sub">Selected indicators, 2022–2025. Source: Ghana Statistical Service; ILO; LocalLink Economist Research</div>
+    <div class="callout-row" style="margin:0 0 20px;">
+      <div class="callout-cell"><div class="cal-num g">13.2<span style="font-size:16px">M</span></div><div class="cal-label">Total active workforce (2025 est.)</div></div>
+      <div class="callout-cell"><div class="cal-num r">12.4<span style="font-size:16px">%</span></div><div class="cal-label">Youth unemployment rate (15–35 yrs)</div></div>
+      <div class="callout-cell"><div class="cal-num">GH₵<span style="font-size:18px"> 576</span></div><div class="cal-label">National daily minimum wage (2025)</div></div>
+      <div class="callout-cell"><div class="cal-num g">+4.1<span style="font-size:16px">%</span></div><div class="cal-label">Real wage growth 2023–2025</div></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Skilled Workers by Sector — Share of Formal Employment (%)</div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-lbl">Services &amp; Finance</div><div class="bar-track"><div class="bar-fill gld" style="width:72%"></div></div><div class="bar-val">28%</div></div>
+        <div class="bar-row"><div class="bar-lbl">Construction</div><div class="bar-track"><div class="bar-fill" style="width:49%"></div></div><div class="bar-val">19%</div></div>
+        <div class="bar-row"><div class="bar-lbl">Manufacturing</div><div class="bar-track"><div class="bar-fill slt" style="width:41%"></div></div><div class="bar-val">16%</div></div>
+        <div class="bar-row"><div class="bar-lbl">Healthcare</div><div class="bar-track"><div class="bar-fill red" style="width:21%"></div></div><div class="bar-val">8%</div></div>
+        <div class="bar-row"><div class="bar-lbl">Education</div><div class="bar-track"><div class="bar-fill gld" style="width:18%"></div></div><div class="bar-val">7%</div></div>
+        <div class="bar-row"><div class="bar-lbl">ICT &amp; Digital</div><div class="bar-track"><div class="bar-fill" style="width:15%"></div></div><div class="bar-val">6%</div></div>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Median Monthly Wage by Region — Formal Skilled Workers (GH₵)</div>
+      <div class="bar-chart">
+        <div class="bar-row"><div class="bar-lbl">Greater Accra</div><div class="bar-track"><div class="bar-fill gld" style="width:100%"></div></div><div class="bar-val">GH₵ 2,780</div></div>
+        <div class="bar-row"><div class="bar-lbl">Western</div><div class="bar-track"><div class="bar-fill gld" style="width:79%"></div></div><div class="bar-val">GH₵ 2,200</div></div>
+        <div class="bar-row"><div class="bar-lbl">Ashanti</div><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><div class="bar-val">GH₵ 2,090</div></div>
+        <div class="bar-row"><div class="bar-lbl">Central</div><div class="bar-track"><div class="bar-fill slt" style="width:62%"></div></div><div class="bar-val">GH₵ 1,720</div></div>
+        <div class="bar-row"><div class="bar-lbl">Brong-Ahafo</div><div class="bar-track"><div class="bar-fill slt" style="width:57%"></div></div><div class="bar-val">GH₵ 1,580</div></div>
+        <div class="bar-row"><div class="bar-lbl">Northern</div><div class="bar-track"><div class="bar-fill red" style="width:48%"></div></div><div class="bar-val">GH₵ 1,340</div></div>
+        <div class="bar-row"><div class="bar-lbl">Upper East/West</div><div class="bar-track"><div class="bar-fill red" style="width:38%"></div></div><div class="bar-val">GH₵ 1,060</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">10</div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION DIVIDER 2 — Brain Drain (photo: brain / neural network)
+══════════════════════════════════════════════════════════════ -->
+<div class="page sec-div" id="part-two">
+  <div class="part2-photo-bg" aria-hidden="true"></div>
+  <div class="part2-photo-overlay" aria-hidden="true"></div>
+  <div class="div-body">
+    <div class="div-part">Part Two</div>
+    <div class="div-rule"></div>
+    <div class="div-title">The Brain<br>Drain<br>Paradox</div>
+    <div class="div-sub">Ghana invests billions in training its best workers — then watches them board flights to London, Toronto, and Dubai</div>
+  </div>
+  </div>
+
+<!-- PAGE 14 — Brain Drain Feature (photo: Ghana Gas / export) -->
+<div class="page" id="page-14">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature — Brain Drain</div>
+    <div class="ph-page">14</div>
+  </div>
+  <div class="img-panel page14-photo-wrap">
+    <div class="page14-photo-bg" aria-hidden="true"></div>
+    <div class="page14-photo-overlay" aria-hidden="true"></div>
+    <div class="pcap" style="z-index:5;">Kotoka International Airport, Accra — arrivals and departures that tell a story of a nation's most valuable export</div>
+  </div>
+  <div class="story-head">
+    <span class="story-tag">Feature</span>
+    <div class="story-hl xl">The Departure Tax: How Ghana Subsidises the World's Workforce</div>
+    <div class="story-deck">Every year, Ghana spends approximately GH₵ 1.8 billion training doctors, engineers, and nurses. Thousands of them never work a single day in Ghana. This is the story of that extraordinary subsidy — and who pays for it.</div>
+    <div class="story-byline">By Abena Osei-Kuffour &nbsp;·&nbsp; Deputy Editor, Economics</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <p class="body">The University of Ghana Medical School graduates between 250 and 300 doctors every year. In 2024, an analysis by the Ghana Health Service found that just 41 percent of medical graduates in the five-year cohort 2019–2023 were still working in Ghana. The rest had emigrated — primarily to the United Kingdom, Canada, and the United States.</p>
+      <p class="body-sm">The pattern repeats across professions. The Nurses and Midwives Council estimates that 18,000 registered nurses left the country between 2020 and 2025, many recruited directly by NHS England. The Ghana Institution of Engineers puts the emigration rate for newly licensed engineers at approximately 22 percent within three years of qualification.</p>
+      <p class="body-sm">"I do not think of it as leaving," says Abena Frimpong, 28, a software engineer who moved to Berlin in 2023. "I think of it as extending my education. There are things I learn here that I can bring back. Maybe. The question is when 'maybe' becomes 'never.'"</p>
+    </div>
+    <div>
+      <div class="pullquote">
+        <div class="pq-text">"41% of medical graduates from Ghana's 2019–2023 cohort were still working in Ghana. The rest had emigrated."</div>
+        <div class="pq-attr">— Ghana Health Service Analysis, 2024</div>
+      </div>
+      <p class="body-sm">The economic arithmetic is brutal. Training a doctor in Ghana costs the state approximately GH₵ 180,000–220,000. When that doctor emigrates and builds a career in the NHS, Ghana has effectively made a gift to the British health system. The World Bank estimated in 2023 that sub-Saharan African countries collectively transfer more in trained human capital to OECD nations each year than they receive in official development aid.</p>
+      <p class="body-sm">The irony is that many Ghanaian emigrants remain emotionally connected to home. Remittances totalled $4.7 billion in 2024, making them Ghana's second-largest source of foreign exchange after gold. The brain drain and the remittance economy are two sides of the same coin.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">14 — 15</div>
+    </div>
+  </div>
+
+<!-- PAGE 16 — Brain Drain Data -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature — Brain Drain</div>
+    <div class="ph-page">16</div>
+  </div>
+  <div style="padding:24px 40px;">
+    <div class="data-hl">The Cost of Departure: Emigration by Profession</div>
+    <div class="data-sub">Estimated annual emigration rates for selected professions, 2020–2025 average. Source: Professional bodies; GSS; LocalLink Economist estimates</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <div class="chart-box">
+          <div class="chart-title">Professionals Emigrating Annually — Estimates</div>
+          <div class="bar-chart">
+            <div class="bar-row"><div class="bar-lbl">Registered Nurses</div><div class="bar-track"><div class="bar-fill red" style="width:100%"></div></div><div class="bar-val">3,600/yr</div></div>
+            <div class="bar-row"><div class="bar-lbl">ICT Professionals</div><div class="bar-track"><div class="bar-fill red" style="width:67%"></div></div><div class="bar-val">1,200/yr</div></div>
+            <div class="bar-row"><div class="bar-lbl">Teachers (trained)</div><div class="bar-track"><div class="bar-fill gld" style="width:50%"></div></div><div class="bar-val">1,100/yr</div></div>
+            <div class="bar-row"><div class="bar-lbl">Engineers</div><div class="bar-track"><div class="bar-fill gld" style="width:39%"></div></div><div class="bar-val">850/yr</div></div>
+            <div class="bar-row"><div class="bar-lbl">Accountants</div><div class="bar-track"><div class="bar-fill slt" style="width:28%"></div></div><div class="bar-val">600/yr</div></div>
+            <div class="bar-row"><div class="bar-lbl">Medical Doctors</div><div class="bar-track"><div class="bar-fill red" style="width:25%"></div></div><div class="bar-val">~160/yr</div></div>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Push vs Pull Factors — Survey of 500 Ghanaian Emigrants (2025)</div>
+          <div class="bar-chart">
+            <div class="bar-row"><div class="bar-lbl">Higher wages abroad</div><div class="bar-track"><div class="bar-fill red" style="width:86%"></div></div><div class="bar-val">86%</div></div>
+            <div class="bar-row"><div class="bar-lbl">Better career prospects</div><div class="bar-track"><div class="bar-fill red" style="width:78%"></div></div><div class="bar-val">78%</div></div>
+            <div class="bar-row"><div class="bar-lbl">Poor work conditions</div><div class="bar-track"><div class="bar-fill gld" style="width:61%"></div></div><div class="bar-val">61%</div></div>
+            <div class="bar-row"><div class="bar-lbl">Family already abroad</div><div class="bar-track"><div class="bar-fill" style="width:49%"></div></div><div class="bar-val">49%</div></div>
+            <div class="bar-row"><div class="bar-lbl">Political instability</div><div class="bar-track"><div class="bar-fill slt" style="width:34%"></div></div><div class="bar-val">34%</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="chart-box" style="height:fit-content;">
+          <div class="chart-title">Top Destination Countries — Ghanaian Skilled Workers (2024)</div>
+          <!-- SVG Donut Chart -->
+          <svg viewBox="0 0 200 200" style="width:160px;display:block;margin:10px auto 16px;">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#e8e4dc" stroke-width="30"/>
+            <!-- UK 39% -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#c0392b" stroke-width="30"
+              stroke-dasharray="171 274" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+            <!-- Canada 25% -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#c8972a" stroke-width="30"
+              stroke-dasharray="110 335" stroke-dashoffset="-171" transform="rotate(-90 100 100)"/>
+            <!-- USA 16% -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#1a5c3a" stroke-width="30"
+              stroke-dasharray="70 375" stroke-dashoffset="-281" transform="rotate(-90 100 100)"/>
+            <!-- Germany 9% -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#2c3e50" stroke-width="30"
+              stroke-dasharray="40 405" stroke-dashoffset="-351" transform="rotate(-90 100 100)"/>
+            <!-- Other 11% -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#888" stroke-width="30"
+              stroke-dasharray="48 397" stroke-dashoffset="-391" transform="rotate(-90 100 100)"/>
+            <text x="100" y="95" text-anchor="middle" font-family="'DM Mono',monospace" font-size="11" fill="#0d0d0d" font-weight="500">Dest.</text>
+            <text x="100" y="111" text-anchor="middle" font-family="'DM Mono',monospace" font-size="11" fill="#0d0d0d" font-weight="500">Split</text>
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:#c0392b;flex-shrink:0;"></div><span style="font-family:'DM Mono',monospace;font-size:8.5px;flex:1;">United Kingdom</span><span style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mid-grey);">39%</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:#c8972a;flex-shrink:0;"></div><span style="font-family:'DM Mono',monospace;font-size:8.5px;flex:1;">Canada</span><span style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mid-grey);">25%</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:#1a5c3a;flex-shrink:0;"></div><span style="font-family:'DM Mono',monospace;font-size:8.5px;flex:1;">USA</span><span style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mid-grey);">16%</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:#2c3e50;flex-shrink:0;"></div><span style="font-family:'DM Mono',monospace;font-size:8.5px;flex:1;">Germany</span><span style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mid-grey);">9%</span></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;border-radius:50%;background:#888;flex-shrink:0;"></div><span style="font-family:'DM Mono',monospace;font-size:8.5px;flex:1;">Other</span><span style="font-family:'DM Mono',monospace;font-size:8.5px;color:var(--mid-grey);">11%</span></div>
+          </div>
+        </div>
+        <div style="background:rgba(192,57,43,.06);border-left:3px solid var(--red);padding:16px;margin-top:16px;">
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;">Cost to Ghana</div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--red);">GH₵ 1.8<span style="font-size:16px;">B</span></div>
+          <div style="font-family:'Source Serif 4',serif;font-size:9px;color:var(--mid-grey);line-height:1.5;margin-top:4px;">Estimated annual training expenditure on professionals who subsequently emigrate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">16 — 17</div>
+    </div>
+  </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION DIVIDER 3 — TVET (photo: hands on technical equipment)
+══════════════════════════════════════════════════════════════ -->
+<div class="page sec-div" id="part-three">
+  <div class="part3-photo-bg" aria-hidden="true"></div>
+  <div class="part3-photo-overlay" aria-hidden="true"></div>
+  <div class="div-body">
+    <div class="div-part">Part Three</div>
+    <div class="div-rule"></div>
+    <div class="div-title">TVET:<br>The Forgotten<br>Ladder</div>
+    <div class="div-sub">Technical and vocational training holds the key to Ghana's skills future. So why has it been treated as an afterthought for fifty years?</div>
+  </div>
+</div>
+
+<!-- PAGE 22 — TVET Feature (photo: welding workshop / Accra Technical University) -->
+<div class="page" id="page-22">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature — TVET Reform</div>
+    <div class="ph-page">22</div>
+  </div>
+  <div class="img-panel page22-photo-wrap">
+    <div class="page22-photo-bg" aria-hidden="true"></div>
+    <div class="page22-photo-overlay" aria-hidden="true"></div>
+    <div class="pcap" style="z-index:5;">Welding workshop, Accra Technical University — student demonstration, October 2025</div>
+  </div>
+  <div class="story-head">
+    <span class="story-tag">Feature</span>
+    <div class="story-hl xl">The School Nobody Wanted to Attend — Until Now</div>
+    <div class="story-deck">Ghana's TVET sector has long been the education system's unloved stepchild. A new generation of graduates, employers, and reformers are changing that narrative — slowly, but with gathering momentum.</div>
+    <div class="story-byline">By Yaw Owusu &nbsp;·&nbsp; Features Writer</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <p class="body">In the Ghanaian school system, the phrase "you will end up in a technical school" was, for generations, a threat. When a child failed the Basic Education Certificate Examination, the path to a vocational institution was presented not as an alternative but as a consolation — evidence of academic inadequacy. The stigma was reinforced by families, teachers, and employers alike, and produced predictable results: TVET institutions chronically underfunded, undersubscribed, and equipped with machinery dating in some cases to the 1970s.</p>
+      <p class="body-sm">That story is changing, though not yet fast enough. Between 2020 and 2025, enrolment in accredited TVET programmes increased by 34 percent. The National Apprenticeship Programme has registered over 300,000 apprentices. Several private technical training providers — among them Cowtec Institute and the Zongo Skills Centre in Kumasi — have built strong employer partnerships and impressive graduate employment rates.</p>
+      <p class="body-sm">"When I told my father I was going to Accra Technical University, he was disappointed," says Samuel Asante, 24, now a certified electrical engineer earning GH₵ 3,200 monthly in the oil and gas sector. "Two years later, he was asking his friends to send their children there. That is the shift."</p>
+    </div>
+    <div>
+      <p class="body">But the structural challenges are formidable. COTVET operates with a budget that remains a fraction of the Ministry of Education's university allocation. Equipment upgrades lag years behind industry requirements: electrical training workshops teaching students on panel boards that predate digital control systems; automotive labs servicing carburettor engines in an era of ECU-managed fuel injection.</p>
+      <div class="pullquote">
+        <div class="pq-text">"How do I train a student to service a modern EV when my workshop's newest vehicle is a 2003 Toyota Corolla?"</div>
+        <div class="pq-attr">— Head of Dept., Automotive Technology, Kumasi Technical University</div>
+      </div>
+      <p class="body-sm">Curriculum reform has also lagged. The TVET curriculum was last comprehensively overhauled in 2015. Since then, the construction industry has adopted Building Information Modelling; manufacturing has embraced Industry 4.0 automation; the energy sector has pivoted toward solar. None of these are adequately represented in current TVET syllabuses.</p>
+      <p class="body-sm">There are green shoots. The TVET Policy 2022 committed the government to a 70:30 STEM ratio in vocational curricula. The Ghana Employers' Association has piloted a "dual apprenticeship" model adapted from Germany. Early results are promising. But pilots are not policy, and good intentions are not budgets.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">22 — 23</div>
+  </div>
+</div>
+
+<!-- PAGE 30 — Women in the Trades -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Feature — Women &amp; Work</div>
+    <div class="ph-page">30</div>
+  </div>
+  <div class="photo-grid two-col" style="height:240px;padding:0 40px;">
+    <div class="img-panel page30-grace-wrap" style="height:240px;">
+      <div class="page30-grace-bg" aria-hidden="true"></div>
+      <div class="page30-grace-overlay" aria-hidden="true"></div>
+      <div class="pcap" style="z-index:5;">Grace Sarpong, licensed electrician, East Legon</div>
+    </div>
+    <div class="img-panel scene-workshop" style="height:240px;">
+      <div class="spark"></div><div class="spark"></div><div class="spark"></div>
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:4;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:5;text-align:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#fff;line-height:1.1;">18<span style="color:var(--gold);">%</span></div>
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase;margin-top:6px;">Women in Technical<br>TVET Programmes</div>
+        <div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);letter-spacing:1px;margin-top:4px;">Up from 9% in 2018</div>
+      </div>
+    </div>
+  </div>
+  <div class="story-head">
+    <span class="story-tag">Feature</span>
+    <div class="story-hl xl">The Women Rewiring Ghana's Trades</div>
+    <div class="story-deck">Female electricians, welders, quantity surveyors, and mechanics are entering Ghana's skilled trades at unprecedented rates — challenging gender norms and stale assumptions about who builds the country.</div>
+    <div class="story-byline">By Efua Quartey &nbsp;·&nbsp; Policy Correspondent</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <p class="body">Grace Adwoa Sarpong, 27, has been a licensed electrician for three years. Her tools are organised with the meticulousness of a surgeon's tray; her knowledge of the National Wiring Regulations is encyclopaedic; her client list, built entirely by word of mouth in East Legon, is longer than she can service. She also happens to be, in many of her clients' homes, the first female electrician they have ever employed.</p>
+      <p class="body-sm">"At first they always want to call my supervisor to confirm I know what I am doing," she says, laughing. "Then I fix the thing. Then they refer me to five of their neighbours." The pattern — initial scepticism followed by professional conversion — is one Grace's fellow female tradespeople recognise uniformly.</p>
+      <p class="body-sm">Women account for an estimated 18 percent of graduates from TVET programmes in technical disciplines. That share has nearly doubled since 2018, driven by targeted scholarship programmes and female-only cohorts at institutions like Kumasi Technical University.</p>
+    </div>
+    <div>
+      <p class="body">The economics of gender in skilled trades are complex. Women in the formal sector — those employed by construction firms or utilities — generally earn the same as male counterparts with equivalent qualifications. The National Labour Commission's 2024 audit found no statistically significant gender pay gap in formally employed technical workers.</p>
+      <div class="pullquote">
+        <div class="pq-text">"My male colleagues charge GH₵ 150 per day. I charged GH₵ 100. Now I charge GH₵ 180. It took three years to get there."</div>
+        <div class="pq-attr">— Female electrician, Tema, age 31</div>
+      </div>
+      <p class="body-sm">The informal sector is a different story. Self-employed female tradespeople report consistently charging lower rates than male equivalents, partly by customer expectation and partly by their own initial reluctance to assert market value. The gap narrows sharply with experience and reputation. But it is real, and it matters.</p>
+      <p class="body-sm">What the data cannot capture is the symbolic significance of the shift. When a girl in Tamale sees a female engineer on a construction hoarding; when a TVET counsellor says "we have many successful women in this programme" — something structural is changing. It changes slowly. But it is changing.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">30 — 31</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION DIVIDER 4 — Regional Spotlight (photo: women in workshop)
+══════════════════════════════════════════════════════════════ -->
+<div class="page sec-div" id="part-four">
+  <div class="part4-photo-bg" aria-hidden="true"></div>
+  <div class="part4-photo-overlay" aria-hidden="true"></div>
+  <div class="div-body">
+    <div class="div-part">Part Four</div>
+    <div class="div-rule"></div>
+    <div class="div-title">Regional<br>Spotlight</div>
+    <div class="div-sub">Three cities, three economies, three labour markets — one country trying to hold them together</div>
+  </div>
+</div>
+
+<!-- PAGE 50 — Regional Overview -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Regional Spotlight</div>
+    <div class="ph-page">50</div>
+  </div>
+  <div style="padding:20px 40px 0;">
+    <div class="hl-rule"></div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">Ghana's Labour Markets — City by City</div>
+  </div>
+  <div class="region-grid">
+    <div class="region-card">
+      <div class="img-panel scene-editorial" style="height:100px;margin-bottom:10px;border-radius:2px;">
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;">
+          <div style="text-align:center;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);letter-spacing:4px;">ACCRA</div>
+            <div style="font-family:'DM Mono',monospace;font-size:7px;color:rgba(255,255,255,.4);letter-spacing:2px;">5°33'N · 0°12'W</div>
+          </div>
+        </div>
+      </div>
+      <div class="rg-name">Accra</div>
+      <div class="rg-sub">Greater Accra Region · Pop. 4.2M</div>
+      <p class="rg-text">Ghana's capital and commercial engine is overwhelmingly a services and white-collar economy. The ICT and fintech sectors have exploded, adding an estimated 35,000 jobs between 2022 and 2025. Construction booms across Cantonments, East Legon, and Airport Hills. The labour market is deep, competitive, and increasingly stratified between a formal professional class and a vast army of informal workers who service them.</p>
+      <div class="rg-stat"><strong>GH₵ 2,780</strong>Median skilled monthly wage · 38% formal employment rate</div>
+    </div>
+    <div class="region-card">
+      <div class="img-panel scene-kumasi" style="height:100px;margin-bottom:10px;border-radius:2px;">
+        <div class="canopy"></div><div class="shelves"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;">
+          <div style="text-align:center;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);letter-spacing:4px;">KUMASI</div>
+            <div style="font-family:'DM Mono',monospace;font-size:7px;color:rgba(255,255,255,.4);letter-spacing:2px;">6°41'N · 1°37'W</div>
+          </div>
+        </div>
+      </div>
+      <div class="rg-name">Kumasi</div>
+      <div class="rg-sub">Ashanti Region · Pop. 3.6M</div>
+      <p class="rg-text">Ghana's second city is the nation's artisan capital. Suame Magazine — with over 200,000 workers across 12,000 workshops — is the largest informal industrial cluster in Africa. Metalwork, auto repair, woodworking, and fabrication dominate. Kumasi's challenge is not talent; it is formalisation. The city's craftspeople are extraordinarily skilled but largely uncertified, cutting them off from larger contracts and export markets.</p>
+      <div class="rg-stat"><strong>GH₵ 2,090</strong>Median skilled monthly wage · Suame Magazine: 200,000+ workers</div>
+    </div>
+    <div class="region-card">
+      <div class="img-panel scene-oil" style="height:100px;margin-bottom:10px;border-radius:2px;">
+        <div class="rig"></div><div class="flame"></div><div class="sea"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;">
+          <div style="text-align:center;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);letter-spacing:4px;">TAKORADI</div>
+            <div style="font-family:'DM Mono',monospace;font-size:7px;color:rgba(255,255,255,.4);letter-spacing:2px;">4°53'N · 1°45'W</div>
+          </div>
+        </div>
+      </div>
+      <div class="rg-name">Takoradi</div>
+      <div class="rg-sub">Western Region · Pop. 445K</div>
+      <p class="rg-text">The discovery of the Jubilee oil field in 2007 transformed Takoradi from a sleepy port into an industrial hub. The oil and gas sector has created significant skilled labour demand — and a significant skills mismatch. Operators report persistent difficulty recruiting locally for specialist roles, while thousands of Takoradi residents with general engineering backgrounds cannot get placements. Offshore drilling requires certification unavailable at any Ghanaian institution.</p>
+      <div class="rg-stat"><strong>GH₵ 2,200</strong>Median skilled monthly wage · Oil sector: ~22,000 formal jobs</div>
+    </div>
+    <div class="region-card">
+      <div class="img-panel scene-north" style="height:100px;margin-bottom:10px;border-radius:2px;">
+        <div class="tree"></div><div class="tree"></div><div class="tree"></div>
+        <div class="ground"></div><div class="hut"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:5;">
+          <div style="text-align:center;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--ink);letter-spacing:4px;">TAMALE</div>
+            <div style="font-family:'DM Mono',monospace;font-size:7px;color:rgba(0,0,0,.5);letter-spacing:2px;">9°24'N · 0°50'W</div>
+          </div>
+        </div>
+      </div>
+      <div class="rg-name">Tamale</div>
+      <div class="rg-sub">Northern Region · Pop. 700K</div>
+      <p class="rg-text">Tamale is the North's most important economic centre — a growing city with a young, ambitious population, good TVET institutions, and a fundamental structural problem: most large employers are not here. Workers who gain qualifications too often see their options as the public sector (low-paying, competitive), agriculture (not their aspiration), or southward migration. The Tamale Special Economic Zone could change this — but it remains, as of January 2026, more plan than reality.</p>
+      <div class="rg-stat"><strong>GH₵ 1,340</strong>Median skilled monthly wage · Youth migration rate: 38%</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">50 — 51</div>
+  </div>
+</div>
+
+<!-- PAGE 54 — Kumasi Deep Dive -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Regional Spotlight — Kumasi</div>
+    <div class="ph-page">54</div>
+  </div>
+  <div class="img-panel suame-magazine-wrap" style="height:260px;">
+    <div class="suame-magazine-bg" aria-hidden="true"></div>
+    <div class="suame-magazine-overlay" aria-hidden="true"></div>
+    <div style="position:absolute;bottom:40px;left:40px;right:40px;z-index:5;">
+      <div style="font-family:'Playfair Display',serif;font-size:38px;font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;">Suame Magazine<br><span style="color:var(--gold);">200,000 Workers.</span></div>
+    </div>
+    <div class="pcap" style="z-index:5;">Africa's largest informal industrial cluster, Kumasi — spanning 400 acres, 12,000 workshops</div>
+  </div>
+  <div class="story-head">
+    <span class="story-tag">Regional Focus</span>
+    <div class="story-hl">Suame Magazine: Africa's Greatest Workshop — and Its Greatest Untapped Asset</div>
+    <div class="story-deck">200,000 workers. 12,000 workshops. Generations of inherited craft knowledge. Suame Magazine is Ghana's most extraordinary labour market. It is also almost entirely invisible to the formal economy.</div>
+    <div class="story-byline">By Kofi Darko Asante &nbsp;·&nbsp; Senior Correspondent</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <p class="body">To walk through Suame Magazine is to understand that the dichotomy between "formal" and "informal" labour is a bureaucratic convenience, not an economic reality. Here, in a sprawling 400-acre complex of sheds and workshops in the heart of Kumasi, 200,000 workers practise trades of extraordinary complexity. Men in their twenties diagnose computer-managed engine faults with diagnostic tablets. Fabricators build custom trailers for mining companies. Foundry workers cast aluminium components sold across West Africa.</p>
+      <p class="body-sm">The cluster was established in the 1970s, when Kumasi's mechanics began congregating in this district for mutual convenience. It has grown organically ever since, now employing more workers than Ghana's entire formal manufacturing sector. The average worker has been in their trade for 14 years. The average master craftsman has trained between 8 and 12 apprentices.</p>
+    </div>
+    <div>
+      <p class="body">Yet Suame Magazine is almost entirely excluded from Ghana's formal economy. Workers are not registered with SSNIT. They do not hold recognised qualifications. They cannot bid on government contracts. They cannot access commercial loans — at least not from banks, who view their income as unverifiable. They exist in an economic twilight that is simultaneously extraordinarily productive and utterly precarious.</p>
+      <div class="pullquote">
+        <div class="pq-text">"I have trained eleven apprentices in thirty years. Not one of them has a certificate. But every one of them can fix anything you bring me."</div>
+        <div class="pq-attr">— Master mechanic, Suame Magazine, age 58</div>
+      </div>
+      <p class="body-sm">"When the government comes, they come to take," says Emmanuel Acheampong, 41, an auto electrician. "They have not yet come to give." Until the social contract changes, formalisation will remain aspirational — and Suame's extraordinary workers will remain invisible on the ledgers that measure Ghana's prosperity.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">54 — 55</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION DIVIDER 5 — Policy
+══════════════════════════════════════════════════════════════ -->
+<div class="page sec-div" id="part-five">
+  <div class="part5-photo-bg" aria-hidden="true"></div>
+  <div class="part5-photo-overlay" aria-hidden="true"></div>
+  <div class="div-body">
+    <div class="div-part">Part Five</div>
+    <div class="div-rule"></div>
+    <div class="div-title">Policy,<br>Plans &amp;<br>Politics</div>
+    <div class="div-sub">What the government says it will do, what experts think it should do, and the gap between the two</div>
+  </div>
+</div>
+
+<!-- PAGE 44 — Policy Analysis (Binding employer standards) -->
+<div class="page" id="page-44">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Policy Watch</div>
+    <div class="ph-page">44</div>
+  </div>
+  <div class="story-head">
+    <span class="story-tag">Policy Analysis</span>
+    <div class="story-hl xl">The National Apprenticeship Programme: Promise vs Performance</div>
+    <div class="story-deck">Ghana's flagship skills programme has 300,000 registered apprentices and strong political backing. But implementation gaps, funding shortfalls, and a persistent quality problem are limiting its transformative potential.</div>
+    <div class="story-byline">By Efua Quartey &nbsp;·&nbsp; Policy Correspondent</div>
+  </div>
+  <div class="side-layout" style="flex:1;">
+    <div class="side-main">
+      <p class="body">The National Apprenticeship Programme (NAP), launched by the Ministry of Employment in 2022, aimed to bring Ghana's 2.1 million informal apprentices into a formal framework: registered, assessed, certified, and connected to employers who would provide placement opportunities upon graduation. Three years in, the headline numbers are impressive. 312,000 apprentices are registered. 68,000 have completed the programme and received certificates. COTVET reports that 74 percent of certified graduates found employment within six months.</p>
+      <p class="body-sm">But the picture below the headlines is more complicated. Fieldwork by LocalLink Economist, conducted across 12 districts between September and November 2025, found persistent problems with programme quality. In several districts, NAP was little more than a registration exercise: apprentices were enrolled on paper, their masters collected stipend payments of GH₵ 400 per month per apprentice, and no substantive assessment or training support was provided. "I signed the form," says one master baker in Koforidua. "I received the money. No one came to assess me or my apprentices. What programme?"</p>
+      <div class="inline-hl">The Assessment Problem</div>
+      <p class="body-sm">The assessment system is a particular weakness. COTVET has 340 certified assessors for over 300,000 registered apprentices — a ratio that makes meaningful individual assessment logistically impossible. The result is "certificate inflation": the credential exists but carries limited information about actual competency. Employers in the formal sector are beginning to notice, with several construction firms reverting to their own in-house testing.</p>
+      <p class="body-sm">The programme's champions argue that these are scaling problems, not design failures. "Any programme of this size will have implementation gaps in its early years," says a senior official at the Ministry, speaking off the record. "The infrastructure is being built at the same time as the programme is running. That is not ideal. But the alternative was to wait until everything was perfect, and never start."</p>
+      <div class="pullquote">
+        <div class="pq-text">"Better to certify 50,000 workers properly than 300,000 workers on paper."</div>
+        <div class="pq-attr">— Prof. Kojo E. Aryeetey, ISSER/UG</div>
+      </div>
+      <p class="body-sm">Critics, led by researchers at ISSER, argue that the political incentive to report large enrolment numbers is precisely the problem. A programme designed to demonstrate scale will always prioritise quantity over quality. Real reform requires binding minimum standards for assessment frequency, mandatory employer engagement, and an independent verification mechanism — none of which currently exist within the NAP framework.</p>
+    </div>
+    <div class="side-bar">
+      <div class="sw">
+        <div class="sw-head">NAP at a Glance</div>
+        <ul class="sw-list">
+          <li>Registered apprentices <span>312,000</span></li>
+          <li>Completions (2022–25) <span>68,000</span></li>
+          <li>Employment rate (6-mo) <span>74%</span></li>
+          <li>Certified assessors <span>340</span></li>
+          <li>Annual budget <span>GH₵ 280M</span></li>
+          <li>Trades covered <span>47</span></li>
+    </ul>
+      </div>
+      <div class="sw">
+        <div class="sw-head">Top Trades Enrolled</div>
+        <ul class="sw-list">
+          <li>Auto Mechanics <span>18%</span></li>
+          <li>Electrical Installation <span>14%</span></li>
+          <li>Carpentry &amp; Joinery <span>12%</span></li>
+          <li>Plumbing &amp; Pipefitting <span>9%</span></li>
+          <li>Welding &amp; Fabrication <span>8%</span></li>
+          <li>Masonry &amp; Tiling <span>7%</span></li>
+          <li>Dressmaking <span>6%</span></li>
+        </ul>
+      </div>
+      <div class="sw">
+        <div class="sw-head">Expert View</div>
+        <div style="font-family:'Source Serif 4',serif;font-size:9px;color:var(--ink);line-height:1.6;font-style:italic;">"The NAP is the right idea. The problem is it tries to be universal when it should be selective and excellent."<br><span style="font-style:normal;color:var(--gold);font-family:'DM Mono',monospace;font-size:7.5px;display:block;margin-top:5px;">— Prof. K.E. Aryeetey, ISSER</span></div>
+      </div>
+      <div class="sw">
+        <div class="sw-head">Key Reform Asks</div>
+        <ul class="sw-list">
+          <li>Assessor expansion to 1,500 <span>By end-2026</span></li>
+          <li>Digital assessment pilot <span>Q2 2026</span></li>
+          <li>Independent audit of certificates <span>Overdue</span></li>
+          <li>Binding employer standards <span>Proposed</span></li>
+        </ul>
+      </div>
+      <div class="img-panel page44-sidebar-photo" style="margin-top:14px;height:160px;">
+        <div class="page44-sidebar-photo-bg" aria-hidden="true"></div>
+        <div class="page44-sidebar-photo-overlay" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+  <div class="img-panel page44-weaving-full">
+    <div class="page44-weaving-full-bg" aria-hidden="true"></div>
+    <div class="page44-weaving-full-overlay" aria-hidden="true"></div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">44 — 45</div>
+  </div>
+  </div>
+
+<!-- PAGE 62 — INTERVIEW -->
+<div class="page">
+  <div class="int-header">
+    <div class="int-tag">In Conversation</div>
+    <div class="int-name">Hon. Cecilia<br>Dapaah-Ntim</div>
+    <div class="int-title">Minister of Employment and Labour Relations, Republic of Ghana</div>
+  </div>
+  <div style="display:grid;grid-template-columns:200px 1fr;gap:28px;padding:28px 40px;flex:1;">
+    <!-- Minister portrait -->
+    <div>
+      <div class="img-panel cecilia-dapaah-wrap" style="height:250px;">
+        <div class="cecilia-dapaah-bg" aria-hidden="true"></div>
+        <div class="cecilia-dapaah-overlay" aria-hidden="true"></div>
+        <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;z-index:5;">
+          <div style="font-family:'DM Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.6);letter-spacing:1.5px;">Hon. Cecilia Dapaah-Ntim</div>
+        </div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:7.5px;color:var(--mid-grey);line-height:1.5;margin-top:10px;letter-spacing:1px;">Interviewed at the Ministry of Employment, Accra, December 2025. Interview edited for length and clarity.</div>
+    </div>
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--mid-grey);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--light-grey);">Interviewed by Abena Osei-Kuffour, Deputy Editor</div>
+      <div class="qa-block">
+        <div class="qa-q">Minister, the NAP has 300,000 registered apprentices. But critics say the quality is inconsistent. How do you respond?</div>
+        <div class="qa-a">Every large programme has teething problems. What I will tell you is that the 68,000 young people who have completed the NAP and hold certificates are in far better positions than they would have been without it. We acknowledge the quality challenges. That is why we are tripling the number of assessors in 2026 and introducing digital assessment tools that allow remote evaluation. We are building the aircraft while flying it, yes — but the alternative was to leave 300,000 young Ghanaians with no recognised pathway at all.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">Ghana loses thousands of nurses and doctors to the UK every year. Does the government have a real strategy to address this?</div>
+        <div class="qa-a">This is one of the most difficult challenges we face, and I will not pretend otherwise. The salary differential is real. A newly qualified nurse in the NHS earns the sterling equivalent of approximately GH₵ 18,000 per month. We cannot match that. What we can do — and are doing — is improve working conditions, accelerate specialist training, and negotiate ethical recruitment agreements with destination countries. The UK-Ghana health worker compact of 2024 was a step. More steps are needed.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">What is your 2030 vision for Ghana's skills landscape?</div>
+        <div class="qa-a">By 2030, I want every Ghanaian with a marketable skill to have a nationally recognised credential for it — whether acquired in a university, a TVET institution, an apprenticeship, or forty years on the job. I want regional wage gaps to be narrowing, not widening. And I want the young woman in Tamale who wants to be an engineer to see our TVET system as a genuine ladder to that ambition, not a consolation prize. That is the vision. We are nowhere near it yet. But it is the right direction.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">62 — 63</div>
+    </div>
+  </div>
+
+<!-- PAGE 66 — OPINION -->
+<div class="page">
+  <div class="op-banner">
+    <div class="op-label">Opinion</div>
+    <div class="op-rule"></div>
+    <div class="op-auth">By Prof. Kojo Ennin Aryeetey<br>ISSER, University of Ghana</div>
+  </div>
+  <div style="padding:26px 40px 0;">
+    <div class="story-hl xl">Stop Romanticising the Informal Economy</div>
+    <div class="story-deck">The informal sector is not a triumph of Ghanaian entrepreneurialism. It is a symptom of policy failure. Treating it as anything else is dangerous self-congratulation.</div>
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:2px;border-bottom:2px solid var(--dark-red);padding-bottom:14px;margin-bottom:0;">Prof. Kojo Ennin Aryeetey &nbsp;·&nbsp; Institute of Statistical, Social &amp; Economic Research, University of Ghana, Legon</div>
+  </div>
+  <div class="two-col">
+    <div>
+      <p class="body">There is a rhetorical move that Ghanaian politicians, development economists, and well-meaning journalists make with depressing regularity. Confronted with data showing that 68 percent of Ghana's workforce is informally employed, they pivot to celebration: look at the ingenuity of our market women, the resilience of our artisans, the entrepreneurial spirit of our informal economy. It is emotionally satisfying, culturally resonant, and analytically bankrupt.</p>
+      <p class="body-sm">Let us be clear about what the informal economy actually is. It is the portion of economic activity that occurs outside the framework of legal registration, tax obligation, labour protection, and social insurance. Informal workers cannot access SSNIT pensions. They have no sick leave, no maternity pay, no recourse when injured. They cannot access formal credit. They cannot bid for government contracts. They are, in the most material sense, economically second-class citizens — and we applaud them for their "resilience" in tolerating these conditions.</p>
+      <p class="body-sm">The Suame Magazine story is instructive. The 200,000 workers in that complex are genuinely skilled. Their productivity is real. Their contribution to the Kumasi economy is substantial. But they operate without the institutional scaffolding that would allow them to grow, invest, protect themselves, and pass wealth to their children. An informal mechanic who is just as skilled as a formally employed engineer earns a fraction as much, has no path to promotion, no pension, and no ability to borrow against his future earnings. That is not resilience. That is deprivation with a positive reframe.</p>
+    </div>
+    <div>
+      <p class="body">The danger of romanticisation is not merely rhetorical. It shapes policy. When government officials point to the informal sector's dynamism as evidence that things are fundamentally fine, they reduce the urgency of the reforms that would actually integrate these workers into formal economic life: the SSNIT reform, the SME credit guarantee scheme, the Recognition of Prior Learning framework that would allow informal workers to gain credentials for skills they already have.</p>
+      <div class="pullquote" style="border-color:var(--dark-red);">
+        <div class="pq-text">"We applaud informal workers for their 'resilience' in tolerating conditions that no formal worker would accept. That is not a compliment. It is a failing."</div>
+        <div class="pq-attr" style="color:var(--dark-red);">— Prof. Kojo E. Aryeetey</div>
+      </div>
+      <p class="body-sm">I am not suggesting that the informal sector should be criminalised or that its workers are victims without agency. Many informal entrepreneurs are building real businesses; many artisans prefer flexibility to formal employment. The point is that the choice between formal and informal should be a genuine choice, made from a position of equal information and opportunity. Currently, it is not.</p>
+      <p class="body-sm">Ghana's skilled labour crisis will not be resolved until we stop treating the informal economy as an achievement and start treating it as the challenge it is. Formalisation is not an imposition on workers. Properly designed, it is an expansion of their rights, their options, and their dignity. That should be the goal. And it should be stated plainly, without the defensive celebration that currently obscures it.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">66 — 67</div>
+  </div>
+</div>
+
+<!-- PAGE 70 — PHOTO ESSAY -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Photo Essay</div>
+    <div class="ph-page">70</div>
+  </div>
+  <div style="padding:20px 40px 10px;">
+    <div class="gold-rule"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;line-height:1.1;margin-bottom:4px;">Hands That Build Ghana</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:var(--mid-grey);">A portrait of workers across the country — from artisan to architect, apprentice to master. Photographs by Nana Addo Boateng.</div>
+  </div>
+  <!-- Photo grid: Foreman, Welder, Artisan (images from economist-assets) -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:10px 40px 0;height:440px;">
+    <div class="img-panel page70-foreman-wrap" style="height:440px;grid-row:span 2;">
+      <div class="page70-foreman-bg" aria-hidden="true"></div>
+      <div class="page70-foreman-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:20px;left:20px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;line-height:1.1;">The Foreman</div></div>
+      <div class="pcap" style="z-index:5;">"I have built two hundred structures. On paper, I barely exist." — Kwesi Agyei, Site Foreman, Spintex Road</div>
+    </div>
+    <div class="img-panel page70-welder-wrap" style="height:216px;">
+      <div class="page70-welder-bg" aria-hidden="true"></div>
+      <div class="page70-welder-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:14px;left:14px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:900;color:#fff;">The Welder</div></div>
+      <div class="pcap" style="z-index:5;">TVET student, Accra Technical University</div>
+    </div>
+    <div class="img-panel page70-artisan-wrap" style="height:216px;">
+      <div class="page70-artisan-bg" aria-hidden="true"></div>
+      <div class="page70-artisan-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:14px;left:14px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:900;color:#fff;">The Artisan</div></div>
+      <div class="pcap" style="z-index:5;">Metalworker, Suame Magazine, Kumasi</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">70</div>
+  </div>
+</div>
+
+<!-- PAGE 71 — Photo Essay continued -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Photo Essay</div>
+    <div class="ph-page">71</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;padding:16px 40px 0;height:330px;">
+    <div class="img-panel page71-grace-wrap" style="height:330px;">
+      <div class="page71-grace-bg" aria-hidden="true"></div>
+      <div class="page71-grace-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:14px;left:14px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:900;color:#fff;">The Engineer</div></div>
+      <div class="pcap" style="z-index:5;">Grace Sarpong, 27 — licensed electrician, East Legon</div>
+    </div>
+    <div class="img-panel page71-nurse-wrap" style="height:330px;">
+      <div class="page71-nurse-bg" aria-hidden="true"></div>
+      <div class="page71-nurse-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:14px;left:14px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:900;color:#fff;">The Nurse</div></div>
+      <div class="pcap" style="z-index:5;">Staff nurse, Korle Bu Teaching Hospital, Accra</div>
+    </div>
+    <div class="img-panel page71-technician-wrap" style="height:330px;">
+      <div class="page71-technician-bg" aria-hidden="true"></div>
+      <div class="page71-technician-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;top:14px;left:14px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:15px;font-weight:900;color:#fff;">The Technician</div></div>
+      <div class="pcap" style="z-index:5;">Offshore technician, Western Region oilfield</div>
+    </div>
+  </div>
+  <div style="padding:12px 40px 0;height:220px;">
+    <div class="img-panel page71-north-wrap" style="height:210px;width:100%;">
+      <div class="page71-north-bg" aria-hidden="true"></div>
+      <div class="page71-north-overlay" aria-hidden="true"></div>
+      <div style="position:absolute;bottom:40px;left:40px;z-index:5;"><div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;">The North</div></div>
+      <div class="pcap" style="z-index:5;">Tamale Central Market — commerce and craft in the Northern Region's economic heart</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">71</div>
+  </div>
+</div>
+
+<!-- PAGE 74 — REFERENCE DATA -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Reference Data</div>
+    <div class="ph-page">74</div>
+  </div>
+  <div style="padding:24px 40px;">
+    <div class="data-hl">Key Labour Statistics — Ghana 2025</div>
+    <div class="data-sub">Source: Ghana Statistical Service Q3 2025; ILO; Ministry of Employment; LocalLink Economist Research Unit</div>
+    <table class="glt" style="margin-bottom:18px;">
+      <thead>
+        <tr><th>Indicator</th><th>2023</th><th>2024</th><th>2025 (est.)</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Total workforce (millions)</td><td class="n">12.6</td><td class="n">12.9</td><td class="n">13.2</td><td class="n">+4.8%</td></tr>
+        <tr><td>Formal employment rate (%)</td><td class="n">29.8</td><td class="n">31.2</td><td class="n">32.0</td><td class="n">+2.2pp</td></tr>
+        <tr><td>Youth unemployment (15–35, %)</td><td class="n">13.1</td><td class="n">12.8</td><td class="n">12.4</td><td class="n" style="color:var(--green)">▼ -0.7pp</td></tr>
+        <tr><td>Youth underemployment (%)</td><td class="n">41.2</td><td class="n">40.1</td><td class="n">38.9</td><td class="n" style="color:var(--green)">▼ -2.3pp</td></tr>
+        <tr><td>Median urban skilled wage (GH₵/mo)</td><td class="n">1,940</td><td class="n">2,190</td><td class="n">2,400</td><td class="n">+23.7%</td></tr>
+        <tr><td>National daily minimum wage (GH₵)</td><td class="n">14.88</td><td class="n">19.97</td><td class="n">23.05</td><td class="n">+15.4%</td></tr>
+        <tr><td>Active NAP apprentices</td><td class="n">180K</td><td class="n">255K</td><td class="n">312K</td><td class="n">+22.4%</td></tr>
+        <tr><td>TVET enrolment (all programmes)</td><td class="n">341K</td><td class="n">398K</td><td class="n">456K</td><td class="n">+14.6%</td></tr>
+        <tr><td>Healthcare workers emigrated/yr (est.)</td><td class="n ng">4,200</td><td class="n ng">4,600</td><td class="n ng">4,900</td><td class="n ng">▲ +6.5%</td></tr>
+        <tr><td>Remittances received ($bn)</td><td class="n">3.9</td><td class="n">4.3</td><td class="n">4.7</td><td class="n">+9.3%</td></tr>
+      </tbody>
+    </table>
+    <table class="glt">
+      <thead>
+        <tr><th>Sector</th><th>Formal Workers</th><th>Median Wage (GH₵/mo)</th><th>Female (%)</th><th>Vacancy Rate</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>ICT &amp; Digital Services</td><td class="n">~85,000</td><td class="n">6,200</td><td class="n">34%</td><td class="n ng">High</td></tr>
+        <tr><td>Oil &amp; Gas</td><td class="n">~22,000</td><td class="n">5,800</td><td class="n">12%</td><td class="n ng">High</td></tr>
+        <tr><td>Healthcare (public)</td><td class="n">~95,000</td><td class="n">4,400</td><td class="n">68%</td><td class="n ng">Very High</td></tr>
+        <tr><td>Financial Services</td><td class="n">~120,000</td><td class="n">3,800</td><td class="n">42%</td><td class="n" style="color:var(--gold)">Moderate</td></tr>
+        <tr><td>Construction (formal)</td><td class="n">~140,000</td><td class="n">2,300</td><td class="n">14%</td><td class="n">Low</td></tr>
+        <tr><td>Manufacturing</td><td class="n">~180,000</td><td class="n">2,100</td><td class="n">29%</td><td class="n">Low</td></tr>
+        <tr><td>Education (public)</td><td class="n">~160,000</td><td class="n">2,800</td><td class="n">44%</td><td class="n" style="color:var(--gold)">Moderate</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">74 — 75</div>
+  </div>
+</div>
+
+<!-- PAGE 76 — FIVE PRIORITIES -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Looking Ahead</div>
+    <div class="ph-page">76</div>
+  </div>
+  <div style="padding:26px 40px 0;">
+    <div class="gold-rule"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;line-height:1.1;margin-bottom:6px;">Five Priorities for Ghana's Labour Market in 2026</div>
+    <div style="font-family:'Source Serif 4',serif;font-size:11.5px;font-style:italic;color:var(--mid-grey);margin-bottom:14px;line-height:1.5;">The editors of LocalLink Economist identify the most consequential policy and investment priorities for the year ahead</div>
+    <div style="border-top:2px solid var(--ink);"></div>
+  </div>
+  <div class="two-col">
+    <div>
+      <div class="inline-hl">1. Fix the NAP's Quality Problem Before It Becomes a Credibility Crisis</div>
+      <p class="body-sm">The National Apprenticeship Programme's biggest asset is political momentum. Its biggest liability is the gap between its credential and actual competency. If employers stop trusting the certificate — as several are beginning to — the programme's value collapses. The government must invest urgently in assessor capacity: the target of 1,500 additional certified assessors by end-2026 is achievable but only with a specific budget allocation. Digital assessment tools can bridge the gap while physical capacity is built.</p>
+      <div class="inline-hl">2. Formalise Ghana's Informal Industrial Clusters</div>
+      <p class="body-sm">Suame Magazine and dozens of smaller clusters represent billions of cedis in productive capacity and hundreds of thousands of skilled workers who are invisible to the formal economy. A Recognition of Prior Learning (RPL) framework — national, standardised, and actively resourced — would allow these workers to gain credentials for skills they already have, without returning to school. Ghana has had a draft RPL policy "under review" since 2020. It needs to be enacted, funded, and implemented.</p>
+      <div class="inline-hl">3. Address Brain Drain Systematically, Not Rhetorically</div>
+      <p class="body-sm">The health worker emigration crisis cannot be solved by closing borders or moral suasion. It requires a genuine salary adjustment in the public health sector targeted at the highest-attrition roles, combined with investment in working conditions and specialist training pathways that make Ghana competitive on dimensions other than pure salary. A public-private partnership model, where private hospitals co-fund public-sector specialist training in exchange for assured staffing pools, deserves serious exploration.</p>
+    </div>
+    <div>
+      <div class="inline-hl">4. Close the Regional Wage and Opportunity Gap</div>
+      <p class="body-sm">The GH₵ 1,440 monthly wage gap between Greater Accra and the Upper East region is not solely a labour market phenomenon — it reflects a profound inequality in economic infrastructure and state investment. The Tamale Special Economic Zone, if properly resourced and governed, could be transformative; its current status as a planning document is not. Targeted infrastructure investment in the North and deliberate incentives for employers to locate outside the south deserve urgent attention.</p>
+      <div class="inline-hl">5. Reform TVET Funding and Governance</div>
+      <p class="body-sm">Ghana's TVET sector cannot transform itself on its current budget allocation, which represents approximately 4.2 percent of the education budget despite enrolling over 450,000 students. The immediate priorities are equipment upgrades (a GH₵ 500 million fund structured as matching grants between institutions and industry partners), curriculum reform to incorporate Industry 4.0 content, and mandatory industry advisory boards at every accredited TVET institution. The TVET Levy allocation to training institutions should be doubled from 30 to 60 percent of collections.</p>
+      <div class="pullquote" style="margin-top:20px;">
+        <div class="pq-text">"Ghana does not have a talent shortage. It has a talent allocation problem, a certification problem, and a wages problem. All three are solvable."</div>
+        <div class="pq-attr">— The Editors, LocalLink Economist</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-text">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text">76 — 77</div>
+  </div>
+</div>
+
+<!-- PAGE 78 — COMING NEXT / SUBSCRIBE -->
+<div class="page" style="background:var(--ink);">
+  <div class="page-header" style="background:var(--ink);border-color:rgba(255,255,255,.1);">
+    <div class="ph-brand" style="color:#fff;"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section" style="color:rgba(255,255,255,.3);">Coming Next</div>
+    <div class="ph-page" style="color:rgba(255,255,255,.3);">78</div>
+  </div>
+  <div style="padding:36px 40px 0;">
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;margin-bottom:14px;">Vol. 02 — February 2026</div>
+    <div style="font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:#fff;line-height:.95;margin-bottom:14px;">The Future<br>of <span style="color:var(--gold);font-style:italic;">Finance</span><br>in Ghana</div>
+    <div style="font-family:'Source Serif 4',serif;font-size:13.5px;font-style:italic;color:rgba(255,255,255,.5);max-width:480px;line-height:1.65;margin-bottom:30px;">From mobile money to green bonds, from fintech disruption to the Bank of Ghana's CBDC pilot — our next issue examines the financial architecture reshaping West Africa's most dynamic economy.</div>
+    <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:32px;">
+      <div><div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Cover Story</div><div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:#fff;line-height:1.3;">Mobile Money's Next Frontier: From Payments to Credit</div></div>
+      <div><div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Feature</div><div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:#fff;line-height:1.3;">The CBDC Question: Is Ghana Ready for a Digital Cedi?</div></div>
+      <div><div style="font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px;">Interview</div><div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;color:#fff;line-height:1.3;">Governor of the Bank of Ghana on Inflation, the Cedi, and 2026</div></div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:24px;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;">Subscribe to LocalLink Economist</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="border:1px solid rgba(200,151,42,.3);padding:16px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:2px;">Digital</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#fff;margin:7px 0;">GH₵ 80 / month</div>
+          <div style="font-family:'Source Serif 4',serif;font-size:9px;color:rgba(255,255,255,.3);line-height:1.5;">Full digital access to all issues, data downloads, and online archives</div>
+        </div>
+        <div style="border:1px solid rgba(200,151,42,.4);padding:16px;background:rgba(200,151,42,.08);">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:2px;">Print + Digital</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#fff;margin:7px 0;">GH₵ 180 / month</div>
+          <div style="font-family:'Source Serif 4',serif;font-size:9px;color:rgba(255,255,255,.3);line-height:1.5;">Monthly print edition delivered + full digital access and subscriber events</div>
+        </div>
+        <div style="border:1px solid rgba(200,151,42,.3);padding:16px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:2px;">Corporate</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:#fff;margin:7px 0;">From GH₵ 1,200 / yr</div>
+          <div style="font-family:'Source Serif 4',serif;font-size:9px;color:rgba(255,255,255,.3);line-height:1.5;">Team licences, bespoke research, executive briefings, and speaking engagements</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2px;">subscribe.locallink.com.gh &nbsp;·&nbsp; +233 30 270 4400</div>
+    </div>
+  </div>
+  <div class="page-footer" style="background:var(--ink);border-color:rgba(255,255,255,.08);">
+    <div class="pf-text" style="color:rgba(255,255,255,.2);">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 01 · JAN 2026</div>
+    <div class="pf-text" style="color:rgba(255,255,255,.2);">78</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     BACK COVER
+══════════════════════════════════════════════════════════════ -->
+<div class="p-sep">— back cover —</div>
+
+<div class="page" id="back-cover">
+  <img class="back-cover-img" src="{{BACK_COVER_IMAGE_FILE_URL}}" alt="" aria-hidden="true">
+  <div class="back-cover-bg" aria-hidden="true"></div>
+  <div class="back-cover-overlay" aria-hidden="true"></div>
+  <div class="bc-rule"></div>
+  <div class="bc-top">
+    <div>
+      <div class="bc-brand"><span>LOCAL</span>LINK Economist</div>
+      <div class="bc-tagline">Rigorous. Local. Essential.</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.28);letter-spacing:2px;">Vol. 01 · Issue 01</div>
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.28);letter-spacing:1px;margin-top:2px;">January 2026</div>
+    </div>
+  </div>
+  <div class="bc-body">
+    <div class="bc-quote">"Ghana does not lack talent. It lacks the infrastructure to recognise, certify, and reward the talent it has."</div>
+    <div class="bc-attr">— LocalLink Economist, Vol. 01</div>
+  </div>
+  <div class="bc-bottom">
+    <div class="bc-contact">
+      <h4>Contact &amp; Subscriptions</h4>
+      <p>LocalLink Media Group<br>14 Independence Avenue, Accra Central<br>P.O. Box AN 5561, Accra-North, Ghana<br><br>editorial@locallink.com.gh<br>subscribe.locallink.com.gh<br>+233 30 270 4400</p>
+    </div>
+    <div class="bc-next">
+      <div class="bc-next-lbl">Next Issue — February 2026</div>
+      <div class="bc-next-t">The Future of Finance in Ghana</div>
+      <div style="margin-top:14px;font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,.2);letter-spacing:1px;">GH₵ 25.00 · $3.50 USD</div>
+      <div style="margin-top:4px;font-family:'DM Mono',monospace;font-size:7px;color:rgba(255,255,255,.14);letter-spacing:1px;">ISSN 0000-0000</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+</user_query>

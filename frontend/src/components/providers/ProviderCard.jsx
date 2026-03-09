@@ -59,9 +59,9 @@ export function ProviderCard({ provider, meta, saved, onSave, onUnsave, showSave
             title={isSaved ? 'Remove from saved' : 'Save provider'}
           >
             {isSaved ? (
-              <span className="text-lg text-rose-500" aria-hidden>♥</span>
+              <span className="text-lg text-red-600" aria-hidden>♥</span>
             ) : (
-              <span className="text-lg text-slate-400 hover:text-rose-500" aria-hidden>♡</span>
+              <span className="text-lg text-slate-400 hover:text-red-600" aria-hidden>♡</span>
             )}
           </button>
         ) : null}

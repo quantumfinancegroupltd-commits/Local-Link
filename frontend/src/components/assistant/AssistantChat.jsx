@@ -95,9 +95,9 @@ function AssistantServiceCard({ service, onNavigate }) {
     <Link
       to={`/u/${service?.artisan_user_id}`}
       onClick={onNavigate}
-      className="flex min-w-0 shrink-0 gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-violet-300 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-violet-500/50"
+      className="flex min-w-0 shrink-0 gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-emerald-500/50"
     >
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-violet-400/80 to-indigo-400/80 text-lg font-bold text-white">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-slate-600 to-emerald-700 text-lg font-bold text-white">
         {service?.category?.slice(0, 1)?.toUpperCase() ?? 'S'}
       </div>
       <div className="min-w-0 flex-1">
@@ -107,11 +107,11 @@ function AssistantServiceCard({ service, onNavigate }) {
           {service?.service_area ? ` · ${service.service_area}` : ''}
         </div>
         {(price || duration) ? (
-          <div className="mt-1 text-xs font-medium text-violet-700 dark:text-violet-400">
+          <div className="mt-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">
             {[price, duration].filter(Boolean).join(' · ')}
           </div>
         ) : null}
-        <div className="mt-1.5 text-xs font-medium text-violet-600 dark:text-violet-400">View & book →</div>
+        <div className="mt-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">View & book →</div>
       </div>
     </Link>
   )

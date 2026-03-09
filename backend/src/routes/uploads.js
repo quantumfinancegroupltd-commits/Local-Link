@@ -4,7 +4,7 @@ import path from 'path'
 import crypto from 'crypto'
 import multer from 'multer'
 import rateLimit from 'express-rate-limit'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, requireRole } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
 import { storage } from '../services/storage/index.js'
 import { maybeGenerateImageThumb } from '../services/mediaProcessing.js'
@@ -35,6 +35,7 @@ function extensionFromMime(mime) {
   if (mime === 'video/mp4') return 'mp4'
   if (mime === 'video/webm') return 'webm'
   if (mime === 'video/quicktime') return 'mov'
+  if (mime === 'application/pdf') return 'pdf'
   return null
 }
 
@@ -206,6 +207,26 @@ const privateUpload = multer({
   fileFilter: (_req, file, cb) => {
     if (allowedPrivateMimes.has(file.mimetype)) return cb(null, true)
     const err = new Error(`Unsupported file type: ${file.mimetype || 'unknown'}`)
+    err.code = 'UNSUPPORTED_MEDIA_TYPE'
+    return cb(err, false)
+  },
+})
+
+// LocalLink Economist: PDF + cover image (admin only). Same storage as public uploads.
+const allowedEconomistMimes = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/gif',
+])
+const economistUpload = multer({
+  storage: multerStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB (PDFs can be large)
+  fileFilter: (_req, file, cb) => {
+    if (allowedEconomistMimes.has(file.mimetype)) return cb(null, true)
+    const err = new Error(`Unsupported file type: ${file.mimetype || 'unknown'}. Use PDF for issue, image for cover.`)
     err.code = 'UNSUPPORTED_MEDIA_TYPE'
     return cb(err, false)
   },
@@ -383,6 +404,56 @@ uploadsRouter.post('/private/media', requireAuth, uploadPrivateRateLimit, (req, 
   }
 
   return res.status(201).json({ files: out })
+}))
+
+// LocalLink Economist: admin upload PDF + cover image. Returns { pdf_url, cover_image_url }.
+// POST /api/uploads/economist  form-data: pdf=<File>, cover_image=<File>
+uploadsRouter.post('/economist', requireAuth, requireRole(['admin']), (req, res, next) => {
+  const handler = economistUpload.fields([
+    { name: 'pdf', maxCount: 1 },
+    { name: 'cover_image', maxCount: 1 },
+  ])
+  handler(req, res, (err) => {
+    if (!err) return next()
+    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'File too large (max 50MB per file)' })
+    if (err?.code === 'UNSUPPORTED_MEDIA_TYPE') return res.status(415).json({ message: err.message })
+    return res.status(400).json({ message: err?.message || 'Upload failed' })
+  })
+}, asyncHandler(async (req, res) => {
+  const pdfFile = req.files?.pdf?.[0]
+  const coverFile = req.files?.cover_image?.[0]
+  if (!pdfFile || !coverFile) {
+    return res.status(400).json({ message: 'Both "pdf" and "cover_image" files are required' })
+  }
+  if (String(pdfFile.mimetype || '') !== 'application/pdf') {
+    return res.status(400).json({ message: 'Field "pdf" must be a PDF file' })
+  }
+  const coverMime = String(coverFile.mimetype || '')
+  if (!coverMime.startsWith('image/')) {
+    return res.status(400).json({ message: 'Field "cover_image" must be an image (JPEG, PNG, etc.)' })
+  }
+  const pdfBase =
+    typeof st.uploadMulterFile === 'function'
+      ? await st.uploadMulterFile(pdfFile)
+      : st.describeMulterFile?.(pdfFile) ?? { url: `/api/uploads/${pdfFile.filename}` }
+  const coverBase =
+    typeof st.uploadMulterFile === 'function'
+      ? await st.uploadMulterFile(coverFile)
+      : st.describeMulterFile?.(coverFile) ?? { url: `/api/uploads/${coverFile.filename}` }
+  let page_count = null
+  try {
+    const pdfParse = (await import('pdf-parse')).default
+    const buf = await fs.readFile(pdfFile.path)
+    const data = await pdfParse(buf)
+    if (typeof data?.numpages === 'number' && data.numpages > 0) page_count = data.numpages
+  } catch {
+    // ignore: page count is optional
+  }
+  return res.status(201).json({
+    pdf_url: pdfBase.url,
+    cover_image_url: coverBase.url,
+    ...(page_count != null && { page_count }),
+  })
 }))
 
 // Serve private uploads (admin or owner only).

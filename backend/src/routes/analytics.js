@@ -9,6 +9,25 @@ import { asyncHandler } from '../middleware/asyncHandler.js'
 
 export const analyticsRouter = Router()
 
+/** Get client IP from request, respecting proxies (X-Forwarded-For, X-Real-IP). */
+function getClientIp(req) {
+  if (!req) return null
+  // Express sets req.ip from X-Forwarded-For when trust proxy is enabled
+  if (req.ip && typeof req.ip === 'string' && req.ip.trim()) return req.ip.trim()
+  const forwarded = req.headers['x-forwarded-for']
+  if (forwarded) {
+    // "client, proxy1, proxy2" – leftmost is the original client
+    const first = typeof forwarded === 'string' ? forwarded.split(',')[0] : forwarded[0]
+    if (first && String(first).trim()) return String(first).trim()
+  }
+  if (req.headers['x-real-ip'] && String(req.headers['x-real-ip']).trim()) {
+    return String(req.headers['x-real-ip']).trim()
+  }
+  const sock = req.socket ?? req.connection
+  if (sock?.remoteAddress) return String(sock.remoteAddress).trim()
+  return null
+}
+
 function countryFromIp(ip) {
   if (!ip || typeof ip !== 'string') return null
   const cleaned = ip.replace(/^::ffff:/, '').trim()
@@ -59,12 +78,13 @@ analyticsRouter.post(
     const userId = req.user?.sub ?? null
     const userAgent = String(req.headers['user-agent'] ?? '').slice(0, 500)
     const referrerHeader = String(req.headers['referer'] ?? req.headers['referrer'] ?? '').slice(0, 500)
+    const clientIp = getClientIp(req)
     const sessionId =
       (bodySessionId && String(bodySessionId).trim())
         ? String(bodySessionId).trim().slice(0, 128)
-        : crypto.createHash('sha256').update(`${req.ip ?? ''}-${Date.now()}-${Math.random()}`).digest('hex').slice(0, 32)
+        : crypto.createHash('sha256').update(`${clientIp ?? ''}-${Date.now()}-${Math.random()}`).digest('hex').slice(0, 32)
     const deviceType = deviceTypeFromUserAgent(userAgent || req.headers['user-agent'])
-    const country = countryFromIp(req.ip ?? req.socket?.remoteAddress ?? null)
+    const country = countryFromIp(clientIp)
 
     await pool.query(
       `insert into analytics_events (event_type, path, referrer, title, user_id, session_id, user_agent, utm_source, utm_medium, utm_campaign, device_type, country, created_at)

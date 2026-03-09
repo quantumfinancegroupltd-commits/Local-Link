@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LocalLink Economist — Construction & Infrastructure Pricing Index, Ghana 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Core palette — industrial blueprint */
+  --navy:      #0b1623;
+  --navy-mid:  #122035;
+  --navy-lt:   #1c3150;
+  --steel:     #2d4a6b;
+  --concrete:  #c8c5bc;
+  --concrete-lt:#e8e5de;
+  --paper:     #f2ede4;
+  --paper-lt:  #faf8f3;
+  --amber:     #e8840a;
+  --amber-lt:  #f4a832;
+  --amber-dk:  #b5620a;
+  --red:       #c0341a;
+  --red-lt:    #e04a28;
+  --green:     #1a7a3c;
+  --green-lt:  #22a050;
+  --white:     #ffffff;
+  --ink:       #0e1822;
+  --mid:       #5a6a7a;
+  --lt-border: #ddd8ce;
+  --blueprint: #1b3a5c;
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:#08111a;
+  font-family:'Barlow',sans-serif;
+  color:var(--ink);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE SHELL
+═══════════════════════════════════════════ */
+.page{
+  width:794px;
+  min-height:1123px;
+  position:relative;
+  overflow:hidden;
+  background:var(--paper);
+  display:flex;
+  flex-direction:column;
+}
+.p-sep{
+  width:794px;padding:7px 0;background:#04090e;
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;
+  color:rgba(255,255,255,.18);letter-spacing:3px;text-transform:uppercase;text-align:center;
+}
+
+/* Blueprint grid overlay (decorative) */
+.bp-grid{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(27,58,92,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27,58,92,.06) 1px, transparent 1px);
+  background-size:28px 28px;
+}
+.bp-grid-fine{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(27,58,92,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27,58,92,.03) 1px, transparent 1px);
+  background-size:7px 7px;
+}
+
+/* ═══════════════════════════════════════════
+   FRONT COVER
+═══════════════════════════════════════════ */
+#cover{background:#c4b8a8;min-height:1123px}
+
+.cover-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center 35%;
+  opacity:1;
+}
+.cover-overlay{
+  position:absolute;inset:0;z-index:2;
+  background:rgba(0,0,0,.42);
+  pointer-events:none;
+}
+.cover-blueprint-overlay{
+  display:none;
+}
+.cover-gradient{
+  display:none;
+}
+.cover-black-veil{
+  display:none;
+}
+/* left accent bar — neutral dark gray so no warm/pink cast in PDF */
+.cover-accent-bar{
+  position:absolute;left:0;top:0;width:6px;height:100%;
+  background:linear-gradient(to bottom,#2a2a2a 0%,#1a1a1a 60%,#0d0d0d 100%);
+  z-index:10;
+}
+/* top technical border — neutral so no warm cast */
+.cover-tech-top{
+  position:absolute;top:0;left:6px;right:0;height:3px;
+  background:#1a1a1a;z-index:10;
+}
+
+.cover-content{position:relative;z-index:5;height:100%;display:flex;flex-direction:column}
+
+/* top bar */
+.cover-topbar{
+  padding:22px 44px 18px;
+  border-bottom:1px solid rgba(232,132,10,.3);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cv-brand{display:flex;flex-direction:column}
+.cv-brand-row{display:flex;align-items:baseline;gap:0}
+.cvb-local{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--amber);letter-spacing:4px;line-height:1}
+.cvb-link{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);letter-spacing:4px;line-height:1}
+.cvb-econ{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:6px;text-transform:uppercase;margin-top:3px}
+.cv-meta{text-align:right}
+.cv-vol{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;display:block}
+.cv-date{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.3);letter-spacing:1px}
+
+/* centre hero text */
+.cover-hero{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 44px 52px}
+
+.cv-eyebrow{
+  display:flex;align-items:center;gap:12px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;
+  color:var(--amber);letter-spacing:4px;text-transform:uppercase;
+  margin-bottom:20px;
+}
+.cv-eyebrow::before{content:'';display:block;width:30px;height:1px;background:var(--amber)}
+
+.cv-headline{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:82px;
+  color:var(--white);
+  line-height:.9;
+  letter-spacing:1px;
+  margin-bottom:10px;
+}
+.cv-headline em{color:var(--amber);font-style:normal}
+
+.cv-sub-row{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:32px;gap:20px;
+}
+.cv-subhead{
+  font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:300;
+  color:rgba(255,255,255,.6);line-height:1.55;max-width:420px;font-style:italic;
+}
+.cv-index-badge{
+  background:var(--amber);padding:12px 16px;text-align:center;flex-shrink:0;
+}
+.cib-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--navy);line-height:1;letter-spacing:2px}
+.cib-label{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--navy);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+
+/* cover teasers */
+.cv-teasers{
+  border-top:1px solid rgba(232,132,10,.25);padding-top:20px;
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px;
+}
+.cvt-label{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px}
+.cvt-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;color:var(--white);line-height:1.3}
+
+.cv-price{
+  position:absolute;bottom:20px;right:44px;
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;
+  color:rgba(255,255,255,.2);letter-spacing:1px;text-align:right;
+}
+
+/* corner crosshairs */
+.crosshair{position:absolute;width:16px;height:16px;z-index:8}
+.crosshair::before,.crosshair::after{content:'';position:absolute;background:rgba(232,132,10,.5)}
+.crosshair::before{width:1px;height:100%;left:50%;top:0}
+.crosshair::after{width:100%;height:1px;top:50%;left:0}
+.ch-tl{top:60px;left:16px}
+.ch-tr{top:60px;right:10px}
+.ch-bl{bottom:40px;left:16px}
+.ch-br{bottom:40px;right:10px}
+
+/* ═══════════════════════════════════════════
+   PAGE CHROME
+═══════════════════════════════════════════ */
+.page-header{
+  border-bottom:2px solid var(--navy);
+  padding:12px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--paper-lt);
+  position:relative;z-index:5;
+}
+.ph-brand{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--navy)}
+.ph-brand span{color:var(--amber)}
+.ph-section{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--mid);text-transform:uppercase}
+.ph-pn{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mid)}
+
+.page-footer{
+  border-top:1px solid var(--lt-border);padding:9px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:auto;position:relative;z-index:5;
+}
+.pf-txt{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:1px}
+
+/* amber accent line under header on special pages */
+.header-accent{height:3px;background:linear-gradient(to right,var(--amber) 0%,transparent 100%)}
+
+/* ═══════════════════════════════════════════
+   CONTENTS PAGE
+═══════════════════════════════════════════ */
+#contents{background:#000}
+.toc-header{padding:48px 50px 0}
+.toc-eye{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:5px;text-transform:uppercase;margin-bottom:12px}
+.toc-title{
+  font-family:'Bebas Neue',sans-serif;font-size:60px;color:var(--paper);
+  line-height:.95;letter-spacing:1px;
+  border-bottom:1px solid rgba(232,132,10,.25);padding-bottom:24px;margin-bottom:30px;
+}
+.toc-title span{color:var(--amber)}
+.toc-grid{padding:0 50px;display:grid;grid-template-columns:1fr 1fr;gap:0}
+.toc-sec{
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);
+  letter-spacing:4px;text-transform:uppercase;
+  padding:14px 0 8px;border-top:1px solid rgba(255,255,255,.07);margin-top:6px;
+}
+.toc-item{display:flex;align-items:flex-start;gap:11px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.toc-num{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--amber);min-width:24px;padding-top:2px}
+.toc-t{font-family:'Barlow Condensed',sans-serif;font-size:13.5px;font-weight:700;color:var(--paper);line-height:1.25}
+.toc-d{font-family:'Barlow',sans-serif;font-size:9.5px;color:rgba(242,237,228,.38);line-height:1.4;margin-top:2px}
+.toc-foot{padding:28px 50px;display:flex;align-items:flex-end;gap:16px}
+.toc-thumb{width:78px;height:106px;object-fit:cover;border:2px solid rgba(232,132,10,.3);opacity:.6}
+.toc-note{
+  font-family:'Libre Baskerville',serif;font-size:12.5px;font-style:italic;
+  color:rgba(242,237,228,.35);max-width:300px;line-height:1.6;
+}
+
+/* ═══════════════════════════════════════════
+   SECTION DIVIDERS
+═══════════════════════════════════════════ */
+.sec-div{min-height:1123px;display:flex;flex-direction:column;justify-content:flex-end;position:relative;overflow:hidden}
+.sd-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.2;filter:grayscale(20%) sepia(30%)}
+.sd-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 20%,rgba(11,22,35,.85) 100%)}
+.sd-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(232,132,10,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(232,132,10,.05) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.sd-content{position:relative;z-index:5;padding:48px}
+.sd-part{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.4);letter-spacing:5px;text-transform:uppercase;margin-bottom:14px}
+.sd-rule{width:40px;height:3px;background:var(--amber);margin-bottom:18px}
+.sd-title{font-family:'Bebas Neue',sans-serif;font-size:62px;color:var(--white);line-height:.92;letter-spacing:1px;margin-bottom:16px}
+.sd-title span{color:var(--amber)}
+.sd-sub{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:300;font-style:italic;color:rgba(255,255,255,.55);max-width:430px;line-height:1.5}
+.sd-accent-bar{position:absolute;left:0;top:0;width:5px;height:100%;background:var(--amber)}
+/* Part One (CIPI Overview): image + dark transparent overlay (no navy/pink) */
+#part1{background:#1a1a1a}
+#part1 .sd-bg{opacity:1;filter:none}
+#part1 .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#part1 .sd-grid{display:none}
+#part1 .sd-accent-bar{display:none}
+/* Part Two (Materials Price Index): image + dark transparent overlay (no navy/pink) */
+#part2{background:#1a1a1a}
+#part2 .sd-bg{opacity:1;filter:none}
+#part2 .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#part2 .sd-grid{display:none}
+#part2 .sd-accent-bar{display:none}
+/* Part Three (Labour Rate Survey): image + dark transparent overlay (no navy/pink) */
+#part3{background:#1a1a1a}
+#part3 .sd-bg{opacity:1;filter:none}
+#part3 .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#part3 .sd-grid{display:none}
+#part3 .sd-accent-bar{display:none}
+/* Part Four (Regional Price Premiums): image + dark transparent overlay (no navy/pink) */
+#part4{background:#1a1a1a}
+#part4 .sd-bg{opacity:1;filter:none;object-position:right center}
+#part4 .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#part4 .sd-grid{display:none}
+#part4 .sd-accent-bar{display:none}
+
+/* Supply Chain Exposed divider: custom background image */
+#supply-chain-divider .sd-bg{opacity:1;filter:none}
+#supply-chain-divider .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#supply-chain-divider .sd-grid{display:none}
+#supply-chain-divider .sd-accent-bar{display:none}
+
+/* Green Building & Sustainability divider: custom background image, no accent bar */
+#green-building-divider{background:#071410}
+#green-building-divider .sd-bg{opacity:1;filter:none}
+#green-building-divider .sd-overlay{display:block;background:rgba(0,0,0,.45);pointer-events:none}
+#green-building-divider .sd-grid{display:none}
+#green-building-divider .sd-accent-bar{display:none}
+
+/* Spread: left half of Part 4 image on labour-rate page (navy negative space) */
+/* Page 44 labour rate: uses default .page (paper) background for readability */
+
+/* Page 56: uses default .page (paper) background for readability */
+
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY / LAYOUT COMPONENTS
+═══════════════════════════════════════════ */
+.story-head{padding:22px 40px 0;position:relative;z-index:5}
+.story-tag{
+  display:inline-block;background:var(--amber);color:var(--navy);
+  font-family:'IBM Plex Mono',monospace;font-size:7.5px;letter-spacing:3px;
+  padding:3px 8px;text-transform:uppercase;margin-bottom:11px;
+}
+.story-tag.outline{background:transparent;border:1px solid var(--amber);color:var(--amber)}
+.story-hl{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;line-height:1.05;color:var(--ink);margin-bottom:7px}
+.story-deck{font-family:'Libre Baskerville',serif;font-size:11px;font-style:italic;color:var(--mid);line-height:1.55;margin-bottom:10px}
+.story-byline{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+
+/* 3-col article layout */
+.three-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;padding-top:20px;position:relative;z-index:5}
+/* 2-col */
+.two-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr;gap:30px;padding-top:20px;position:relative;z-index:5}
+
+.col-body p{font-family:'Barlow',sans-serif;font-size:10.5px;line-height:1.76;margin-bottom:11px;color:#1a2530}
+.col-body p:first-child::first-letter{
+  font-family:'Bebas Neue',sans-serif;font-size:52px;float:left;
+  line-height:.8;margin-right:8px;margin-top:5px;color:var(--amber);
+}
+
+.pullquote{border-left:3px solid var(--amber);padding:13px 16px;margin:16px 0;background:rgba(232,132,10,.04)}
+.pq-text{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;font-style:italic;color:var(--ink);line-height:1.35}
+.pq-attr{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:1.5px;margin-top:7px}
+
+.inline-head{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:var(--ink);margin:15px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+
+.amber-rule{width:36px;height:2px;background:var(--amber);margin-bottom:10px}
+.full-rule{height:1px;background:var(--lt-border);margin:14px 0}
+
+/* ═══════════════════════════════════════════
+   EDITOR LETTER
+═══════════════════════════════════════════ */
+.ed-letter{padding:28px 40px;flex:1;display:grid;grid-template-columns:1fr 230px;gap:34px;position:relative;z-index:5}
+.el-body p{font-family:'Barlow',sans-serif;font-size:10.5px;line-height:1.76;margin-bottom:12px;color:var(--ink)}
+.el-drop::first-letter{font-family:'Bebas Neue',sans-serif;font-size:70px;float:left;line-height:.78;margin-right:8px;margin-top:5px;color:var(--amber)}
+.el-sig{margin-top:16px;padding-top:13px;border-top:1px solid var(--lt-border)}
+.el-sig-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--ink)}
+.el-sig-role{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:1.5px;margin-top:3px}
+/* sidebar */
+.el-sb{border-left:2px solid var(--amber);padding-left:18px}
+.el-sb-head{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:4px;text-transform:uppercase;margin-bottom:13px}
+.sb-stat{margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--lt-border)}
+.sb-stat:last-child{border-bottom:none}
+.sb-num{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--ink);line-height:1;letter-spacing:2px}
+.sb-num.up{color:var(--red)}.sb-num.dn{color:var(--green)}.sb-num.amber{color:var(--amber)}
+.sb-lbl{font-family:'Barlow',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.45;margin-top:3px}
+
+/* ═══════════════════════════════════════════
+   DATA / INDEX PAGES
+═══════════════════════════════════════════ */
+.data-page{padding:22px 40px;flex:1;position:relative;z-index:5}
+.data-hl{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--ink);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.data-sub{font-family:'Barlow',sans-serif;font-size:10px;color:var(--mid);font-style:italic;margin-bottom:20px}
+
+/* KPI callout row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--lt-border);margin-bottom:22px;background:var(--paper-lt)}
+.kpi-cell{padding:16px 14px;border-right:1px solid var(--lt-border);text-align:center}
+.kpi-cell:last-child{border-right:none}
+.kpi-num{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;line-height:1;color:var(--ink)}
+.kpi-num.up{color:var(--red)}.kpi-num.dn{color:var(--green)}.kpi-num.amber{color:var(--amber)}
+.kpi-lbl{font-family:'Barlow',sans-serif;font-size:8.5px;color:var(--mid);line-height:1.4;margin-top:5px}
+
+/* chart container */
+.chart-box{background:var(--paper-lt);border:1px solid var(--lt-border);padding:18px;margin-bottom:18px}
+.chart-box.dark{background:var(--navy);border-color:var(--navy-lt)}
+.chart-label{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.chart-label.light{color:rgba(255,255,255,.35)}
+
+/* horizontal bar */
+.h-bar-chart{display:flex;flex-direction:column;gap:8px}
+.hb-row{display:flex;align-items:center;gap:8px}
+.hb-lbl{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--ink);min-width:130px;text-align:right}
+.hb-lbl.light{color:rgba(255,255,255,.7)}
+.hb-track{flex:1;height:14px;background:var(--lt-border);position:relative;overflow:hidden}
+.hb-track.dark-track{background:rgba(255,255,255,.08)}
+.hb-fill{height:100%;background:var(--amber);position:relative}
+.hb-fill.red{background:var(--red)}.hb-fill.green{background:var(--green)}.hb-fill.steel{background:var(--steel)}.hb-fill.navy{background:var(--navy)}
+.hb-val{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);min-width:70px}
+.hb-val.light{color:rgba(255,255,255,.5)}
+
+/* stacked bar (visual) */
+.stack-bar{height:32px;display:flex;width:100%;margin-bottom:6px}
+.stack-seg{height:100%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:7px;color:rgba(255,255,255,.9);overflow:hidden;white-space:nowrap;padding:0 3px}
+
+/* line chart via CSS (sparkline style) */
+.spark-row{display:flex;align-items:flex-end;gap:4px;height:60px;padding-bottom:0;border-bottom:1px solid var(--lt-border)}
+.spark-bar{flex:1;background:var(--amber);opacity:.8;min-width:6px;border-radius:1px 1px 0 0}
+.spark-bar.red{background:var(--red)}.spark-bar.green{background:var(--green)}
+.spark-bar.hl{background:var(--amber);opacity:1;outline:1px solid var(--amber-dk)}
+
+/* SVG line chart */
+.svg-chart{width:100%;display:block}
+
+/* number mega feature */
+.num-feat{display:flex;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);background:var(--paper-lt);margin:16px 0}
+.nf-cell{flex:1;text-align:center;border-right:1px solid var(--lt-border);padding:14px 8px}
+.nf-cell:last-child{border-right:none}
+.nf-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--ink);line-height:1;letter-spacing:2px}
+.nf-num span{color:var(--amber)}
+.nf-lbl{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:1.5px;text-transform:uppercase;line-height:1.5;margin-top:2px}
+
+/* ═══════════════════════════════════════════
+   PRICE INDEX TABLE
+═══════════════════════════════════════════ */
+.price-table-wrap{overflow:hidden;border:1px solid var(--lt-border);margin-bottom:18px}
+table.price-tbl{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:8.5px}
+table.price-tbl thead tr{background:var(--navy);color:var(--paper)}
+table.price-tbl thead th{padding:9px 10px;text-align:left;font-size:7.5px;letter-spacing:2px;text-transform:uppercase;font-weight:500;white-space:nowrap}
+table.price-tbl thead th:not(:first-child){text-align:right}
+table.price-tbl tbody tr{border-bottom:1px solid var(--lt-border)}
+table.price-tbl tbody tr:nth-child(even){background:rgba(200,197,188,.12)}
+table.price-tbl tbody tr:hover{background:rgba(232,132,10,.05)}
+table.price-tbl td{padding:8px 10px;color:var(--ink);line-height:1.3}
+table.price-tbl td:not(:first-child){text-align:right}
+table.price-tbl td.cat{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--navy);letter-spacing:.3px}
+table.price-tbl td.unit{color:var(--mid);font-size:7.5px}
+table.price-tbl td.price{font-weight:600;color:var(--ink)}
+table.price-tbl td.change-up{color:var(--red);font-weight:600}
+table.price-tbl td.change-dn{color:var(--green);font-weight:600}
+table.price-tbl td.change-flat{color:var(--mid)}
+table.price-tbl .section-row td{background:var(--navy-lt);color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:3px;text-transform:uppercase;padding:6px 10px;font-weight:500}
+.change-pill{display:inline-block;padding:1px 5px;border-radius:2px;font-size:7.5px;font-weight:600}
+.pill-up{background:rgba(192,52,26,.12);color:var(--red)}
+.pill-dn{background:rgba(26,122,60,.12);color:var(--green)}
+.pill-flat{background:rgba(90,106,122,.1);color:var(--mid)}
+
+/* index score gauge */
+.gauge-wrap{display:flex;align-items:center;gap:20px;padding:16px;background:var(--navy);margin-bottom:18px}
+.gauge-svg{flex-shrink:0}
+.gauge-info .g-num{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--amber);letter-spacing:3px;line-height:1}
+.gauge-info .g-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.gauge-info .g-interp{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--white);font-weight:700;margin-top:6px}
+.gauge-info .g-desc{font-family:'Barlow',sans-serif;font-size:10px;color:rgba(255,255,255,.45);line-height:1.5;margin-top:6px;max-width:280px}
+
+/* ═══════════════════════════════════════════
+   REGIONAL COMPARISON
+═══════════════════════════════════════════ */
+.region-strip{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:0 40px;flex:1;position:relative;z-index:5}
+.region-card{border:1px solid var(--lt-border);padding:18px;position:relative;overflow:hidden}
+.region-card:nth-child(even){border-left:none}
+.region-card:nth-child(n+3){border-top:none}
+.rc-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--ink);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.rc-sub{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.rc-img{width:100%;height:88px;object-fit:cover;margin-bottom:10px;display:block;filter:sepia(10%) contrast(110%)}
+.rc-text{font-family:'Barlow',sans-serif;font-size:9px;line-height:1.6;color:#333}
+.rc-kpi{margin-top:9px;padding-top:9px;border-top:1px solid var(--lt-border);display:flex;gap:14px}
+.rc-kpi-item{text-align:center;flex:1}
+.rc-kpi-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--ink);line-height:1}
+.rc-kpi-num.up{color:var(--red)}.rc-kpi-num.dn{color:var(--green)}
+.rc-kpi-lbl{font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;line-height:1.4}
+
+/* ═══════════════════════════════════════════
+   POLICY / SIDEBAR LAYOUT
+═══════════════════════════════════════════ */
+.policy-layout{display:grid;grid-template-columns:1fr 190px;gap:0;padding:0 40px 24px;flex:1;position:relative;z-index:5}
+.pol-main{padding-right:24px}
+.pol-sb{border-left:2px solid var(--lt-border);padding-left:18px}
+.psw{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--lt-border)}
+.psw:last-child{border-bottom:none}
+.psw-head{font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px}
+.psw-list{list-style:none}
+.psw-list li{font-family:'Barlow',sans-serif;font-size:9.5px;color:var(--ink);padding:4px 0;border-bottom:1px solid var(--lt-border);line-height:1.4}
+.psw-list li:last-child{border-bottom:none}
+.psw-list li span{color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:7.5px;display:block}
+
+/* ═══════════════════════════════════════════
+   INTERVIEW
+═══════════════════════════════════════════ */
+.itv-header{background:var(--navy);padding:30px 40px 24px;position:relative;overflow:hidden}
+.itv-header::after{content:'"';position:absolute;right:26px;bottom:-28px;font-family:'Bebas Neue',sans-serif;font-size:200px;color:rgba(232,132,10,.08);line-height:1}
+.itv-tag{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:4px;text-transform:uppercase;margin-bottom:10px}
+.itv-name{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--white);line-height:1;margin-bottom:6px;letter-spacing:1px}
+.itv-role{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-style:italic;color:rgba(255,255,255,.45)}
+.itv-body{padding:24px 40px;flex:1;display:grid;grid-template-columns:185px 1fr;gap:24px;position:relative;z-index:5}
+.itv-photo{width:185px;height:240px;object-fit:cover;object-position:top;border:3px solid var(--amber)}
+.qa-block{margin-bottom:15px}
+.qa-q{font-family:'Barlow Condensed',sans-serif;font-size:11.5px;font-weight:700;font-style:italic;color:var(--amber);margin-bottom:4px;line-height:1.35}
+.qa-a{font-family:'Barlow',sans-serif;font-size:10.5px;line-height:1.7;color:var(--ink)}
+
+/* ═══════════════════════════════════════════
+   OPINION / GUEST ESSAY
+═══════════════════════════════════════════ */
+.op-banner{background:var(--red);padding:16px 40px;display:flex;align-items:center;gap:16px}
+.op-lbl{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);letter-spacing:3px}
+.op-rule{flex:1;height:1px;background:rgba(255,255,255,.2)}
+.op-by{font-family:'IBM Plex Mono',monospace;font-size:7px;color:rgba(255,255,255,.45);letter-spacing:1.5px;text-transform:uppercase;text-align:right}
+
+/* ═══════════════════════════════════════════
+   PHOTO / INFOGRAPHIC GRIDS
+═══════════════════════════════════════════ */
+.photo-grid{display:grid;gap:3px}
+.pg-2{grid-template-columns:1fr 1fr}
+.pg-3{grid-template-columns:1fr 1fr 1fr}
+.pg-wide-left{grid-template-columns:2fr 1fr}
+.pc{overflow:hidden;position:relative}
+.pc img{width:100%;height:100%;object-fit:cover;display:block;filter:sepia(8%) contrast(108%)}
+.pc .cap{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(11,22,35,.75));padding:16px 10px 8px;font-family:'IBM Plex Mono',monospace;font-size:7px;color:rgba(255,255,255,.68);letter-spacing:.5px}
+.pc.tall{grid-row:span 2}
+
+/* ═══════════════════════════════════════════
+   ADVERT / SPONSOR
+═══════════════════════════════════════════ */
+.ad-strip{border:2px solid var(--amber);padding:13px 16px;display:flex;align-items:center;gap:16px;margin:14px 0;background:rgba(232,132,10,.03)}
+.ad-lbl{font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:var(--amber);letter-spacing:3px;writing-mode:vertical-rl;text-transform:uppercase;padding-right:8px;border-right:1px solid rgba(232,132,10,.25)}
+.ad-hl{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.ad-body{font-family:'Barlow',sans-serif;font-size:9px;color:var(--mid);line-height:1.5}
+
+/* ═══════════════════════════════════════════
+   REFERENCE / GLOSSARY TABLE
+═══════════════════════════════════════════ */
+table.ref{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono',monospace;font-size:8.5px}
+table.ref th{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);border-bottom:2px solid var(--navy);padding:7px 6px;text-align:left}
+table.ref th:not(:first-child){text-align:right}
+table.ref td{padding:6px 6px;border-bottom:1px solid var(--lt-border);line-height:1.4;color:var(--ink)}
+table.ref td:not(:first-child){text-align:right}
+table.ref tr:last-child td{border-bottom:none}
+table.ref td.num{font-family:'IBM Plex Mono',monospace;color:var(--navy);font-size:8.5px}
+table.ref td.up{color:var(--red)!important;font-weight:600}
+table.ref td.dn{color:var(--green)!important;font-weight:600}
+table.ref .sec td{background:rgba(232,132,10,.07);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px}
+
+/* ═══════════════════════════════════════════
+   DONUT / PIE via SVG
+═══════════════════════════════════════════ */
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.leg-lbl{font-family:'Barlow',sans-serif;font-size:9px;color:var(--ink);flex:1}
+.leg-val{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mid)}
+
+/* ═══════════════════════════════════════════
+   MASTHEAD PAGE
+═══════════════════════════════════════════ */
+.mast-grid{padding:34px 40px;display:grid;grid-template-columns:1fr 1fr;gap:36px;flex:1;position:relative;z-index:5}
+.mast-sec-head{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:4px;text-transform:uppercase;border-bottom:1px solid var(--lt-border);padding-bottom:7px;margin-bottom:12px}
+.mast-name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--ink)}
+.mast-role{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:1px;margin-bottom:9px}
+
+/* ═══════════════════════════════════════════
+   BACK COVER
+═══════════════════════════════════════════ */
+#back-cover{background:#000;min-height:1123px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.bc-blueprint{position:absolute;inset:0;background-image:linear-gradient(rgba(232,132,10,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(232,132,10,.04) 1px,transparent 1px);background-size:36px 36px;pointer-events:none}
+.bc-accent{position:absolute;left:0;top:0;width:5px;height:100%;background:linear-gradient(to bottom,var(--amber) 0%,var(--red) 100%)}
+.bc-top{padding:36px 46px 24px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:5}
+.bc-brand{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--white)}
+.bc-brand span{color:var(--amber)}
+.bc-tagline{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-style:italic;color:rgba(255,255,255,.25);letter-spacing:1px;margin-top:4px}
+.bc-body{flex:1;padding:44px 46px 0;position:relative;z-index:5}
+.bc-quote{font-family:'Bebas Neue',sans-serif;font-size:46px;color:var(--white);line-height:1;letter-spacing:1px;max-width:600px;margin-bottom:16px}
+.bc-quote span{color:var(--amber)}
+.bc-attrib{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--amber);letter-spacing:3px;text-transform:uppercase}
+.bc-ad-box{margin-top:28px;padding:20px 24px;border:1px solid rgba(232,132,10,.35);background:rgba(232,132,10,.06);max-width:420px}
+.bc-ad-head{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.bc-ad-text{font-family:'Barlow',sans-serif;font-size:10px;color:rgba(255,255,255,.7);line-height:1.55;margin-bottom:12px}
+.bc-ad-cta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:1px}
+.bc-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:34px;height:175px}
+.bc-strip img{width:100%;height:100%;object-fit:cover;filter:grayscale(40%) sepia(20%);opacity:.5}
+.bc-bottom{padding:24px 46px 36px;display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;position:relative;z-index:5}
+.bc-contact h4{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px}
+.bc-contact p{font-family:'Barlow',sans-serif;font-size:9.5px;color:rgba(255,255,255,.28);line-height:1.65}
+.bc-next{text-align:right}
+.bc-next-lbl{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.25);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.bc-next-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-style:italic;font-weight:700;color:rgba(255,255,255,.5)}
+</style>
+</head>
+<body>
+
+<!-- ██████████████████████████████████████████
+     FRONT COVER
+██████████████████████████████████████████ -->
+<div class="page" id="cover" style="background:#c4b8a8">
+  <img class="cover-bg-img" src="{{COVER_IMAGE_FILE_URL}}" alt="Construction, Ghana">
+  <div class="cover-overlay"></div>
+  <div class="cover-accent-bar"></div>
+  <div class="cover-tech-top"></div>
+  <div class="crosshair ch-tl"></div>
+  <div class="crosshair ch-tr"></div>
+  <div class="crosshair ch-bl"></div>
+  <div class="crosshair ch-br"></div>
+
+  <div class="cover-content">
+    <div class="cover-topbar">
+      <div class="cv-brand">
+        <div class="cv-brand-row">
+          <span class="cvb-local">LOCAL</span><span class="cvb-link">LINK</span>
+        </div>
+        <div class="cvb-econ">Economist</div>
+      </div>
+      <div class="cv-meta">
+        <span class="cv-vol">Vol. 02 &nbsp;·&nbsp; Issue 02</span>
+        <span class="cv-date">February 2026 &nbsp;·&nbsp; GH₵ 25.00 / $3.50</span>
+      </div>
+    </div>
+
+    <div class="cover-hero">
+      <div class="cv-eyebrow">Annual Pricing Report</div>
+
+      <div class="cv-headline">
+        CONSTRUCTION<br>&amp; <em>INFRASTRUCTURE</em><br>PRICING INDEX
+      </div>
+
+      <div class="cv-sub-row">
+        <div class="cv-subhead">
+          Ghana's most comprehensive survey of construction materials, labour rates, and project costs — from a bag of cement to a kilometre of highway. 142 data points across 9 regions, Q4 2025.
+        </div>
+        <div class="cv-index-badge">
+          <div class="cib-num">CIPI</div>
+          <div class="cib-label">Ghana Index</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--navy);line-height:1;margin-top:4px;letter-spacing:2px">128.4</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:rgba(11,22,35,.6);letter-spacing:1px;margin-top:2px">+8.3% YoY</div>
+        </div>
+      </div>
+
+      <div class="cv-teasers">
+        <div>
+          <div class="cvt-label">Cover Story</div>
+          <div class="cvt-title">Cement at GH₵ 90/bag — What's Driving the Spike?</div>
+        </div>
+        <div>
+          <div class="cvt-label">Deep Dive</div>
+          <div class="cvt-title">Full Materials Price Tables: 142 Line Items</div>
+        </div>
+        <div>
+          <div class="cvt-label">Regional</div>
+          <div class="cvt-title">Why Tamale Builds at 34% More Than Accra</div>
+        </div>
+        <div>
+          <div class="cvt-label">Outlook</div>
+          <div class="cvt-title">2026 Forecast: Where Prices Are Heading</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cv-price">ISSN 0000-0001 &nbsp;·&nbsp; GH₵ 25.00</div>
+</div>
+
+<div class="p-sep">── inside front cover ──</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 2 — MASTHEAD
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Masthead</div>
+    <div class="ph-pn">02</div>
+  </div>
+  <div class="mast-grid">
+    <div>
+      <div class="mast-sec-head">Editorial</div>
+      <div class="mast-name">Kwame A. Mensah</div><div class="mast-role">Editor-in-Chief</div>
+      <div class="mast-name">Abena Osei-Kuffour</div><div class="mast-role">Deputy Editor, Economics</div>
+      <div class="mast-name">Kofi Darko Asante</div><div class="mast-role">Senior Correspondent, Construction &amp; Real Estate</div>
+      <div class="mast-name">Ama Boateng</div><div class="mast-role">Lead Data Analyst &amp; Index Compiler</div>
+      <div class="mast-name">Yaw Owusu</div><div class="mast-role">Features Writer</div>
+      <div class="mast-name">Efua Quartey</div><div class="mast-role">Policy Correspondent</div>
+      <div class="mast-name">Kwesi Antwi-Boasiako</div><div class="mast-role">Construction Economics Analyst</div>
+      <div class="mast-name">Prince Nkrumah-Yeboah</div><div class="mast-role" style="margin-bottom:18px">Regional Correspondent, Northern &amp; Middle Belt</div>
+
+      <div class="mast-sec-head">Data &amp; Methodology</div>
+      <div class="mast-name">Priscilla Aidoo</div><div class="mast-role">Quantitative Research Lead</div>
+      <div class="mast-name">Samuel Ofori-Atta</div><div class="mast-role">Field Survey Coordinator (9 regions)</div>
+      <div class="mast-name">Akosua Twum</div><div class="mast-role" style="margin-bottom:18px">Statistical Modelling &amp; Forecasting</div>
+
+      <div class="mast-sec-head">Design</div>
+      <div class="mast-name">Adjoa Mensah-Ankrah</div><div class="mast-role">Art Director</div>
+      <div class="mast-name">Emmanuel Tetteh</div><div class="mast-role">Senior Graphic Designer</div>
+    </div>
+    <div>
+      <div class="mast-sec-head">Advisory Panel — Construction &amp; Engineering</div>
+      <div class="mast-name">Ing. Kwabena Asante-Poku</div><div class="mast-role">Ghana Institution of Engineers (GhIE)</div>
+      <div class="mast-name">Dr. Kweku Agyemang-Bonsu</div><div class="mast-role">Department of Civil Engineering, KNUST</div>
+      <div class="mast-name">Mrs. Abena Sarpong-Adu</div><div class="mast-role">Ghana Real Estate Developers Association (GREDA)</div>
+      <div class="mast-name">Arch. Francis Koomson</div><div class="mast-role" style="margin-bottom:18px">Ghana Institute of Architects</div>
+
+      <div class="mast-sec-head">Data Partners</div>
+      <div class="mast-name">Ghana Statistical Service</div><div class="mast-role">CPI and PPI data, Q4 2025</div>
+      <div class="mast-name">Bank of Ghana</div><div class="mast-role">Forex rates &amp; import cost indices</div>
+      <div class="mast-name">Ghana Customs &amp; Excise Division</div><div class="mast-role">Materials import data, HS codes 72–76, 84, 94</div>
+      <div class="mast-name">National Development Planning Commission</div><div class="mast-role" style="margin-bottom:18px">Infrastructure project cost benchmarks</div>
+
+      <div style="background:var(--navy);padding:16px 18px;margin-bottom:16px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:9px">Methodology Note</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:9px;color:rgba(242,237,228,.55);line-height:1.65">The LocalLink Construction &amp; Infrastructure Pricing Index (CIPI) is compiled quarterly from 142 individual price points across 9 administrative regions. Prices are collected from registered suppliers, government procurement records, and field survey. All prices are inclusive of applicable VAT unless otherwise noted. Base year: Q1 2023 = 100.</div>
+      </div>
+      <div style="font-family:'Barlow',sans-serif;font-size:8.5px;color:var(--mid);line-height:1.65">© 2026 LocalLink Media Group, Accra. All rights reserved. Construction pricing data is indicative and should be verified against current market rates before use in project budgeting. LocalLink Economist accepts no liability for commercial decisions based on prices published herein.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">LOCALLINK MEDIA GROUP · ACCRA</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 3 — CONTENTS
+██████████████████████████████████████████ -->
+<div class="page" id="contents">
+  <div class="bp-grid"></div>
+  <div class="toc-header">
+    <div class="toc-eye">Table of Contents</div>
+    <div class="toc-title">CONSTRUCTION &amp; <span>INFRASTRUCTURE</span><br>PRICING INDEX 2026</div>
+  </div>
+  <div class="toc-grid">
+    <div>
+      <div class="toc-sec">Overview &amp; Index</div>
+      <div class="toc-item"><div class="toc-num">06</div><div><div class="toc-t">The CIPI: Ghana's Construction Cost Benchmark</div><div class="toc-d">How we compile the index and what it tells us about the state of building in Ghana</div></div></div>
+      <div class="toc-item"><div class="toc-num">10</div><div><div class="toc-t">Headline Findings: Q4 2025</div><div class="toc-d">The 8.3% annual increase — which categories drove it, and what's next</div></div></div>
+      <div class="toc-item"><div class="toc-num">14</div><div><div class="toc-t">Cement at GH₵ 90/Bag: The Cost Crisis in Context</div><div class="toc-d">Supply chain, forex pressure, and the GPCL monopoly question</div></div></div>
+      <div class="toc-sec">Materials Prices</div>
+      <div class="toc-item"><div class="toc-num">20</div><div><div class="toc-t">Full Materials Price Index — 142 Line Items</div><div class="toc-d">Every material from reinforcement steel to roof nails, with YoY change</div></div></div>
+      <div class="toc-item"><div class="toc-num">32</div><div><div class="toc-t">Structural Materials: Steel, Cement &amp; Concrete</div><div class="toc-d">Deep dive into the materials that make up 48% of project budgets</div></div></div>
+      <div class="toc-item"><div class="toc-num">38</div><div><div class="toc-t">MEP: Mechanical, Electrical &amp; Plumbing Prices</div><div class="toc-d">Copper wire, conduit, PVC fittings, and sanitary ware — the hidden cost escalation</div></div></div>
+    </div>
+    <div>
+      <div class="toc-sec">Labour &amp; Equipment</div>
+      <div class="toc-item"><div class="toc-num">44</div><div><div class="toc-t">Construction Labour Rate Survey 2026</div><div class="toc-d">Daily rates for 24 trades, by region and skill level</div></div></div>
+      <div class="toc-item"><div class="toc-num">50</div><div><div class="toc-t">Plant &amp; Equipment Hire Rates</div><div class="toc-d">From excavators to concrete mixers — weekly hire rates across Ghana</div></div></div>
+      <div class="toc-sec">Regional Analysis</div>
+      <div class="toc-item"><div class="toc-num">56</div><div><div class="toc-t">The Regional Price Premium: Why Location Matters</div><div class="toc-d">Tamale adds 34%, Cape Coast 18%, Kumasi 12% to Accra baseline costs</div></div></div>
+      <div class="toc-item"><div class="toc-num">62</div><div><div class="toc-t">Infrastructure Benchmarks: Roads, Schools &amp; Water</div><div class="toc-d">Cost-per-km, cost-per-classroom, cost-per-borehole — Ghana's project cost database</div></div></div>
+      <div class="toc-sec">Policy &amp; Outlook</div>
+      <div class="toc-item"><div class="toc-num">68</div><div><div class="toc-t">Interview: GREDA on the Housing Affordability Crisis</div><div class="toc-d">Ghana Real Estate Developers Association on what rising costs mean for housing supply</div></div></div>
+      <div class="toc-item"><div class="toc-num">72</div><div><div class="toc-t">2026 Price Forecast: Our Model's Projections</div><div class="toc-d">Cement, steel, and labour — where prices are heading over the next 12 months</div></div></div>
+      <div class="toc-item"><div class="toc-num">76</div><div><div class="toc-t">Reference Tables &amp; Methodology</div><div class="toc-d">Complete source notes, regional weighting, and index calculation methodology</div></div></div>
+    </div>
+  </div>
+  <div class="toc-foot">
+    <img class="toc-thumb" src="{{TOC_THUMB_IMAGE_FILE_URL}}" alt="Construction &amp; supply chain">
+    <div class="toc-note">"Every GH₵ spent on construction passes through a supply chain shaped by exchange rates, regulation, and distance. This index makes that chain visible."<br>— Kwame A. Mensah, Editor-in-Chief</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 5 — EDITOR'S LETTER
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">From the Editor</div>
+    <div class="ph-pn">05</div>
+  </div>
+  <div class="header-accent"></div>
+  <div style="padding:24px 40px 0;margin-bottom:14px;position:relative;z-index:5">
+    <div class="amber-rule"></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1.1;color:var(--ink);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">The Price of Building Ghana</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:3px;text-transform:uppercase">Letter from the Editor-in-Chief</div>
+  </div>
+  <div class="ed-letter">
+    <div class="el-body">
+      <p class="el-drop">In January 2025, a 50kg bag of ordinary Portland cement cost GH₵ 75 at a Tema hardware store. By December 2025, the same bag cost GH₵ 90 — a 20 percent increase in twelve months. On its own, that is a number. Multiplied across a medium-density residential project of 2,000 square metres consuming perhaps 2,500 bags, it becomes GH₵ 37,500 of additional cost on a single line item. Add the corresponding increases in reinforcement steel, aluminium roofing, copper wiring, and skilled labour rates, and you begin to understand why housing developers in Accra are shelving projects, why school contractors are requesting variation orders, and why the ordinary Ghanaian who wants to build a three-bedroom house is finding the dream receding faster than they can save.</p>
+      <p>This second edition of LocalLink Economist is our response to what we believe is one of the most consequential but least understood dynamics in Ghana's economy: the cost of construction. We have spent four months compiling 142 price data points across nine regions, surveying suppliers, contractors, and government procurement databases, and building what we believe to be Ghana's most comprehensive independent construction pricing index.</p>
+      <p>What we found should alarm policymakers, builders, and prospective homeowners in equal measure. The LocalLink CIPI (Construction and Infrastructure Pricing Index) stood at 128.4 at the end of Q4 2025 — up 8.3 percent year-on-year and fully 28.4 percent above our base year of Q1 2023. Structural materials — cement, steel, and precast concrete — are the primary drivers. But the deepest and most troubling story is in the data on regional price variation. A contractor building a government school in Tamale faces total material costs approximately 34 percent higher than an equivalent project in Accra. That premium is not abstract: it represents government money wasted, infrastructure not built, and communities not served.</p>
+      <p>We have also included, for the first time, a full construction labour rate survey covering 24 trades across all nine regions. The pattern is consistent with what we found in our inaugural labour market edition: skilled workers in the north are paid less, but the materials they build with cost more. It is a paradox that has deep consequences for national infrastructure equity.</p>
+      <p>We present this data not as a counsel of despair but as a foundation for better decisions — by government procurers, private developers, quantity surveyors, and the millions of Ghanaians navigating one of the most expensive decisions of their lives: whether, and how, to build.</p>
+      <div class="el-sig">
+        <div class="el-sig-name">Kwame A. Mensah</div>
+        <div class="el-sig-role">Editor-in-Chief, LocalLink Economist</div>
+        <div class="el-sig-role" style="color:var(--mid)">Accra, February 2026</div>
+      </div>
+    </div>
+    <div class="el-sb">
+      <div class="el-sb-head">Index Snapshot</div>
+      <div class="sb-stat"><div class="sb-num amber">128.4</div><div class="sb-lbl">CIPI score, Q4 2025 (Base Q1 2023 = 100)</div></div>
+      <div class="sb-stat"><div class="sb-num up">+8.3%</div><div class="sb-lbl">Year-on-year increase in overall construction costs</div></div>
+      <div class="sb-stat"><div class="sb-num up">GH₵ 90</div><div class="sb-lbl">Price of 50kg Portland cement bag, Accra Dec 2025 (was GH₵ 75, Jan 2025)</div></div>
+      <div class="sb-stat"><div class="sb-num up">+34%</div><div class="sb-lbl">Regional cost premium — Tamale vs Accra, materials only</div></div>
+      <div class="sb-stat"><div class="sb-num">142</div><div class="sb-lbl">Price data points compiled for this edition across 9 regions</div></div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">05</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     SECTION DIVIDER — Part I
+██████████████████████████████████████████ -->
+<div class="page sec-div" id="part1">
+  <div class="sd-accent-bar"></div>
+  <img class="sd-bg" src="{{PART1_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-grid"></div>
+  <div class="sd-content">
+    <div class="sd-part">Part One</div>
+    <div class="sd-rule"></div>
+    <div class="sd-title">THE<br><span>CIPI</span><br>OVERVIEW</div>
+    <div class="sd-sub">Ghana's construction cost benchmark — what it measures, how it moved, and what it means for every builder in the country</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 6 — CIPI OVERVIEW / INDEX EXPLAINER
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">CIPI — Overview</div>
+    <div class="ph-pn">06</div>
+  </div>
+  <div class="header-accent"></div>
+
+  <!-- Index Gauge + headline -->
+  <div style="padding:20px 40px 0;position:relative;z-index:5">
+    <div class="gauge-wrap">
+      <!-- SVG semi-gauge -->
+      <svg class="gauge-svg" width="160" height="95" viewBox="0 0 160 95">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#1a7a3c"/>
+            <stop offset="40%" stop-color="#e8840a"/>
+            <stop offset="100%" stop-color="#c0341a"/>
+          </linearGradient>
+        </defs>
+        <!-- track -->
+        <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12" stroke-linecap="round"/>
+        <!-- fill — 128.4/200 = 64.2% of arc -->
+        <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="url(#gaugeGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="204" stroke-dashoffset="73"/>
+        <!-- needle -->
+        <line x1="80" y1="85" x2="34" y2="26" stroke="#e8840a" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="80" cy="85" r="5" fill="#e8840a"/>
+        <!-- labels -->
+        <text x="12" y="93" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.4)">0</text>
+        <text x="72" y="16" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.4)">100</text>
+        <text x="140" y="93" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.4)" text-anchor="end">200</text>
+      </svg>
+      <div class="gauge-info">
+        <div class="g-num">128.4</div>
+        <div class="g-label">CIPI Score — Q4 2025 &nbsp;·&nbsp; Base Q1 2023 = 100</div>
+        <div class="g-interp">ELEVATED — above long-run trend</div>
+        <div class="g-desc">The index has risen 28.4 points (28.4%) since the base period. Structural materials and imported MEP components are the primary drivers. The pace of increase is accelerating.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-left:auto">
+        <div style="background:rgba(255,255,255,.05);padding:10px 12px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--amber);letter-spacing:2px;line-height:1">+8.3%</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px">YoY CHANGE</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);padding:10px 12px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--red);letter-spacing:2px;line-height:1">+3.1%</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px">QoQ CHANGE</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);padding:10px 12px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--white);letter-spacing:2px;line-height:1">142</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px">DATA POINTS</div>
+        </div>
+        <div style="background:rgba(255,255,255,.05);padding:10px 12px;text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--white);letter-spacing:2px;line-height:1">9</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:6.5px;color:rgba(255,255,255,.35);letter-spacing:1px;margin-top:3px">REGIONS COVERED</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-index performance -->
+  <div style="padding:18px 40px 0;position:relative;z-index:5">
+    <div class="chart-box">
+      <div class="chart-label">CIPI Sub-Index Performance — Q4 2025 vs Q4 2024 (YoY %)</div>
+      <div class="h-bar-chart">
+        <div class="hb-row"><div class="hb-lbl">Structural Materials</div><div class="hb-track"><div class="hb-fill red" style="width:86%"></div></div><div class="hb-val">+11.4%</div></div>
+        <div class="hb-row"><div class="hb-lbl">MEP Components</div><div class="hb-track"><div class="hb-fill red" style="width:78%"></div></div><div class="hb-val">+10.2%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Finishes &amp; Cladding</div><div class="hb-track"><div class="hb-fill" style="width:62%;background:var(--amber)"></div></div><div class="hb-val">+8.1%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Skilled Labour</div><div class="hb-track"><div class="hb-fill" style="width:55%;background:var(--amber)"></div></div><div class="hb-val">+7.2%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Plant &amp; Equipment Hire</div><div class="hb-track"><div class="hb-fill steel" style="width:42%"></div></div><div class="hb-val">+5.5%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Roofing &amp; Waterproofing</div><div class="hb-track"><div class="hb-fill steel" style="width:48%"></div></div><div class="hb-val">+6.3%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Earthworks</div><div class="hb-track"><div class="hb-fill" style="width:34%;background:var(--green)"></div></div><div class="hb-val">+4.5%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Unskilled Labour</div><div class="hb-track"><div class="hb-fill" style="width:28%;background:var(--green)"></div></div><div class="hb-val">+3.7%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col" style="padding-top:16px">
+    <div class="col-body">
+      <p>The LocalLink Construction and Infrastructure Pricing Index is compiled quarterly from surveys of registered suppliers, import records at Tema and Takoradi ports, and government procurement databases across nine administrative regions. Each of the 142 price data points is weighted by its typical share of total project cost for a standardised medium-density residential building — our reference project — with supplementary indices for road construction, institutional buildings (schools and clinics), and water infrastructure.</p>
+    </div>
+    <div class="col-body">
+      <p>The Q4 2025 reading of 128.4 represents the highest level since the index was initiated in Q1 2023. The acceleration in Q3 and Q4 2025 — adding 6.2 points in the second half of the year alone — reflects the compounding effects of cedi depreciation on imported material costs, the global steel price recovery, and what suppliers describe as supply chain disruptions in the local cement market. We examine each of these drivers in detail in the pages that follow.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">06 — 07</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 10 — HEADLINE FINDINGS / TREND CHART
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">CIPI — Headline Findings</div>
+    <div class="ph-pn">10</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">CIPI Quarterly Trend — Q1 2023 to Q4 2025</div>
+    <div class="data-sub">Index scores by quarter; base Q1 2023 = 100. Sub-indices shown separately. Source: LocalLink Economist Research Unit.</div>
+
+    <!-- CIPI trend SVG chart -->
+    <div class="chart-box dark" style="margin-bottom:18px">
+      <div class="chart-label light">CIPI Overall Score — Quarterly (Q1 2023 – Q4 2025)</div>
+      <svg class="svg-chart" height="160" viewBox="0 0 714 160">
+        <!-- grid lines -->
+        <line x1="0" y1="20" x2="714" y2="20" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <line x1="0" y1="60" x2="714" y2="60" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <line x1="0" y1="100" x2="714" y2="100" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <line x1="0" y1="140" x2="714" y2="140" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+        <!-- y-labels -->
+        <text x="4" y="18" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.25)">140</text>
+        <text x="4" y="58" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.25)">130</text>
+        <text x="4" y="98" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.25)">120</text>
+        <text x="4" y="138" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.25)">100</text>
+        <!-- Baseline 100 dashed -->
+        <line x1="30" y1="140" x2="714" y2="140" stroke="rgba(232,132,10,.3)" stroke-width="1" stroke-dasharray="4,3"/>
+
+        <!-- CIPI Overall line — Q1'23=100, Q2=103, Q3=107, Q4=111, Q1'24=114, Q2=117, Q3=121, Q4=124, Q1'25=124.8, Q2=125.6, Q3=127.2, Q4=128.4 -->
+        <!-- Map: 100→140, 128.4→16, x from 30 to 700 over 12 pts, step=60.9 -->
+        <polyline
+          points="30,140 91,128 152,112 213,96 274,84 335,72 396,56 457,44 518,41.6 579,38.4 640,32 700,25.6"
+          fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linejoin="round"/>
+        <!-- area fill -->
+        <polygon
+          points="30,140 91,128 152,112 213,96 274,84 335,72 396,56 457,44 518,41.6 579,38.4 640,32 700,25.6 700,155 30,155"
+          fill="rgba(232,132,10,.08)"/>
+        <!-- Structural materials sub-line -->
+        <polyline
+          points="30,140 91,124 152,108 213,88 274,76 335,60 396,40 457,28 518,24 579,20 640,14 700,8"
+          fill="none" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+        <!-- Labour sub-line -->
+        <polyline
+          points="30,140 91,132 152,120 213,110 274,102 335,94 396,84 457,76 518,74 579,72 640,68 700,64"
+          fill="none" stroke="#4a9" stroke-width="1.5" stroke-dasharray="5,3" stroke-linejoin="round"/>
+
+        <!-- data point dots on main line -->
+        <circle cx="30" cy="140" r="3" fill="var(--amber)"/>
+        <circle cx="700" cy="25.6" r="4" fill="var(--amber)" stroke="var(--navy)" stroke-width="1.5"/>
+        <text x="704" y="23" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)">128.4</text>
+
+        <!-- X labels -->
+        <text x="26" y="158" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.28)">Q1'23</text>
+        <text x="266" y="158" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.28)">Q1'24</text>
+        <text x="512" y="158" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.28)">Q1'25</text>
+        <text x="668" y="158" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.28)">Q4'25</text>
+
+        <!-- legend -->
+        <rect x="540" y="12" width="10" height="2" fill="var(--amber)"/>
+        <text x="554" y="18" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.5)">CIPI Overall</text>
+        <rect x="540" y="24" width="10" height="1.5" fill="var(--red)" rx="0"/>
+        <text x="554" y="30" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.5)">Structural</text>
+        <rect x="540" y="36" width="10" height="1.5" fill="#4a9" rx="0"/>
+        <text x="554" y="42" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.5)">Labour</text>
+      </svg>
+    </div>
+
+    <div class="kpi-row" style="background:var(--paper-lt)">
+      <div class="kpi-cell"><div class="kpi-num up">+11.4%</div><div class="kpi-lbl">Structural Materials YoY — the single biggest driver</div></div>
+      <div class="kpi-cell"><div class="kpi-num up">+10.2%</div><div class="kpi-lbl">MEP Components — driven by imported copper &amp; cable</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">+8.3%</div><div class="kpi-lbl">CIPI Overall — highest 12-month gain since base year</div></div>
+      <div class="kpi-cell"><div class="kpi-num dn">+3.7%</div><div class="kpi-lbl">Unskilled Labour — lowest inflation category</div></div>
+    </div>
+
+    <!-- Split cost budget chart -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="chart-box">
+        <div class="chart-label">Typical Project Cost Split — Medium Residential (2025)</div>
+        <div class="donut-wrap">
+          <svg width="105" height="105" viewBox="0 0 105 105">
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#e8e5de" stroke-width="17"/>
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#c0341a" stroke-width="17" stroke-dasharray="114 125" stroke-dashoffset="0"/>
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#e8840a" stroke-width="17" stroke-dasharray="66 173" stroke-dashoffset="-114"/>
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#2d4a6b" stroke-width="17" stroke-dasharray="48 191" stroke-dashoffset="-180"/>
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#1a7a3c" stroke-width="17" stroke-dasharray="33 206" stroke-dashoffset="-228"/>
+            <circle cx="52" cy="52" r="38" fill="none" stroke="#888" stroke-width="17" stroke-dasharray="27 212" stroke-dashoffset="-261"/>
+          </svg>
+          <div>
+            <div class="leg-item"><div class="leg-dot" style="background:#c0341a"></div><span class="leg-lbl">Structural Materials</span><span class="leg-val">30%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#e8840a"></div><span class="leg-lbl">MEP &amp; Finishes</span><span class="leg-val">18%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#2d4a6b"></div><span class="leg-lbl">Skilled Labour</span><span class="leg-val">13%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#1a7a3c"></div><span class="leg-lbl">Plant &amp; Prelims</span><span class="leg-val">9%</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:#888"></div><span class="leg-lbl">Other</span><span class="leg-val">30%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">Annual Inflation by Category — Q4 2025 vs Q4 2023 (2-yr cumulative)</div>
+        <div class="h-bar-chart">
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Structural Mtls</div><div class="hb-track"><div class="hb-fill red" style="width:100%"></div></div><div class="hb-val">+23.8%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">MEP Components</div><div class="hb-track"><div class="hb-fill red" style="width:88%"></div></div><div class="hb-val">+21.1%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Roofing</div><div class="hb-track"><div class="hb-fill" style="width:72%;background:var(--amber)"></div></div><div class="hb-val">+17.2%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Finishes</div><div class="hb-track"><div class="hb-fill" style="width:63%;background:var(--amber)"></div></div><div class="hb-val">+15.0%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Skilled Labour</div><div class="hb-track"><div class="hb-fill steel" style="width:52%"></div></div><div class="hb-val">+12.4%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Plant Hire</div><div class="hb-track"><div class="hb-fill steel" style="width:44%"></div></div><div class="hb-val">+10.5%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:110px">Unskilled Labour</div><div class="hb-track"><div class="hb-fill green" style="width:32%"></div></div><div class="hb-val">+7.6%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">10 — 11</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     SECTION DIVIDER — Part II: MATERIALS
+██████████████████████████████████████████ -->
+<div class="page sec-div" id="part2">
+  <div class="sd-accent-bar"></div>
+  <img class="sd-bg" src="{{PART2_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-grid"></div>
+  <div class="sd-content">
+    <div class="sd-part">Part Two</div>
+    <div class="sd-rule"></div>
+    <div class="sd-title">MATERIALS<br><span>PRICE</span><br>INDEX</div>
+    <div class="sd-sub">142 line items — from a bag of cement to a tonne of reinforcement steel. Prices collected Q4 2025 across 9 regions.</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 20 — FULL MATERIALS PRICE TABLE (1)
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Materials Price Index</div>
+    <div class="ph-pn">20</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Full Materials Price Table — Q4 2025</div>
+    <div class="data-sub">Greater Accra (Tema/Accra) market prices, inclusive of VAT. Source: LocalLink field survey Nov–Dec 2025. YoY = vs Q4 2024.</div>
+
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr>
+            <th style="width:36%">Material / Description</th>
+            <th>Unit</th>
+            <th>Q4 2024 (GH₵)</th>
+            <th>Q4 2025 (GH₵)</th>
+            <th>YoY Change</th>
+            <th>USD Equiv.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">CEMENT &amp; CONCRETE</td></tr>
+          <tr><td class="cat">Ordinary Portland Cement (OPC) 50kg</td><td class="unit">Bag</td><td>75.00</td><td class="price">90.00</td><td class="change-up"><span class="change-pill pill-up">+20.0%</span></td><td>5.63</td></tr>
+          <tr><td class="cat">Masonry Cement 50kg</td><td class="unit">Bag</td><td>72.00</td><td class="price">86.00</td><td class="change-up"><span class="change-pill pill-up">+19.4%</span></td><td>5.38</td></tr>
+          <tr><td class="cat">Rapid Hardening Cement 50kg</td><td class="unit">Bag</td><td>88.00</td><td class="price">106.00</td><td class="change-up"><span class="change-pill pill-up">+20.5%</span></td><td>6.63</td></tr>
+          <tr><td class="cat">Ready-Mix Concrete C20</td><td class="unit">m³</td><td>540.00</td><td class="price">648.00</td><td class="change-up"><span class="change-pill pill-up">+20.0%</span></td><td>40.50</td></tr>
+          <tr><td class="cat">Ready-Mix Concrete C25</td><td class="unit">m³</td><td>580.00</td><td class="price">698.00</td><td class="change-up"><span class="change-pill pill-up">+20.3%</span></td><td>43.63</td></tr>
+          <tr><td class="cat">Ready-Mix Concrete C30</td><td class="unit">m³</td><td>620.00</td><td class="price">748.00</td><td class="change-up"><span class="change-pill pill-up">+20.6%</span></td><td>46.75</td></tr>
+          <tr><td class="cat">River Sand (sharp)</td><td class="unit">Ton</td><td>180.00</td><td class="price">196.00</td><td class="change-up"><span class="change-pill pill-up">+8.9%</span></td><td>12.25</td></tr>
+          <tr><td class="cat">Quarry Dust / Fine Aggregate</td><td class="unit">Ton</td><td>140.00</td><td class="price">152.00</td><td class="change-up"><span class="change-pill pill-up">+8.6%</span></td><td>9.50</td></tr>
+          <tr><td class="cat">Crushed Stone (20mm)</td><td class="unit">Ton</td><td>210.00</td><td class="price">228.00</td><td class="change-up"><span class="change-pill pill-up">+8.6%</span></td><td>14.25</td></tr>
+          <tr><td class="cat">Hollow Core Concrete Blocks (6")</td><td class="unit">Each</td><td>4.80</td><td class="price">5.60</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>0.35</td></tr>
+          <tr><td class="cat">Solid Concrete Blocks (6")</td><td class="unit">Each</td><td>5.20</td><td class="price">6.10</td><td class="change-up"><span class="change-pill pill-up">+17.3%</span></td><td>0.38</td></tr>
+          <tr><td class="cat">Precast Concrete Lintel (1.2m)</td><td class="unit">Each</td><td>38.00</td><td class="price">44.00</td><td class="change-up"><span class="change-pill pill-up">+15.8%</span></td><td>2.75</td></tr>
+          <tr class="section-row"><td colspan="6">REINFORCEMENT STEEL</td></tr>
+          <tr><td class="cat">Mild Steel Round Bar (Y8)</td><td class="unit">Ton</td><td>8,200</td><td class="price">9,650</td><td class="change-up"><span class="change-pill pill-up">+17.7%</span></td><td>603</td></tr>
+          <tr><td class="cat">High Yield Bar (Y10)</td><td class="unit">Ton</td><td>8,400</td><td class="price">9,900</td><td class="change-up"><span class="change-pill pill-up">+17.9%</span></td><td>619</td></tr>
+          <tr><td class="cat">High Yield Bar (Y12)</td><td class="unit">Ton</td><td>8,500</td><td class="price">10,050</td><td class="change-up"><span class="change-pill pill-up">+18.2%</span></td><td>628</td></tr>
+          <tr><td class="cat">High Yield Bar (Y16)</td><td class="unit">Ton</td><td>8,600</td><td class="price">10,200</td><td class="change-up"><span class="change-pill pill-up">+18.6%</span></td><td>638</td></tr>
+          <tr><td class="cat">High Yield Bar (Y20)</td><td class="unit">Ton</td><td>8,700</td><td class="price">10,350</td><td class="change-up"><span class="change-pill pill-up">+19.0%</span></td><td>647</td></tr>
+          <tr><td class="cat">Binding Wire (BWG 16)</td><td class="unit">kg</td><td>12.50</td><td class="price">14.80</td><td class="change-up"><span class="change-pill pill-up">+18.4%</span></td><td>0.93</td></tr>
+          <tr><td class="cat">BRC Mesh (A142)</td><td class="unit">Sheet</td><td>320.00</td><td class="price">378.00</td><td class="change-up"><span class="change-pill pill-up">+18.1%</span></td><td>23.63</td></tr>
+          <tr class="section-row"><td colspan="6">STRUCTURAL STEEL SECTIONS</td></tr>
+          <tr><td class="cat">Universal Column UC 152×152</td><td class="unit">m</td><td>280.00</td><td class="price">330.00</td><td class="change-up"><span class="change-pill pill-up">+17.9%</span></td><td>20.63</td></tr>
+          <tr><td class="cat">Universal Beam UB 203×133</td><td class="unit">m</td><td>310.00</td><td class="price">365.00</td><td class="change-up"><span class="change-pill pill-up">+17.7%</span></td><td>22.81</td></tr>
+          <tr><td class="cat">RHS 100×100×5mm</td><td class="unit">m</td><td>98.00</td><td class="price">116.00</td><td class="change-up"><span class="change-pill pill-up">+18.4%</span></td><td>7.25</td></tr>
+          <tr><td class="cat">SHS 75×75×4mm</td><td class="unit">m</td><td>72.00</td><td class="price">85.00</td><td class="change-up"><span class="change-pill pill-up">+18.1%</span></td><td>5.31</td></tr>
+          <tr><td class="cat">Flat Bar 50×6mm</td><td class="unit">m</td><td>18.00</td><td class="price">21.50</td><td class="change-up"><span class="change-pill pill-up">+19.4%</span></td><td>1.34</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:.5px;margin-top:6px">Exchange rate used: USD 1 = GH₵ 16.00 (Bank of Ghana mid-rate, Dec 2025) &nbsp;·&nbsp; All prices include 15% VAT &nbsp;·&nbsp; Prices are Accra/Tema market; see page 56 for regional premiums</div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">20 — 21</div>
+  </div>
+</div>
+
+<!-- PAGE 22 — MATERIALS TABLE CONTINUED -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Materials Price Index — Continued</div>
+    <div class="ph-pn">22</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Materials Price Table — Q4 2025 (Continued)</div>
+    <div class="data-sub">Roofing, masonry, timber, doors &amp; windows, finishes. Accra/Tema market prices incl. VAT. Source: LocalLink Economist Research Unit.</div>
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr><th style="width:36%">Material / Description</th><th>Unit</th><th>Q4 2024 (GH₵)</th><th>Q4 2025 (GH₵)</th><th>YoY Change</th><th>USD Equiv.</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">ROOFING</td></tr>
+          <tr><td class="cat">Long Span Alum. Sheet (0.55mm) Long Span</td><td class="unit">m²</td><td>98.00</td><td class="price">114.00</td><td class="change-up"><span class="change-pill pill-up">+16.3%</span></td><td>7.13</td></tr>
+          <tr><td class="cat">Step Tile Alum. Sheet (0.55mm)</td><td class="unit">m²</td><td>112.00</td><td class="price">130.00</td><td class="change-up"><span class="change-pill pill-up">+16.1%</span></td><td>8.13</td></tr>
+          <tr><td class="cat">Corrugated GI Sheet (0.4mm)</td><td class="unit">m²</td><td>68.00</td><td class="price">78.00</td><td class="change-up"><span class="change-pill pill-up">+14.7%</span></td><td>4.88</td></tr>
+          <tr><td class="cat">Roof Timber Purlin (3"×2") Treated</td><td class="unit">m</td><td>28.00</td><td class="price">30.00</td><td class="change-up"><span class="change-pill pill-up">+7.1%</span></td><td>1.88</td></tr>
+          <tr><td class="cat">Roof Timber Rafter (4"×2") Treated</td><td class="unit">m</td><td>34.00</td><td class="price">37.00</td><td class="change-up"><span class="change-pill pill-up">+8.8%</span></td><td>2.31</td></tr>
+          <tr><td class="cat">Bituminous Felt (Torch-On, 3mm)</td><td class="unit">Roll</td><td>380.00</td><td class="price">420.00</td><td class="change-up"><span class="change-pill pill-up">+10.5%</span></td><td>26.25</td></tr>
+          <tr class="section-row"><td colspan="6">DOORS, WINDOWS &amp; IRONMONGERY</td></tr>
+          <tr><td class="cat">Flush Door (Solid Core, 900×2100)</td><td class="unit">Each</td><td>480.00</td><td class="price">530.00</td><td class="change-up"><span class="change-pill pill-up">+10.4%</span></td><td>33.13</td></tr>
+          <tr><td class="cat">Panel Door (Hardwood, 900×2100)</td><td class="unit">Each</td><td>720.00</td><td class="price">800.00</td><td class="change-up"><span class="change-pill pill-up">+11.1%</span></td><td>50.00</td></tr>
+          <tr><td class="cat">Aluminium Casement Window (1200×1200)</td><td class="unit">Each</td><td>680.00</td><td class="price">780.00</td><td class="change-up"><span class="change-pill pill-up">+14.7%</span></td><td>48.75</td></tr>
+          <tr><td class="cat">uPVC Sliding Window (1800×1200)</td><td class="unit">Each</td><td>920.00</td><td class="price">1,050.00</td><td class="change-up"><span class="change-pill pill-up">+14.1%</span></td><td>65.63</td></tr>
+          <tr><td class="cat">Louvre Blades (Obscured Glass, per set 6 blades)</td><td class="unit">Set</td><td>120.00</td><td class="price">135.00</td><td class="change-up"><span class="change-pill pill-up">+12.5%</span></td><td>8.44</td></tr>
+          <tr class="section-row"><td colspan="6">FLOOR &amp; WALL FINISHES</td></tr>
+          <tr><td class="cat">Ceramic Floor Tile (300×300, standard)</td><td class="unit">m²</td><td>48.00</td><td class="price">52.00</td><td class="change-up"><span class="change-pill pill-up">+8.3%</span></td><td>3.25</td></tr>
+          <tr><td class="cat">Porcelain Floor Tile (600×600, imported)</td><td class="unit">m²</td><td>145.00</td><td class="price">172.00</td><td class="change-up"><span class="change-pill pill-up">+18.6%</span></td><td>10.75</td></tr>
+          <tr><td class="cat">Wall Tile (200×300, ceramic)</td><td class="unit">m²</td><td>42.00</td><td class="price">46.00</td><td class="change-up"><span class="change-pill pill-up">+9.5%</span></td><td>2.88</td></tr>
+          <tr><td class="cat">Screeding Sand/Cement (25mm)</td><td class="unit">m²</td><td>32.00</td><td class="price">38.00</td><td class="change-up"><span class="change-pill pill-up">+18.8%</span></td><td>2.38</td></tr>
+          <tr><td class="cat">Emulsion Paint (20L, local brand)</td><td class="unit">Tin</td><td>280.00</td><td class="price">310.00</td><td class="change-up"><span class="change-pill pill-up">+10.7%</span></td><td>19.38</td></tr>
+          <tr><td class="cat">Gloss Paint (5L, imported)</td><td class="unit">Tin</td><td>180.00</td><td class="price">210.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>13.13</td></tr>
+          <tr><td class="cat">Textured Spray Coat (20kg)</td><td class="unit">Bag</td><td>95.00</td><td class="price">108.00</td><td class="change-up"><span class="change-pill pill-up">+13.7%</span></td><td>6.75</td></tr>
+          <tr class="section-row"><td colspan="6">PLUMBING &amp; DRAINAGE</td></tr>
+          <tr><td class="cat">uPVC Soil Pipe (110mm dia, 3m)</td><td class="unit">Length</td><td>68.00</td><td class="price">76.00</td><td class="change-up"><span class="change-pill pill-up">+11.8%</span></td><td>4.75</td></tr>
+          <tr><td class="cat">uPVC Pressure Pipe (25mm, 6m)</td><td class="unit">Length</td><td>42.00</td><td class="price">47.00</td><td class="change-up"><span class="change-pill pill-up">+11.9%</span></td><td>2.94</td></tr>
+          <tr><td class="cat">GI Pipe (25mm, sch 40, 6m)</td><td class="unit">Length</td><td>195.00</td><td class="price">228.00</td><td class="change-up"><span class="change-pill pill-up">+16.9%</span></td><td>14.25</td></tr>
+          <tr><td class="cat">HDPE Pipe (110mm, 50m roll)</td><td class="unit">Roll</td><td>1,850.00</td><td class="price">2,150.00</td><td class="change-up"><span class="change-pill pill-up">+16.2%</span></td><td>134.38</td></tr>
+          <tr><td class="cat">WC Suite (local, close coupled)</td><td class="unit">Set</td><td>380.00</td><td class="price">420.00</td><td class="change-up"><span class="change-pill pill-up">+10.5%</span></td><td>26.25</td></tr>
+          <tr><td class="cat">Wash Hand Basin (pedestal, local)</td><td class="unit">Each</td><td>220.00</td><td class="price">248.00</td><td class="change-up"><span class="change-pill pill-up">+12.7%</span></td><td>15.50</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:.5px;margin-top:6px">USD 1 = GH₵ 16.00 &nbsp;·&nbsp; Prices incl. 15% VAT &nbsp;·&nbsp; Accra/Tema market &nbsp;·&nbsp; Apply regional premium factors on page 56</div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">22 — 23</div>
+  </div>
+</div>
+
+<!-- PAGE 24 — MEP / ELECTRICAL PRICES -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">MEP Price Index — Electrical &amp; Mechanical</div>
+    <div class="ph-pn">24</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Electrical, Mechanical &amp; HVAC Price Table — Q4 2025</div>
+    <div class="data-sub">MEP components saw the sharpest imported-cost inflation. Copper-based products rose 22–28% YoY driven by global copper prices and cedi weakness. Prices incl. VAT, Accra/Tema market.</div>
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr><th style="width:36%">Material / Description</th><th>Unit</th><th>Q4 2024 (GH₵)</th><th>Q4 2025 (GH₵)</th><th>YoY Change</th><th>USD Equiv.</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">CABLES &amp; WIRING</td></tr>
+          <tr><td class="cat">PVC Insulated Cable 2.5mm² (100m)</td><td class="unit">Roll</td><td>680.00</td><td class="price">840.00</td><td class="change-up"><span class="change-pill pill-up">+23.5%</span></td><td>52.50</td></tr>
+          <tr><td class="cat">PVC Insulated Cable 4.0mm² (100m)</td><td class="unit">Roll</td><td>980.00</td><td class="price">1,220.00</td><td class="change-up"><span class="change-pill pill-up">+24.5%</span></td><td>76.25</td></tr>
+          <tr><td class="cat">PVC Insulated Cable 6.0mm² (100m)</td><td class="unit">Roll</td><td>1,450.00</td><td class="price">1,800.00</td><td class="change-up"><span class="change-pill pill-up">+24.1%</span></td><td>112.50</td></tr>
+          <tr><td class="cat">Armoured Cable (25mm², 4-core, per m)</td><td class="unit">m</td><td>185.00</td><td class="price">234.00</td><td class="change-up"><span class="change-pill pill-up">+26.5%</span></td><td>14.63</td></tr>
+          <tr><td class="cat">Coaxial Cable RG6 (100m)</td><td class="unit">Roll</td><td>280.00</td><td class="price">320.00</td><td class="change-up"><span class="change-pill pill-up">+14.3%</span></td><td>20.00</td></tr>
+          <tr class="section-row"><td colspan="6">CONDUIT &amp; TRUNKING</td></tr>
+          <tr><td class="cat">PVC Conduit 20mm (3m)</td><td class="unit">Length</td><td>12.00</td><td class="price">13.50</td><td class="change-up"><span class="change-pill pill-up">+12.5%</span></td><td>0.84</td></tr>
+          <tr><td class="cat">PVC Conduit 25mm (3m)</td><td class="unit">Length</td><td>15.50</td><td class="price">17.50</td><td class="change-up"><span class="change-pill pill-up">+12.9%</span></td><td>1.09</td></tr>
+          <tr><td class="cat">GI Conduit 20mm (3m)</td><td class="unit">Length</td><td>42.00</td><td class="price">50.00</td><td class="change-up"><span class="change-pill pill-up">+19.0%</span></td><td>3.13</td></tr>
+          <tr><td class="cat">PVC Trunking 50×50mm (3m)</td><td class="unit">Length</td><td>38.00</td><td class="price">43.00</td><td class="change-up"><span class="change-pill pill-up">+13.2%</span></td><td>2.69</td></tr>
+          <tr class="section-row"><td colspan="6">SWITCHGEAR &amp; ACCESSORIES</td></tr>
+          <tr><td class="cat">Single Switch (13A, surface)</td><td class="unit">Each</td><td>8.50</td><td class="price">9.50</td><td class="change-up"><span class="change-pill pill-up">+11.8%</span></td><td>0.59</td></tr>
+          <tr><td class="cat">Single Socket Outlet (13A, twin)</td><td class="unit">Each</td><td>22.00</td><td class="price">25.50</td><td class="change-up"><span class="change-pill pill-up">+15.9%</span></td><td>1.59</td></tr>
+          <tr><td class="cat">MCB 20A Single Pole (DB component)</td><td class="unit">Each</td><td>48.00</td><td class="price">56.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>3.50</td></tr>
+          <tr><td class="cat">Consumer Unit 12-way (incl. main switch)</td><td class="unit">Each</td><td>620.00</td><td class="price">720.00</td><td class="change-up"><span class="change-pill pill-up">+16.1%</span></td><td>45.00</td></tr>
+          <tr class="section-row"><td colspan="6">SOLAR PV &amp; INVERTER SYSTEMS</td></tr>
+          <tr><td class="cat">Solar Panel 400W Monocrystalline</td><td class="unit">Each</td><td>680.00</td><td class="price">720.00</td><td class="change-up"><span class="change-pill pill-up">+5.9%</span></td><td>45.00</td></tr>
+          <tr><td class="cat">Hybrid Inverter 5kVA</td><td class="unit">Each</td><td>4,200.00</td><td class="price">4,650.00</td><td class="change-up"><span class="change-pill pill-up">+10.7%</span></td><td>290.63</td></tr>
+          <tr><td class="cat">LiFePO4 Battery 100Ah 48V</td><td class="unit">Each</td><td>6,800.00</td><td class="price">7,200.00</td><td class="change-up"><span class="change-pill pill-up">+5.9%</span></td><td>450.00</td></tr>
+          <tr class="section-row"><td colspan="6">AIR CONDITIONING</td></tr>
+          <tr><td class="cat">Split AC 1.5HP (cooling only, local brand)</td><td class="unit">Unit</td><td>2,200.00</td><td class="price">2,500.00</td><td class="change-up"><span class="change-pill pill-up">+13.6%</span></td><td>156.25</td></tr>
+          <tr><td class="cat">Split AC 2.0HP (inverter, imported)</td><td class="unit">Unit</td><td>3,800.00</td><td class="price">4,350.00</td><td class="change-up"><span class="change-pill pill-up">+14.5%</span></td><td>271.88</td></tr>
+          <tr><td class="cat">Cassette AC 4.0HP (commercial)</td><td class="unit">Unit</td><td>7,200.00</td><td class="price">8,200.00</td><td class="change-up"><span class="change-pill pill-up">+13.9%</span></td><td>512.50</td></tr>
+          <tr><td class="cat">Copper Refrigerant Pipe (3/8" + 5/8", per m)</td><td class="unit">m</td><td>68.00</td><td class="price">86.00</td><td class="change-up"><span class="change-pill pill-up">+26.5%</span></td><td>5.38</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="background:rgba(192,52,26,.06);border-left:3px solid var(--red);padding:10px 14px;margin-top:12px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">⚑ ALERT: Copper-based products +22–28% YoY</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.5">The London Metal Exchange copper price rose 18% in USD terms in 2025. Combined with a 6.2% cedi depreciation against the dollar, Ghanaian importers of copper cables, pipes, and fittings faced compound cost increases of 22–28%. Electrical contractors report significant budget overruns on projects priced in early 2025.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">24 — 25</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     SECTION DIVIDER — LABOUR
+██████████████████████████████████████████ -->
+<div class="page sec-div" id="part3">
+  <div class="sd-accent-bar"></div>
+  <img class="sd-bg" src="{{PART3_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-grid"></div>
+  <div class="sd-content">
+    <div class="sd-part">Part Three</div>
+    <div class="sd-rule"></div>
+    <div class="sd-title">LABOUR<br><span>RATE</span><br>SURVEY</div>
+    <div class="sd-sub">Daily rates for 24 trades, by region and skill level — Ghana's first comprehensive construction labour benchmark</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 44 — LABOUR RATES
+██████████████████████████████████████████ -->
+<div class="page" id="labour-rate-page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Labour Rate Survey 2026</div>
+    <div class="ph-pn">44</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Construction Labour Daily Rates — Q4 2025</div>
+    <div class="data-sub">All rates in GH₵ per day (8-hour day). Rates are for direct hire; gang or subcontract rates will vary. Source: LocalLink field survey; GREDA; Contractors Association of Ghana.</div>
+
+    <div class="num-feat" style="margin-bottom:16px">
+      <div class="nf-cell"><div class="nf-num">+<span>7.2</span>%</div><div class="nf-lbl">Skilled Labour Rate Inflation YoY</div></div>
+      <div class="nf-cell"><div class="nf-num">GH₵<span>160</span></div><div class="nf-lbl">Highest daily rate: Electrical Engr.</div></div>
+      <div class="nf-cell"><div class="nf-num">GH₵<span>58</span></div><div class="nf-lbl">Minimum: Unskilled labourer</div></div>
+      <div class="nf-cell"><div class="nf-num"><span>+34</span>%</div><div class="nf-lbl">Tamale premium vs Accra baseline</div></div>
+    </div>
+
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr>
+            <th style="width:28%">Trade</th>
+            <th>Skill Level</th>
+            <th>Accra (GH₵/day)</th>
+            <th>Kumasi (GH₵/day)</th>
+            <th>Takoradi (GH₵/day)</th>
+            <th>Tamale (GH₵/day)</th>
+            <th>YoY Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="7">CIVIL &amp; STRUCTURAL</td></tr>
+          <tr><td class="cat">Mason / Bricklayer</td><td>Skilled</td><td>110</td><td>102</td><td>106</td><td>98</td><td class="change-up"><span class="change-pill pill-up">+9.1%</span></td></tr>
+          <tr><td class="cat">Carpenter (Formwork)</td><td>Skilled</td><td>120</td><td>112</td><td>115</td><td>105</td><td class="change-up"><span class="change-pill pill-up">+7.4%</span></td></tr>
+          <tr><td class="cat">Steel Fixer / Bar Bender</td><td>Skilled</td><td>115</td><td>108</td><td>112</td><td>100</td><td class="change-up"><span class="change-pill pill-up">+8.4%</span></td></tr>
+          <tr><td class="cat">Concreter</td><td>Semi-skilled</td><td>92</td><td>86</td><td>90</td><td>80</td><td class="change-up"><span class="change-pill pill-up">+6.3%</span></td></tr>
+          <tr><td class="cat">Excavator Operator</td><td>Skilled</td><td>140</td><td>128</td><td>135</td><td>148</td><td class="change-up"><span class="change-pill pill-up">+6.1%</span></td></tr>
+          <tr><td class="cat">Unskilled Labourer</td><td>Unskilled</td><td>58</td><td>52</td><td>55</td><td>48</td><td class="change-up"><span class="change-pill pill-up">+3.6%</span></td></tr>
+          <tr class="section-row"><td colspan="7">MEP TRADES</td></tr>
+          <tr><td class="cat">Licensed Electrician</td><td>Skilled</td><td>155</td><td>142</td><td>148</td><td>135</td><td class="change-up"><span class="change-pill pill-up">+8.4%</span></td></tr>
+          <tr><td class="cat">Electrical Engr. (Supervising)</td><td>Professional</td><td>160</td><td>148</td><td>155</td><td>140</td><td class="change-up"><span class="change-pill pill-up">+8.1%</span></td></tr>
+          <tr><td class="cat">Plumber (Licensed)</td><td>Skilled</td><td>130</td><td>120</td><td>125</td><td>112</td><td class="change-up"><span class="change-pill pill-up">+7.1%</span></td></tr>
+          <tr><td class="cat">AC Technician</td><td>Skilled</td><td>145</td><td>135</td><td>138</td><td>125</td><td class="change-up"><span class="change-pill pill-up">+7.4%</span></td></tr>
+          <tr class="section-row"><td colspan="7">FINISHES &amp; SPECIALIST</td></tr>
+          <tr><td class="cat">Plasterer</td><td>Skilled</td><td>105</td><td>98</td><td>102</td><td>90</td><td class="change-up"><span class="change-pill pill-up">+7.8%</span></td></tr>
+          <tr><td class="cat">Tiler (Floor / Wall)</td><td>Skilled</td><td>115</td><td>108</td><td>110</td><td>98</td><td class="change-up"><span class="change-pill pill-up">+7.4%</span></td></tr>
+          <tr><td class="cat">Painter &amp; Decorator</td><td>Skilled</td><td>98</td><td>92</td><td>95</td><td>84</td><td class="change-up"><span class="change-pill pill-up">+6.6%</span></td></tr>
+          <tr><td class="cat">Aluminium Fabricator</td><td>Skilled</td><td>125</td><td>115</td><td>120</td><td>105</td><td class="change-up"><span class="change-pill pill-up">+8.3%</span></td></tr>
+          <tr><td class="cat">Welder (MIG/TIG)</td><td>Skilled</td><td>132</td><td>122</td><td>128</td><td>115</td><td class="change-up"><span class="change-pill pill-up">+7.3%</span></td></tr>
+          <tr><td class="cat">Site Supervisor / Foreman</td><td>Professional</td><td>145</td><td>135</td><td>140</td><td>128</td><td class="change-up"><span class="change-pill pill-up">+5.8%</span></td></tr>
+          <tr><td class="cat">Site Engineer (Civil)</td><td>Professional</td><td>210</td><td>195</td><td>200</td><td>185</td><td class="change-up"><span class="change-pill pill-up">+7.1%</span></td></tr>
+          <tr><td class="cat">Quantity Surveyor (Site)</td><td>Professional</td><td>250</td><td>235</td><td>240</td><td>220</td><td class="change-up"><span class="change-pill pill-up">+8.7%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:.5px;margin-top:6px">Rates are for direct hire on standard working day. Overtime, weekend, and public holiday rates typically 1.5× to 2× standard. Social security (SSNIT) and income tax deductions not included.</div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">44 — 45</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     SECTION DIVIDER — REGIONAL
+██████████████████████████████████████████ -->
+<div class="page sec-div" id="part4">
+  <div class="sd-accent-bar"></div>
+  <img class="sd-bg" src="{{PART4_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-grid"></div>
+  <div class="sd-content">
+    <div class="sd-part">Part Four</div>
+    <div class="sd-rule"></div>
+    <div class="sd-title">REGIONAL<br><span>PRICE</span><br>PREMIUMS</div>
+    <div class="sd-sub">Why the same building costs 34% more in Tamale than in Accra — and what it means for national infrastructure equity</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 56 — REGIONAL ANALYSIS
+██████████████████████████████████████████ -->
+<div class="page" id="regional-page56">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Regional Price Analysis</div>
+    <div class="ph-pn">56</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page" style="padding-bottom:0">
+    <div class="data-hl">Regional Material Cost Premium Index — Accra Baseline = 100</div>
+    <div class="data-sub">How far above Accra/Tema market prices do materials cost in each region, after transport and local market factors? Q4 2025 survey. Source: LocalLink Economist Research Unit.</div>
+    <div class="chart-box" style="margin-bottom:14px">
+      <div class="chart-label">Regional Price Premium — Overall Materials (Accra = 0% baseline)</div>
+      <div class="h-bar-chart">
+        <div class="hb-row"><div class="hb-lbl">Accra / Greater Accra</div><div class="hb-track"><div class="hb-fill green" style="width:0%"></div></div><div class="hb-val" style="color:var(--green)">Baseline</div></div>
+        <div class="hb-row"><div class="hb-lbl">Kumasi / Ashanti</div><div class="hb-track"><div class="hb-fill" style="width:27%;background:var(--amber-lt)"></div></div><div class="hb-val">+12%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Takoradi / Western</div><div class="hb-track"><div class="hb-fill" style="width:20%;background:var(--amber-lt)"></div></div><div class="hb-val">+8%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Cape Coast / Central</div><div class="hb-track"><div class="hb-fill" style="width:43%;background:var(--amber)"></div></div><div class="hb-val">+18%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Sunyani / Bono</div><div class="hb-track"><div class="hb-fill" style="width:50%;background:var(--amber)"></div></div><div class="hb-val">+21%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Ho / Volta</div><div class="hb-track"><div class="hb-fill" style="width:55%;background:var(--amber-dk)"></div></div><div class="hb-val">+23%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Koforidua / E. Region</div><div class="hb-track"><div class="hb-fill" style="width:38%;background:var(--amber)"></div></div><div class="hb-val">+16%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Bolgatanga / U. East</div><div class="hb-track"><div class="hb-fill red" style="width:72%"></div></div><div class="hb-val">+30%</div></div>
+        <div class="hb-row"><div class="hb-lbl">Tamale / Northern</div><div class="hb-track"><div class="hb-fill red" style="width:82%"></div></div><div class="hb-val">+34%</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- Regional cards -->
+  <div class="region-strip" style="padding-bottom:22px">
+    <div class="region-card">
+      <div class="rc-name">Tamale</div>
+      <div class="rc-sub">Northern Region &nbsp;·&nbsp; +34% premium</div>
+      <img class="rc-img" src="{{TAMALE_REGION_IMAGE_FILE_URL}}" alt="Tamale">
+      <div class="rc-text">The highest construction cost premium in the country. Materials must travel 600–800km from Tema port or Accra warehouses. Road freight cost for a truckload of cement: GH₵ 2,800–3,400. Local competition among suppliers is limited. Government procurement records show per-m² costs for public buildings in Tamale averaging GH₵ 3,200 vs GH₵ 2,390 in Accra — a 34% gap that directly reduces the number of schools, clinics, and roads the public infrastructure budget can deliver.</div>
+      <div class="rc-kpi">
+        <div class="rc-kpi-item"><div class="rc-kpi-num up">+34%</div><div class="rc-kpi-lbl">Materials premium</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num up">GH₵3,200</div><div class="rc-kpi-lbl">Avg. m² public bldg</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">600km</div><div class="rc-kpi-lbl">Avg. freight distance</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Kumasi</div>
+      <div class="rc-sub">Ashanti Region &nbsp;·&nbsp; +12% premium</div>
+      <img class="rc-img" src="{{KUMASI_REGION_IMAGE_FILE_URL}}" alt="Kumasi">
+      <div class="rc-text">Ghana's second largest construction market, with a relatively healthy competitive landscape. The Kumasi premium of 12% is driven primarily by transport costs from Tema (280km) and local retailer margins, partially offset by a competitive supply market in the city. The Kumasi construction sector is significant: GREDA estimates the region accounts for 22% of national private residential construction by volume. Cement prices in Kumasi averaged GH₵ 101 per bag in Q4 2025 vs GH₵ 90 in Accra.</div>
+      <div class="rc-kpi">
+        <div class="rc-kpi-item"><div class="rc-kpi-num" style="color:var(--amber)">+12%</div><div class="rc-kpi-lbl">Materials premium</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">GH₵101</div><div class="rc-kpi-lbl">Cement 50kg bag</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">280km</div><div class="rc-kpi-lbl">Avg. freight distance</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Takoradi</div>
+      <div class="rc-sub">Western Region &nbsp;·&nbsp; +8% premium</div>
+      <img class="rc-img" src="{{TAKORADI_REGION_IMAGE_FILE_URL}}" alt="Takoradi">
+      <div class="rc-text">The second-lowest regional premium, reflecting proximity to the Takoradi Port (which receives some cement and steel imports directly), a strong local construction sector serving the oil and gas industry, and relative transport link quality on the N8 highway corridor. Oil industry construction demand has also driven development of a reasonably competitive local materials supply market. Takoradi's main premium driver is specialist MEP materials for the offshore sector, which must be sourced from Accra.</div>
+      <div class="rc-kpi">
+        <div class="rc-kpi-item"><div class="rc-kpi-num dn">+8%</div><div class="rc-kpi-lbl">Materials premium</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">GH₵97</div><div class="rc-kpi-lbl">Cement 50kg bag</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">220km</div><div class="rc-kpi-lbl">Avg. freight distance</div></div>
+      </div>
+    </div>
+    <div class="region-card">
+      <div class="rc-name">Bolgatanga</div>
+      <div class="rc-sub">Upper East Region &nbsp;·&nbsp; +30% premium</div>
+      <img class="rc-img" src="{{BOLGATANGA_REGION_IMAGE_FILE_URL}}" alt="Bolgatanga">
+      <div class="rc-text">The Upper East Region's construction cost premium of 30% is second only to Tamale. The region is served by a single primary supply route via the N10 highway from Kumasi, which is prone to seasonal disruption during the rainy season (June–September). Government procurement data shows that road projects in the region regularly exceed initial BoQ estimates by 20–35%, with transport cost escalation cited as the primary cause. The arrival of a new cement depot in Bolgatanga in Q3 2025 is expected to reduce the premium by approximately 4–6 percentage points when fully operational.</div>
+      <div class="rc-kpi">
+        <div class="rc-kpi-item"><div class="rc-kpi-num up">+30%</div><div class="rc-kpi-lbl">Materials premium</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">GH₵117</div><div class="rc-kpi-lbl">Cement 50kg bag</div></div>
+        <div class="rc-kpi-item"><div class="rc-kpi-num">750km</div><div class="rc-kpi-lbl">Avg. freight distance</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">56 — 57</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 62 — INFRASTRUCTURE BENCHMARKS
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Infrastructure Cost Benchmarks</div>
+    <div class="ph-pn">62</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Infrastructure Cost Benchmarks — Ghana 2025</div>
+    <div class="data-sub">Cost-per-unit benchmarks for key infrastructure typologies. Based on completed government project data, PPA tender records, and NDPC infrastructure cost database. Prices in GH₵ millions where noted.</div>
+
+    <div class="kpi-row">
+      <div class="kpi-cell"><div class="kpi-num amber">GH₵ 4.2M</div><div class="kpi-lbl">Cost per km — 2-lane asphalt road (flat terrain, Accra)</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">GH₵ 820K</div><div class="kpi-lbl">Cost per 3-classroom block — government primary school</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">GH₵ 380K</div><div class="kpi-lbl">Cost per rural borehole — with hand pump, full civil works</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">GH₵ 2,390</div><div class="kpi-lbl">Cost per m² — government residential building, Accra</div></div>
+    </div>
+
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead>
+          <tr><th>Infrastructure Type</th><th>Unit</th><th>Accra (GH₵)</th><th>Kumasi (GH₵)</th><th>Tamale (GH₵)</th><th>YoY Change</th></tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">ROAD CONSTRUCTION</td></tr>
+          <tr><td class="cat">2-Lane Asphalt Road (flat, urban)</td><td class="unit">per km</td><td>4,200,000</td><td>4,704,000</td><td>5,628,000</td><td class="change-up"><span class="change-pill pill-up">+11.2%</span></td></tr>
+          <tr><td class="cat">2-Lane Asphalt Road (rolling terrain)</td><td class="unit">per km</td><td>5,800,000</td><td>6,496,000</td><td>7,772,000</td><td class="change-up"><span class="change-pill pill-up">+10.8%</span></td></tr>
+          <tr><td class="cat">Gravel/Earth Road Rehabilitation</td><td class="unit">per km</td><td>620,000</td><td>694,000</td><td>832,000</td><td class="change-up"><span class="change-pill pill-up">+9.6%</span></td></tr>
+          <tr><td class="cat">Urban Concrete Road (150mm)</td><td class="unit">per km</td><td>3,100,000</td><td>3,472,000</td><td>4,154,000</td><td class="change-up"><span class="change-pill pill-up">+12.5%</span></td></tr>
+          <tr><td class="cat">Reinforced Concrete Bridge (30m span)</td><td class="unit">Each</td><td>18,400,000</td><td>20,608,000</td><td>24,656,000</td><td class="change-up"><span class="change-pill pill-up">+14.8%</span></td></tr>
+          <tr class="section-row"><td colspan="6">EDUCATION FACILITIES</td></tr>
+          <tr><td class="cat">3-Classroom Block (primary, basic spec)</td><td class="unit">Block</td><td>820,000</td><td>918,400</td><td>1,098,800</td><td class="change-up"><span class="change-pill pill-up">+9.4%</span></td></tr>
+          <tr><td class="cat">6-Classroom Block (JHS, standard spec)</td><td class="unit">Block</td><td>1,650,000</td><td>1,848,000</td><td>2,211,000</td><td class="change-up"><span class="change-pill pill-up">+10.1%</span></td></tr>
+          <tr><td class="cat">CHASS Secondary School Block (12 rooms)</td><td class="unit">Block</td><td>4,200,000</td><td>4,704,000</td><td>5,628,000</td><td class="change-up"><span class="change-pill pill-up">+11.0%</span></td></tr>
+          <tr><td class="cat">TVET Workshop Block (fully equipped)</td><td class="unit">Block</td><td>6,800,000</td><td>7,616,000</td><td>9,112,000</td><td class="change-up"><span class="change-pill pill-up">+13.2%</span></td></tr>
+          <tr class="section-row"><td colspan="6">HEALTH FACILITIES</td></tr>
+          <tr><td class="cat">CHPS Compound (standard)</td><td class="unit">Each</td><td>1,400,000</td><td>1,568,000</td><td>1,876,000</td><td class="change-up"><span class="change-pill pill-up">+9.0%</span></td></tr>
+          <tr><td class="cat">Health Centre (Polyclinic standard)</td><td class="unit">Each</td><td>8,500,000</td><td>9,520,000</td><td>11,390,000</td><td class="change-up"><span class="change-pill pill-up">+11.8%</span></td></tr>
+          <tr><td class="cat">District Hospital (50-bed)</td><td class="unit">Each</td><td>42,000,000</td><td>47,040,000</td><td>56,280,000</td><td class="change-up"><span class="change-pill pill-up">+13.4%</span></td></tr>
+          <tr class="section-row"><td colspan="6">WATER &amp; SANITATION</td></tr>
+          <tr><td class="cat">Borehole + Hand Pump (complete)</td><td class="unit">Each</td><td>380,000</td><td>425,600</td><td>509,200</td><td class="change-up"><span class="change-pill pill-up">+8.6%</span></td></tr>
+          <tr><td class="cat">Piped Water System (small town)</td><td class="unit">Each</td><td>3,200,000</td><td>3,584,000</td><td>4,288,000</td><td class="change-up"><span class="change-pill pill-up">+10.4%</span></td></tr>
+          <tr><td class="cat">Urban Water Treatment Plant (500 m³/day)</td><td class="unit">Each</td><td>24,000,000</td><td>26,880,000</td><td>32,160,000</td><td class="change-up"><span class="change-pill pill-up">+12.6%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:.5px;margin-top:6px">Tamale figures apply +34% regional premium to Accra baseline. Kumasi figures apply +12% regional premium. All figures include construction, basic M&amp;E, and project management costs. Land acquisition and professional fees excluded unless stated.</div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">62 — 63</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 68 — INTERVIEW
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="itv-header">
+    <div class="itv-tag">In Conversation</div>
+    <div class="itv-name">Arch. Patrick<br>Acheampong-Kusi</div>
+    <div class="itv-role">President, Ghana Real Estate Developers Association (GREDA)</div>
+  </div>
+  <div class="itv-body">
+    <img class="itv-photo" src="https://picsum.photos/seed/greda-pres/185/240" alt="GREDA President">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">Interviewed by Kofi Darko Asante, Senior Correspondent</div>
+      <div class="qa-block">
+        <div class="qa-q">The CIPI is up 8.3% year-on-year. What does that mean for Ghana's housing developers?</div>
+        <div class="qa-a">It means we are building fewer houses than we should be. When cement goes from GH₵ 75 to GH₵ 90 in twelve months, and steel goes up 18%, and copper wiring 24%, a developer who priced a project in early 2025 is now facing a bill 15–20% higher than their BoQ. Most developers are not in a position to absorb that. Projects are being shelved. Contracts are being renegotiated. Some are simply being abandoned. At a time when Ghana has a housing deficit of approximately 1.8 million units, we cannot afford this.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">Is the cement price increase a market failure, or just the cost of doing business in a global commodity environment?</div>
+        <div class="qa-a">It is both — but the domestic element is the more troubling one. GPCL and CIMAF together control the overwhelming majority of cement production capacity. When they announce a price increase, there is no effective competition to hold the price down. We have called for the government to open cement importation more freely and remove the tariff protection that keeps domestic prices above the cost that competitive imports would achieve. The government has not moved on this. Until it does, cement prices will reflect the interests of producers, not the interests of the housing market or the public infrastructure budget.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">What policy changes would most help the real estate and construction sector in 2026?</div>
+        <div class="qa-a">Three things. First, tariff review on construction materials — particularly cement, steel, and aluminium. Second, the GH₵ 2 billion affordable housing fund in the budget needs to be disbursed, not recycled as an announcement. Third, the government must reform the Rent Control Act to make the private rental market more investable. If developers cannot price risk appropriately in the rental market, they will not build rental housing, and the deficit will widen further. These are not radical demands. They are the baseline conditions for a functional construction sector.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">68 — 69</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 72 — 2026 PRICE FORECAST
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">2026 Price Outlook &amp; Forecast</div>
+    <div class="ph-pn">72</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">2026 Construction Price Forecast</div>
+    <div class="data-sub">LocalLink Economist Research Unit projections, Q1–Q4 2026. Based on global commodity models, Bank of Ghana forex projections, and domestic supply-side analysis. Ranges represent 80% confidence intervals.</div>
+
+    <div class="chart-box dark" style="margin-bottom:14px">
+      <div class="chart-label light">CIPI Forecast — Q1 2026 to Q4 2026 (with confidence band)</div>
+      <svg class="svg-chart" height="140" viewBox="0 0 714 140">
+        <!-- grid -->
+        <line x1="0" y1="20" x2="714" y2="20" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+        <line x1="0" y1="60" x2="714" y2="60" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+        <line x1="0" y1="100" x2="714" y2="100" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+        <line x1="0" y1="130" x2="714" y2="130" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+        <text x="4" y="18" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.22)">145</text>
+        <text x="4" y="58" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.22)">140</text>
+        <text x="4" y="98" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.22)">135</text>
+        <text x="4" y="128" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,.22)">128</text>
+        <!-- Actual last point (Q4 2025 = 128.4) -->
+        <circle cx="50" cy="126" r="4" fill="var(--amber)" stroke="var(--navy)" stroke-width="1.5"/>
+        <text x="36" y="140" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.35)">Q4'25</text>
+        <!-- Forecast line — central -->
+        <polyline points="50,126 220,112 390,96 560,82 700,70" fill="none" stroke="var(--amber)" stroke-width="2" stroke-dasharray="6,3" stroke-linejoin="round"/>
+        <!-- Upper band -->
+        <polyline points="50,126 220,100 390,80 560,62 700,48" fill="none" stroke="rgba(192,52,26,.4)" stroke-width="1" stroke-linejoin="round"/>
+        <!-- Lower band -->
+        <polyline points="50,126 220,124 390,112 560,100 700,90" fill="none" stroke="rgba(26,122,60,.4)" stroke-width="1" stroke-linejoin="round"/>
+        <!-- Confidence fill -->
+        <polygon points="50,126 220,100 390,80 560,62 700,48 700,90 560,100 390,112 220,124 50,126" fill="rgba(232,132,10,.06)"/>
+        <!-- forecast dots -->
+        <circle cx="220" cy="112" r="3" fill="var(--amber)" stroke="var(--navy)" stroke-width="1"/>
+        <circle cx="390" cy="96" r="3" fill="var(--amber)" stroke="var(--navy)" stroke-width="1"/>
+        <circle cx="560" cy="82" r="3" fill="var(--amber)" stroke="var(--navy)" stroke-width="1"/>
+        <circle cx="700" cy="70" r="3" fill="var(--amber)" stroke="var(--navy)" stroke-width="1"/>
+        <!-- labels -->
+        <text x="208" y="140" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.35)">Q1'26</text>
+        <text x="378" y="140" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.35)">Q2'26</text>
+        <text x="548" y="140" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.35)">Q3'26</text>
+        <text x="680" y="140" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.35)">Q4'26</text>
+        <text x="704" y="68" font-family="IBM Plex Mono" font-size="8" fill="var(--amber)">137.2</text>
+        <!-- legend -->
+        <rect x="470" y="10" width="12" height="2" fill="var(--amber)"/>
+        <text x="486" y="16" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.45)">Central forecast</text>
+        <rect x="470" y="22" width="12" height="1" fill="rgba(192,52,26,.6)"/>
+        <text x="486" y="28" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.45)">Upside risk</text>
+        <rect x="470" y="34" width="12" height="1" fill="rgba(26,122,60,.6)"/>
+        <text x="486" y="40" font-family="IBM Plex Mono" font-size="7" fill="rgba(255,255,255,.45)">Downside scenario</text>
+      </svg>
+    </div>
+
+    <div class="price-table-wrap" style="margin-bottom:14px">
+      <table class="price-tbl">
+        <thead><tr><th>Category</th><th>Q4 2025 Actual</th><th>Q1 2026 Forecast</th><th>Q4 2026 Forecast</th><th>2026 Change (central)</th><th>Key Risk Factor</th></tr></thead>
+        <tbody>
+          <tr><td class="cat">CIPI Overall</td><td>128.4</td><td>130.8</td><td class="price">137.2</td><td class="change-up"><span class="change-pill pill-up">+6.9%</span></td><td class="unit">Forex &amp; global commodities</td></tr>
+          <tr><td class="cat">Cement (50kg bag, Accra)</td><td>GH₵ 90</td><td>GH₵ 94</td><td class="price">GH₵ 100–105</td><td class="change-up"><span class="change-pill pill-up">+11–17%</span></td><td class="unit">GPCL pricing &amp; gas supply</td></tr>
+          <tr><td class="cat">Reinforcement Steel (Y12, per ton)</td><td>GH₵ 10,050</td><td>GH₵ 10,400</td><td class="price">GH₵ 11,200</td><td class="change-up"><span class="change-pill pill-up">+11.4%</span></td><td class="unit">Global steel + cedi</td></tr>
+          <tr><td class="cat">Copper Cable 2.5mm² (100m)</td><td>GH₵ 840</td><td>GH₵ 870</td><td class="price">GH₵ 920</td><td class="change-up"><span class="change-pill pill-up">+9.5%</span></td><td class="unit">LME copper + forex</td></tr>
+          <tr><td class="cat">Skilled Labour (mason, daily)</td><td>GH₵ 110</td><td>GH₵ 115</td><td class="price">GH₵ 122</td><td class="change-up"><span class="change-pill pill-up">+10.9%</span></td><td class="unit">Minimum wage review Q2</td></tr>
+          <tr><td class="cat">Aluminium Roofing (m²)</td><td>GH₵ 114</td><td>GH₵ 118</td><td class="price">GH₵ 126</td><td class="change-up"><span class="change-pill pill-up">+10.5%</span></td><td class="unit">Bauxite export policy</td></tr>
+          <tr><td class="cat">Ready-Mix Concrete C25 (m³)</td><td>GH₵ 698</td><td>GH₵ 726</td><td class="price">GH₵ 780</td><td class="change-up"><span class="change-pill pill-up">+11.7%</span></td><td class="unit">Cement price passthrough</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div style="border:1px solid rgba(192,52,26,.3);padding:14px;background:rgba(192,52,26,.04)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:7px">⚑ Upside Risk</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:9px;color:var(--mid);line-height:1.55">Cedi depreciates faster than BoG projection; global steel price spikes on supply shock; domestic cement capacity shortfall widens</div>
+      </div>
+      <div style="border:1px solid rgba(232,132,10,.3);padding:14px;background:rgba(232,132,10,.04)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;margin-bottom:7px">Central Scenario</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:9px;color:var(--mid);line-height:1.55">Cedi broadly stable; global commodities moderate; domestic supply constrained; CIPI reaches 137.2 by Q4 2026 (+6.9%)</div>
+      </div>
+      <div style="border:1px solid rgba(26,122,60,.3);padding:14px;background:rgba(26,122,60,.04)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:7px">✓ Downside Risk</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:9px;color:var(--mid);line-height:1.55">Successful cement tariff reform; new production capacity online; cedi appreciation; CIPI reaches 132–133 (+3–4%)</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">72 — 73</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 76 — OPINION: THE HIDDEN COST
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="op-banner">
+    <div class="op-lbl">Opinion</div>
+    <div class="op-rule"></div>
+    <div class="op-by">By Ing. Kwabena Asante-Poku<br>Ghana Institution of Engineers</div>
+  </div>
+  <div style="padding:22px 40px 0;position:relative;z-index:5">
+    <div class="amber-rule"></div>
+    <div class="story-hl" style="font-size:24px;line-height:1.1">The Tamale School That Never Got Built: How Construction Cost Inequality Fails Ghana's Public Budget</div>
+    <div class="story-deck">Every percentage point of regional price premium represents classrooms not built, boreholes not drilled, and clinics not opened. We have been calculating this wrong for decades.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:2px;border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:0">Ing. Kwabena Asante-Poku &nbsp;·&nbsp; Past President, Ghana Institution of Engineers (GhIE)</div>
+  </div>
+  <div class="two-col" style="padding-top:18px">
+    <div class="col-body">
+      <p>Ghana's national infrastructure budget is not allocated on the basis of what things actually cost in different parts of the country. It is allocated on the basis of population, political geography, and line ministry estimates that use Accra prices with, at best, a notional transport cost uplift. The result is a systematic and persistent underfunding of infrastructure in precisely the regions that need it most: the north, the Volta Region, the Upper Regions.</p>
+      <p>Consider the arithmetic of a 3-classroom block. In Accra, GH₵ 820,000 builds one. In Tamale, the same specification costs GH₵ 1,098,800. If the Ministry of Education allocates GH₵ 8.2 million for ten classroom blocks "in the north" — using Accra unit rates — it will actually deliver seven, not ten. The three missing classrooms are invisible in the budget. They appear as contractor "variation orders" or, more frequently, as incomplete projects where the money ran out.</p>
+      <p>I have spent thirty years reviewing public sector construction contracts in Ghana. The pattern is consistent and maddening. A district assembly receives a budget based on national average unit rates. The Tamale DA goes to tender. Every competent bidder — knowing the true cost of transport, labour mobilisation, and materials in the north — prices above the budget. The DA either accepts the cheapest bidder who intends to cut corners, or the project is not awarded at all. Neither outcome serves the people of Tamale.</p>
+    </div>
+    <div class="col-body">
+      <p>The solution is not complicated. The National Development Planning Commission and the Ministry of Finance need to develop and maintain a Regional Infrastructure Cost Adjustment Table — published annually, tied to actual market data, and used mandatorily in all public sector budget estimation. This is what the UK's HM Treasury does with its Infrastructure and Projects Authority construction cost data. It is what the South African National Treasury does with its ASAQS benchmarks. Ghana has the data. What it has lacked is the institutional commitment to use it.</p>
+      <div class="pullquote" style="border-color:var(--red)">
+        <div class="pq-text">"Ghana allocates infrastructure budgets using Accra prices. The north pays the difference in classrooms not built and boreholes not drilled."</div>
+        <div class="pq-attr" style="color:var(--red)">— Ing. Kwabena Asante-Poku</div>
+      </div>
+      <p>There is also a procurement reform dimension. The Ghana PPA Act requires awarding to the lowest evaluated bidder. In a market with real regional cost differentials, this creates a race to the bottom in which the winning bidder has priced impossibly low and will deliver impossibly little. The PPA should be amended to allow reserve prices calibrated to regional benchmarks — prices below which a bid is presumed non-compliant with specification, not merely competitive.</p>
+      <p>These reforms would cost nothing except the political will to implement them. The alternative — continuing to build infrastructure in the north at prices that assume it is located in Accra — is a subsidy that flows not to the people of Tamale, but to the contractors who deliver less than promised and the officials who sign off on it.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">76 — 77</div>
+  </div>
+</div>
+
+<!-- ██████████████████████████████████████████
+     PAGE 78 — PHOTO ESSAY & COMING NEXT
+██████████████████████████████████████████ -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Ghana Builds</div>
+    <div class="ph-pn">78</div>
+  </div>
+  <div class="header-accent"></div>
+  <div style="padding:18px 40px 10px;position:relative;z-index:5">
+    <div class="amber-rule"></div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;line-height:1.1;text-transform:uppercase;color:var(--ink);margin-bottom:4px">Ghana Builds</div>
+    <div style="font-family:'Libre Baskerville',serif;font-size:10.5px;font-style:italic;color:var(--mid)">Construction sites, supply yards, and the people who make them work. Photographs by Nana Addo Boateng, November–December 2025.</div>
+  </div>
+  <div style="padding:8px 40px 0;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:200px 190px;gap:3px;position:relative;z-index:5">
+    <div style="grid-row:span 2;position:relative;overflow:hidden">
+      <img src="{{PAGE78_HIGHRISE_IMAGE_FILE_URL}}" alt="High-rise under construction, Cantonments — steel and concrete climbing five floors. Dec. 2025" style="width:100%;height:100%;object-fit:cover;filter:sepia(8%) contrast(110%)">
+    </div>
+    <div style="position:relative;overflow:hidden">
+      <img src="{{PAGE78_TEMA_WHOLESALER_IMAGE_FILE_URL}}" alt="GH₵ 90/bag — Tema wholesaler, Dec. 2025" style="width:100%;height:100%;object-fit:cover;filter:sepia(10%) contrast(108%)">
+    </div>
+    <div style="position:relative;overflow:hidden">
+      <img src="{{PAGE78_REBAR_SPINTEX_IMAGE_FILE_URL}}" alt="Rebar yard, Spintex Road — Y16 high-yield bar, GH₵ 10,200/ton" style="width:100%;height:100%;object-fit:cover;filter:sepia(10%) contrast(108%)">
+    </div>
+  </div>
+  <!-- Subscription / Next issue -->
+  <div style="padding:16px 40px;background:var(--navy);margin-top:10px;position:relative;z-index:5">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:center">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Next Issue — March 2026</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);letter-spacing:1px;line-height:1;margin-bottom:8px">DIGITAL ECONOMY &amp; <span style="color:var(--amber)">FINTECH</span> IN GHANA</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:10px;font-style:italic;color:rgba(255,255,255,.45);line-height:1.5">Mobile money, digital lending, CBDC pilots, and the Bank of Ghana's regulatory agenda — our March issue maps the transformation of Ghanaian finance.</div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.28);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px">Subscribe</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div style="border:1px solid rgba(232,132,10,.3);padding:10px 12px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amber);letter-spacing:2px">Digital</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--white);margin:4px 0">GH₵ 80 / mo</div>
+          </div>
+          <div style="border:1px solid rgba(232,132,10,.3);padding:10px 12px;background:rgba(232,132,10,.07)">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amber);letter-spacing:2px">Print+Digital</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--white);margin:4px 0">GH₵ 180 / mo</div>
+          </div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--amber);letter-spacing:1.5px">subscribe.locallink.com.gh &nbsp;·&nbsp; +233 30 270 4400</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">78</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NEW SECTION DIVIDER — SUPPLY CHAIN
+══════════════════════════════════════════ -->
+<div class="page sec-div" id="supply-chain-divider" style="background:#0a1208">
+  <div class="sd-accent-bar"></div>
+  <img class="sd-bg" src="{{SUPPLY_CHAIN_BG_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-grid"></div>
+  <div class="sd-content">
+    <div class="sd-part">Special Report</div>
+    <div class="sd-rule"></div>
+    <div class="sd-title">SUPPLY<br><span>CHAIN</span><br>EXPOSED</div>
+    <div class="sd-sub">How materials get from a factory in China or a port in Rotterdam to a building site in Tamale — and why that journey costs so much</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SUPPLY CHAIN — IMPORT COST ANATOMY
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Supply Chain — Import Cost Anatomy</div>
+    <div class="ph-pn">84</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="story-head">
+    <span class="story-tag">Supply Chain Analysis</span>
+    <div class="story-hl" style="font-size:22px">The Long Journey: From Factory Gate to Building Site</div>
+    <div class="story-deck">For every GH₵ 100 of imported construction material that reaches a site in Accra, approximately GH₵ 38 represents costs added after the goods leave their country of manufacture. We map every step.</div>
+    <div class="story-byline">By Ama Boateng, Lead Data Analyst &amp; Priscilla Aidoo, Quantitative Research Lead</div>
+  </div>
+  <div style="padding:14px 40px 0;position:relative;z-index:5">
+    <div class="chart-box dark">
+      <div class="chart-label light">Cost Build-Up: Imported Construction Material (China to Accra Site) — per GH₵ 100 Factory Gate</div>
+      <div style="margin:14px 0 6px;display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Factory gate price</div>
+          <div style="flex:1;height:16px;background:var(--steel);width:72%"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--white);min-width:80px">GH₵ 100.00</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Ocean freight (CIF)</div>
+          <div style="width:10%;height:16px;background:#3a6a8a"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 13.80</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Import duty (avg. 20%)</div>
+          <div style="width:14%;height:16px;background:var(--amber-dk)"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 22.80</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">VAT (15% on CIF+duty)</div>
+          <div style="width:18%;height:16px;background:var(--amber)"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 20.49</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Port &amp; clearing charges</div>
+          <div style="width:6%;height:16px;background:#b5620a"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 8.20</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Inland transport</div>
+          <div style="width:5%;height:16px;background:#8a3010"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 6.40</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.55);min-width:160px">Distributor margin</div>
+          <div style="width:13%;height:16px;background:var(--red)"></div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.7);min-width:80px">+GH₵ 20.00</div>
+        </div>
+        <div style="border-top:1px solid rgba(232,132,10,.3);padding-top:8px;display:flex;align-items:center;gap:10px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);min-width:160px;font-weight:600">TOTAL LANDED SITE COST</div>
+          <div style="flex:1;height:20px;background:linear-gradient(to right,var(--steel),var(--amber))"></div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);min-width:80px">GH₵ 191.69</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="two-col" style="padding-top:14px">
+    <div class="col-body">
+      <div class="inline-head">The Tema Port Bottleneck</div>
+      <p>Ghana's construction sector is critically dependent on Tema Port — the country's main deep-water port and entry point for an estimated 68% of all imported construction materials. In 2025, average dwell time for construction-related imports at Tema was 11.4 days, down from 14.2 days in 2023 but still substantially above the port's own target of 7 days and the West African benchmark of 5.8 days (Abidjan) or 4.1 days (Dakar). The cost of those extra days is not trivial. For a 20-foot container, each additional day at port costs GH₵ 180–380 in demurrage and storage. On a modest project importing 15 containers, the difference between a 7-day and 11-day dwell time represents GH₵ 16,000–23,000 in entirely avoidable cost.</p>
+      <div class="inline-head">The Forex Transmission Problem</div>
+      <p>Ghana imports approximately 62% of its construction materials by value. Every exchange rate movement transmits directly into construction costs. When the cedi depreciated 6.2% against the USD in 2025, importers of copper cable, sanitary ware, ceramic tiles, and MEP components faced automatic cost increases on their next shipment. There is no hedging mechanism available to most Ghanaian construction material importers. They absorb the forex risk entirely — and pass it on entirely.</p>
+    </div>
+    <div class="col-body">
+      <div class="price-table-wrap" style="margin-bottom:12px">
+        <table class="price-tbl">
+          <thead><tr><th>Category</th><th>Import Duty</th><th>Domestic Prod?</th><th>Reform Needed?</th></tr></thead>
+          <tbody>
+            <tr><td class="cat">Finished Cement</td><td>35%</td><td class="change-dn">Yes</td><td class="change-flat">Partial</td></tr>
+            <tr><td class="cat">Clinker</td><td>0%</td><td class="change-dn">No</td><td class="change-flat">Appropriate</td></tr>
+            <tr><td class="cat">Steel Rebar</td><td>20%</td><td class="change-dn">Limited</td><td class="change-up">Review</td></tr>
+            <tr><td class="cat">Copper Cable</td><td>20%</td><td class="change-dn">No</td><td class="change-up">Reduce</td></tr>
+            <tr><td class="cat">uPVC Pipe</td><td>20%</td><td class="change-dn">No</td><td class="change-up">Reduce</td></tr>
+            <tr><td class="cat">Solar Panels</td><td>10%</td><td class="change-dn">No</td><td class="change-up">Eliminate</td></tr>
+            <tr><td class="cat">Fire Safety Equip.</td><td>20%</td><td class="change-dn">No</td><td class="change-up">Exempt</td></tr>
+            <tr><td class="cat">Ceramic Tiles</td><td>20%</td><td class="change-dn">Minimal</td><td class="change-up">Reduce</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="inline-head">The Duty Cost Wedge</div>
+      <p>Ghana's import duty schedule averages 17.8% across our 142 materials. On a GH₵ 100 million project, the duty component embedded in materials costs is roughly GH₵ 11–14 million — a tax on construction borne ultimately by housing buyers and infrastructure users. The duty schedule has not been comprehensively reviewed since 2019. Several categories show anomalies: uPVC pipes face 20% duty with no domestic competition; solar panels face 10% duty despite government's renewable energy commitment.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">84 — 85</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DOMESTIC PRODUCERS MAP
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Ghana's Domestic Construction Industry</div>
+    <div class="ph-pn">86</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Who Makes What in Ghana — Domestic Construction Materials Production</div>
+    <div class="data-sub">Ghana has a modest but significant domestic construction materials manufacturing base. This table maps major producers, their capacity, and their estimated share of Ghana's total materials consumption. Source: GIPC; LocalLink research; company reports 2025.</div>
+    <div class="price-table-wrap" style="margin-bottom:16px">
+      <table class="price-tbl">
+        <thead><tr><th style="width:22%">Company / Brand</th><th>Product Category</th><th>Location</th><th>Est. Capacity</th><th>Mkt. Share (Ghana)</th><th>Import Competition?</th></tr></thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">CEMENT &amp; CONCRETE</td></tr>
+          <tr><td class="cat">GPCL (Ghana Cement)</td><td>OPC, Masonry Cement</td><td>Tema, Greater Accra</td><td>1.8M tons/yr</td><td class="price">~45%</td><td class="change-flat">Tariff protected</td></tr>
+          <tr><td class="cat">CIMAF Ghana</td><td>OPC, Blended Cement</td><td>Accra, Greater Accra</td><td>1.2M tons/yr</td><td class="price">~30%</td><td class="change-flat">Tariff protected</td></tr>
+          <tr><td class="cat">Dangote Cement (imports + blend)</td><td>OPC</td><td>Tema Port distribution</td><td>0.8M tons/yr equiv.</td><td class="price">~20%</td><td class="change-flat">Import + blend</td></tr>
+          <tr><td class="cat">Diamond Cement</td><td>OPC, Rapid Hardening</td><td>Aflao, Volta Region</td><td>0.3M tons/yr</td><td class="price">~5%</td><td class="change-flat">Domestic only</td></tr>
+          <tr class="section-row"><td colspan="6">STEEL &amp; METALS</td></tr>
+          <tr><td class="cat">Tema Steel Works</td><td>Rebar Y8–Y32, angles</td><td>Tema Industrial Area</td><td>180,000 tons/yr</td><td class="price">~22%</td><td class="change-up">Partial (imports fill gap)</td></tr>
+          <tr><td class="cat">Ferro Fabrik</td><td>Rebar, wire rod, BRC mesh</td><td>Tema, Greater Accra</td><td>120,000 tons/yr</td><td class="price">~15%</td><td class="change-up">Partial</td></tr>
+          <tr><td class="cat">Aluminium Products Co. (ALPCO)</td><td>Aluminium roofing, sections</td><td>Tema, Greater Accra</td><td>28,000 tons/yr</td><td class="price">~35%</td><td class="change-flat">Some import competition</td></tr>
+          <tr class="section-row"><td colspan="6">PAINT &amp; COATINGS</td></tr>
+          <tr><td class="cat">Pabco Paints</td><td>Emulsion, gloss, textured</td><td>Accra</td><td>18M litres/yr</td><td class="price">~28%</td><td class="change-flat">Protected domestic</td></tr>
+          <tr><td class="cat">Tex Styles Ghana (paints div.)</td><td>Emulsion, undercoat</td><td>Accra</td><td>12M litres/yr</td><td class="price">~18%</td><td class="change-flat">Protected domestic</td></tr>
+          <tr><td class="cat">Dulux Ghana (AkzoNobel)</td><td>Premium emulsion, gloss</td><td>Accra distribution</td><td>8M litres/yr equiv.</td><td class="price">~12%</td><td class="change-flat">Import-based brand</td></tr>
+          <tr class="section-row"><td colspan="6">AGGREGATES</td></tr>
+          <tr><td class="cat">Quarry Plus Ltd</td><td>Crushed stone, quarry dust</td><td>Multiple quarries</td><td>2.4M tons/yr</td><td class="price">~18%</td><td class="change-dn">No import competition</td></tr>
+          <tr><td class="cat">Coastline Quarry</td><td>Crushed granite, sand</td><td>Western Region</td><td>1.8M tons/yr</td><td class="price">~14%</td><td class="change-dn">No import competition</td></tr>
+          <tr class="section-row"><td colspan="6">PIPES &amp; PLUMBING</td></tr>
+          <tr><td class="cat">Abosso Goldfields Plastics</td><td>uPVC pressure pipe, fittings</td><td>Tarkwa, Western Region</td><td>8,400 tons/yr</td><td class="price">~20%</td><td class="change-up">Strong import competition</td></tr>
+          <tr><td class="cat">Interplast Ghana</td><td>HDPE pipe, uPVC drainage</td><td>Accra</td><td>6,200 tons/yr</td><td class="price">~15%</td><td class="change-up">Strong import competition</td></tr>
+          <tr class="section-row"><td colspan="6">CERAMICS &amp; TILES</td></tr>
+          <tr><td class="cat">Ghana Ceramic Co. (GCC)</td><td>Ceramic floor &amp; wall tiles</td><td>Saltpond, Central Region</td><td>4.2M m²/yr</td><td class="price">~22%</td><td class="change-up">Heavy import competition</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="background:rgba(232,132,10,.06);border-left:3px solid var(--amber);padding:12px 16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--amber);margin-bottom:5px">Key Finding: Ghana manufactures approximately 38% of construction materials by value</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">The remaining 62% is imported — primarily from China (steel, tiles, MEP components), India (cement inputs, sanitary ware), and Europe (specialist MEP, technical products). Every cedi depreciation transmits directly into 62% of construction material costs within 30–90 days. Increasing domestic production capacity — particularly for steel and ceramics — is the most effective long-run hedge against forex-driven construction cost inflation.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">86 — 87</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     GREEN BUILDING SECTION DIVIDER
+══════════════════════════════════════════ -->
+<div class="page sec-div" id="green-building-divider">
+  <img class="sd-bg" src="{{GREEN_BUILDING_BG_IMAGE_FILE_URL}}" alt="">
+  <div class="sd-overlay"></div>
+  <div class="sd-content">
+    <div class="sd-part">Special Section</div>
+    <div class="sd-rule" style="background:var(--green)"></div>
+    <div class="sd-title">GREEN<br><span style="color:#6de89a">BUILDING</span><br>&amp; SUSTAINABILITY</div>
+    <div class="sd-sub">What does it cost to build sustainably in Ghana? The premium, the payback period, and the widening policy gap.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     GREEN BUILDING PAGE
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Green Building Economics</div>
+    <div class="ph-pn">90</div>
+  </div>
+  <div class="header-accent" style="background:linear-gradient(to right,var(--green) 0%,transparent 100%)"></div>
+  <div class="data-page">
+    <div class="data-hl">The Green Premium: What Sustainable Building Really Costs in Ghana</div>
+    <div class="data-sub">Green building in Ghana is growing but remains a fraction of the total market. We examine cost premiums for sustainable construction features and calculate payback periods at current Ghana energy prices. Source: LocalLink research; Ghana Green Building Council; IFC EDGE database.</div>
+    <div class="kpi-row" style="margin-bottom:16px">
+      <div class="kpi-cell"><div class="kpi-num" style="color:var(--green)">8–14%</div><div class="kpi-lbl">Typical green premium on construction cost for an EDGE-certified building vs standard spec</div></div>
+      <div class="kpi-cell"><div class="kpi-num" style="color:var(--green)">6.2 yrs</div><div class="kpi-lbl">Average payback period for green premium via energy savings at current ECG tariffs</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">12</div><div class="kpi-lbl">EDGE-certified buildings completed in Ghana as of Dec 2025 (IFC database)</div></div>
+      <div class="kpi-cell"><div class="kpi-num up">+34%</div><div class="kpi-lbl">Rental premium achieved by certified green office buildings in Airport City, Accra</div></div>
+    </div>
+    <div class="price-table-wrap" style="margin-bottom:14px">
+      <table class="price-tbl">
+        <thead><tr><th style="width:28%">Green Feature</th><th>Description</th><th>Add'l Cost (GH₵/m²)</th><th>Annual Saving (GH₵/m²/yr)</th><th>Simple Payback</th><th>CO₂ Impact</th></tr></thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">ENERGY EFFICIENCY</td></tr>
+          <tr><td class="cat">Solar PV Rooftop (grid-tied)</td><td class="unit">5kW per 100m² floor</td><td class="price">+GH₵ 320</td><td>GH₵ 148</td><td class="change-dn">2.2 yrs</td><td>-0.8t CO₂/yr per 100m²</td></tr>
+          <tr><td class="cat">Solar Water Heating</td><td class="unit">200L system per 4 units</td><td class="price">+GH₵ 85</td><td>GH₵ 52</td><td class="change-dn">1.6 yrs</td><td>-0.3t CO₂/yr</td></tr>
+          <tr><td class="cat">Inverter AC (vs standard split)</td><td class="unit">Additional cost per unit</td><td class="price">+GH₵ 48</td><td>GH₵ 38</td><td class="change-dn">1.3 yrs</td><td>-0.2t CO₂/yr</td></tr>
+          <tr><td class="cat">LED Lighting Throughout</td><td class="unit">Vs standard fluorescent</td><td class="price">+GH₵ 22</td><td>GH₵ 28</td><td class="change-dn">0.8 yrs</td><td>-0.15t CO₂/yr</td></tr>
+          <tr><td class="cat">High-Performance Glazing (DGU)</td><td class="unit">Double-glazed units</td><td class="price">+GH₵ 180</td><td>GH₵ 34</td><td class="change-up">5.3 yrs</td><td>-0.4t CO₂/yr</td></tr>
+          <tr><td class="cat">External Insulation (75mm EPS)</td><td class="unit">Walls only</td><td class="price">+GH₵ 140</td><td>GH₵ 24</td><td class="change-up">5.8 yrs</td><td>-0.3t CO₂/yr</td></tr>
+          <tr><td class="cat">Natural Ventilation Design</td><td class="unit">Cross-ventilation optimisation</td><td class="price">+GH₵ 45</td><td>GH₵ 60</td><td class="change-dn">0.75 yrs</td><td>-0.5t CO₂/yr</td></tr>
+          <tr class="section-row"><td colspan="6">WATER EFFICIENCY</td></tr>
+          <tr><td class="cat">Rainwater Harvesting System</td><td class="unit">3,000L tank + filtration</td><td class="price">+GH₵ 95</td><td>GH₵ 42</td><td class="change-dn">2.3 yrs</td><td>Indirect</td></tr>
+          <tr><td class="cat">Greywater Recycling</td><td class="unit">For toilet flushing</td><td class="price">+GH₵ 160</td><td>GH₵ 36</td><td class="change-up">4.4 yrs</td><td>Indirect</td></tr>
+          <tr><td class="cat">Water-Efficient Fittings (4-star)</td><td class="unit">Taps, showers, WC</td><td class="price">+GH₵ 38</td><td>GH₵ 24</td><td class="change-dn">1.6 yrs</td><td>Indirect</td></tr>
+          <tr class="section-row"><td colspan="6">CERTIFICATION COST PREMIUM (TOTAL BUILD)</td></tr>
+          <tr><td class="cat">EDGE Basic (20% improvement)</td><td class="unit">vs standard residential</td><td class="price">+5–8%</td><td>Varies</td><td class="change-dn">4–7 yrs</td><td>-15–20% operational carbon</td></tr>
+          <tr><td class="cat">LEED Silver</td><td class="unit">vs standard commercial</td><td class="price">+11–16%</td><td>Varies</td><td class="change-up">7–12 yrs</td><td>-25–35% operational carbon</td></tr>
+          <tr><td class="cat">LEED Gold</td><td class="unit">vs standard commercial</td><td class="price">+14–20%</td><td>Varies</td><td class="change-up">10–15 yrs</td><td>-35–50% operational carbon</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">90 — 91</div>
+  </div>
+</div>
+
+<!-- Spread 90–91 right: Energy Savings + Developer Margin (kept together on page 91) -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Green Building Economics</div>
+    <div class="ph-pn">91</div>
+  </div>
+  <div class="header-accent" style="background:linear-gradient(to right,var(--green) 0%,transparent 100%)"></div>
+  <div class="data-page">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="chart-box">
+        <div class="chart-label">Annual Energy Savings — Green vs Standard Building (Accra, per 1,000m² GFA)</div>
+        <div class="h-bar-chart" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl" style="min-width:100px">Solar PV</div><div class="hb-track"><div class="hb-fill" style="width:100%;background:var(--green)"></div></div><div class="hb-val">GH₵ 148K/yr</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:100px">Nat. ventilation</div><div class="hb-track"><div class="hb-fill" style="width:40%;background:var(--green)"></div></div><div class="hb-val">GH₵ 60K/yr</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:100px">Inverter AC</div><div class="hb-track"><div class="hb-fill" style="width:26%;background:var(--green-lt)"></div></div><div class="hb-val">GH₵ 38K/yr</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:100px">LED lighting</div><div class="hb-track"><div class="hb-fill" style="width:19%;background:var(--green-lt)"></div></div><div class="hb-val">GH₵ 28K/yr</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:100px">Solar hot water</div><div class="hb-track"><div class="hb-fill" style="width:15%;background:var(--green)"></div></div><div class="hb-val">GH₵ 22K/yr</div></div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">Developer Margin Trend — 3BR House, Accra Mid-Market (2020–2025)</div>
+        <div class="h-bar-chart" style="margin-top:6px">
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2020</div><div class="hb-track"><div class="hb-fill green" style="width:100%"></div></div><div class="hb-val">48% margin</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2021</div><div class="hb-track"><div class="hb-fill green" style="width:88%"></div></div><div class="hb-val">42%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2022</div><div class="hb-track"><div class="hb-fill" style="width:62%;background:var(--amber)"></div></div><div class="hb-val">30%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2023</div><div class="hb-track"><div class="hb-fill" style="width:54%;background:var(--amber)"></div></div><div class="hb-val">26%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2024</div><div class="hb-track"><div class="hb-fill" style="width:40%;background:var(--amber-dk)"></div></div><div class="hb-val">19%</div></div>
+          <div class="hb-row"><div class="hb-lbl" style="min-width:38px">2025</div><div class="hb-track"><div class="hb-fill red" style="width:27%"></div></div><div class="hb-val">13%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">90 — 91</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     FINISHES & SPECIALIST MATERIALS
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Finishes, External Works &amp; Specialist Materials</div>
+    <div class="ph-pn">28</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Finishes, Landscaping &amp; Specialist Materials — Q4 2025</div>
+    <div class="data-sub">External works, specialist finishes, landscaping, security, waterproofing, and formwork. Prices incl. 15% VAT, Accra/Tema market. Source: LocalLink field survey Nov–Dec 2025.</div>
+    <div class="price-table-wrap">
+      <table class="price-tbl">
+        <thead><tr><th style="width:36%">Material / Description</th><th>Unit</th><th>Q4 2024 (GH₵)</th><th>Q4 2025 (GH₵)</th><th>YoY Change</th><th>USD Equiv.</th></tr></thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">EXTERNAL WORKS &amp; PAVING</td></tr>
+          <tr><td class="cat">Interlocking Concrete Paver (60mm)</td><td class="unit">m²</td><td>68.00</td><td class="price">78.00</td><td class="change-up"><span class="change-pill pill-up">+14.7%</span></td><td>4.88</td></tr>
+          <tr><td class="cat">Asphalt Paving (40mm dense base)</td><td class="unit">m²</td><td>182.00</td><td class="price">210.00</td><td class="change-up"><span class="change-pill pill-up">+15.4%</span></td><td>13.13</td></tr>
+          <tr><td class="cat">Concrete Kerb (precast, 150mm)</td><td class="unit">m</td><td>28.00</td><td class="price">32.00</td><td class="change-up"><span class="change-pill pill-up">+14.3%</span></td><td>2.00</td></tr>
+          <tr><td class="cat">Chain-Link Fence (1.8m high, galv.)</td><td class="unit">m</td><td>95.00</td><td class="price">112.00</td><td class="change-up"><span class="change-pill pill-up">+17.9%</span></td><td>7.00</td></tr>
+          <tr><td class="cat">Precast Concrete Wall (1.8m)</td><td class="unit">m</td><td>480.00</td><td class="price">560.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>35.00</td></tr>
+          <tr><td class="cat">Concrete Drainage Channel (300mm)</td><td class="unit">m</td><td>145.00</td><td class="price">168.00</td><td class="change-up"><span class="change-pill pill-up">+15.9%</span></td><td>10.50</td></tr>
+          <tr class="section-row"><td colspan="6">SECURITY &amp; ACCESS CONTROL</td></tr>
+          <tr><td class="cat">Steel Security Door (flush, powder coat)</td><td class="unit">Each</td><td>1,200.00</td><td class="price">1,420.00</td><td class="change-up"><span class="change-pill pill-up">+18.3%</span></td><td>88.75</td></tr>
+          <tr><td class="cat">Roller Shutter (galv., 3m×3m)</td><td class="unit">Each</td><td>3,800.00</td><td class="price">4,500.00</td><td class="change-up"><span class="change-pill pill-up">+18.4%</span></td><td>281.25</td></tr>
+          <tr><td class="cat">CCTV Camera (HD, weatherproof)</td><td class="unit">Each</td><td>420.00</td><td class="price">465.00</td><td class="change-up"><span class="change-pill pill-up">+10.7%</span></td><td>29.06</td></tr>
+          <tr><td class="cat">Electric Fence Energizer (10 zones)</td><td class="unit">Unit</td><td>1,800.00</td><td class="price">2,050.00</td><td class="change-up"><span class="change-pill pill-up">+13.9%</span></td><td>128.13</td></tr>
+          <tr><td class="cat">Razor Wire (BTO-22, per roll)</td><td class="unit">Roll</td><td>85.00</td><td class="price">100.00</td><td class="change-up"><span class="change-pill pill-up">+17.6%</span></td><td>6.25</td></tr>
+          <tr class="section-row"><td colspan="6">LANDSCAPING &amp; IRRIGATION</td></tr>
+          <tr><td class="cat">Overhead Water Tank (5,000L poly)</td><td class="unit">Each</td><td>1,680.00</td><td class="price">1,920.00</td><td class="change-up"><span class="change-pill pill-up">+14.3%</span></td><td>120.00</td></tr>
+          <tr><td class="cat">Borehole Pump (submersible, 0.75kW)</td><td class="unit">Each</td><td>2,200.00</td><td class="price">2,520.00</td><td class="change-up"><span class="change-pill pill-up">+14.5%</span></td><td>157.50</td></tr>
+          <tr><td class="cat">Drip Irrigation System (100m²)</td><td class="unit">Kit</td><td>1,400.00</td><td class="price">1,600.00</td><td class="change-up"><span class="change-pill pill-up">+14.3%</span></td><td>100.00</td></tr>
+          <tr class="section-row"><td colspan="6">WATERPROOFING &amp; INSULATION</td></tr>
+          <tr><td class="cat">Crystalline Waterproofing (per kg)</td><td class="unit">kg</td><td>48.00</td><td class="price">56.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>3.50</td></tr>
+          <tr><td class="cat">Bituminous Paint (5L)</td><td class="unit">Tin</td><td>85.00</td><td class="price">96.00</td><td class="change-up"><span class="change-pill pill-up">+12.9%</span></td><td>6.00</td></tr>
+          <tr><td class="cat">Expanded Polystyrene Board (50mm)</td><td class="unit">m²</td><td>42.00</td><td class="price">49.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td><td>3.06</td></tr>
+          <tr class="section-row"><td colspan="6">FORMWORK &amp; SCAFFOLDING</td></tr>
+          <tr><td class="cat">Timber Formwork (18mm ply)</td><td class="unit">m²</td><td>48.00</td><td class="price">52.00</td><td class="change-up"><span class="change-pill pill-up">+8.3%</span></td><td>3.25</td></tr>
+          <tr><td class="cat">Steel Formwork (rental, per m²/wk)</td><td class="unit">m²/week</td><td>18.00</td><td class="price">20.00</td><td class="change-up"><span class="change-pill pill-up">+11.1%</span></td><td>1.25</td></tr>
+          <tr><td class="cat">Scaffolding (tube &amp; coupler, per m²/wk)</td><td class="unit">m²/week</td><td>12.00</td><td class="price">13.50</td><td class="change-up"><span class="change-pill pill-up">+12.5%</span></td><td>0.84</td></tr>
+          <tr><td class="cat">Acrow Prop (proprietary, per prop/wk)</td><td class="unit">prop/week</td><td>8.50</td><td class="price">9.50</td><td class="change-up"><span class="change-pill pill-up">+11.8%</span></td><td>0.59</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:.5px;margin-top:6px">USD 1 = GH₵ 16.00 · All prices incl. 15% VAT · Accra/Tema market · Apply regional premiums from page 56</div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">28 — 29</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TIMBER & JOINERY PRICES
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Timber, Joinery &amp; Hardwood Prices</div>
+    <div class="ph-pn">30</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Timber &amp; Joinery Price Index — Q4 2025</div>
+    <div class="data-sub">Ghana has significant domestic timber resources, but Forestry Commission logging restrictions have constrained supply of premium hardwoods — pushing quality joinery costs sharply upward. Treated imported timber fills the gap at premium prices. Source: Timber Industry Development Division; LocalLink field survey.</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:14px">
+      <div class="price-table-wrap">
+        <table class="price-tbl">
+          <thead><tr><th style="width:38%">Item</th><th>Species/Spec</th><th>Unit</th><th>Q4 2024</th><th>Q4 2025</th><th>YoY</th></tr></thead>
+          <tbody>
+            <tr class="section-row"><td colspan="6">STRUCTURAL &amp; GENERAL TIMBER</td></tr>
+            <tr><td class="cat">Hardwood Joist (4"×2", treated)</td><td>Odum/Wawa</td><td class="unit">m</td><td>32.00</td><td class="price">38.00</td><td class="change-up"><span class="change-pill pill-up">+18.8%</span></td></tr>
+            <tr><td class="cat">Hardwood Rafter (4"×3", treated)</td><td>Odum</td><td class="unit">m</td><td>48.00</td><td class="price">56.00</td><td class="change-up"><span class="change-pill pill-up">+16.7%</span></td></tr>
+            <tr><td class="cat">Softwood Stud (3"×2", imported)</td><td>Swedish pine</td><td class="unit">m</td><td>22.00</td><td class="price">28.00</td><td class="change-up"><span class="change-pill pill-up">+27.3%</span></td></tr>
+            <tr><td class="cat">Blockboard (18mm, 2440×1220)</td><td>Wawa core</td><td class="unit">Sheet</td><td>220.00</td><td class="price">265.00</td><td class="change-up"><span class="change-pill pill-up">+20.5%</span></td></tr>
+            <tr><td class="cat">Plywood (18mm, hardwood face)</td><td>Mixed tropical</td><td class="unit">Sheet</td><td>185.00</td><td class="price">220.00</td><td class="change-up"><span class="change-pill pill-up">+18.9%</span></td></tr>
+            <tr><td class="cat">MDF Board (18mm, 2440×1220)</td><td>Imported</td><td class="unit">Sheet</td><td>240.00</td><td class="price">290.00</td><td class="change-up"><span class="change-pill pill-up">+20.8%</span></td></tr>
+            <tr class="section-row"><td colspan="6">FLOORING</td></tr>
+            <tr><td class="cat">Solid Hardwood Flooring (22mm)</td><td>Mahogany</td><td class="unit">m²</td><td>320.00</td><td class="price">385.00</td><td class="change-up"><span class="change-pill pill-up">+20.3%</span></td></tr>
+            <tr><td class="cat">Engineered Wood Flooring (14mm)</td><td>Oak veneer, imported</td><td class="unit">m²</td><td>480.00</td><td class="price">565.00</td><td class="change-up"><span class="change-pill pill-up">+17.7%</span></td></tr>
+            <tr><td class="cat">Laminate Flooring (8mm AC4)</td><td>Imported (China)</td><td class="unit">m²</td><td>95.00</td><td class="price">112.00</td><td class="change-up"><span class="change-pill pill-up">+17.9%</span></td></tr>
+            <tr class="section-row"><td colspan="6">BUILT-IN JOINERY &amp; KITCHEN</td></tr>
+            <tr><td class="cat">Fitted Kitchen (MDF, local, per m run)</td><td>Local fabrication</td><td class="unit">m run</td><td>1,800.00</td><td class="price">2,150.00</td><td class="change-up"><span class="change-pill pill-up">+19.4%</span></td></tr>
+            <tr><td class="cat">Fitted Kitchen (imported modular)</td><td>China/Turkey</td><td class="unit">m run</td><td>3,400.00</td><td class="price">4,050.00</td><td class="change-up"><span class="change-pill pill-up">+19.1%</span></td></tr>
+            <tr><td class="cat">Built-in Wardrobes (MDF per m²)</td><td>Local fabrication</td><td class="unit">m²</td><td>680.00</td><td class="price">810.00</td><td class="change-up"><span class="change-pill pill-up">+19.1%</span></td></tr>
+            <tr><td class="cat">Staircase (hardwood, per flight)</td><td>Odum hardwood</td><td class="unit">Flight</td><td>4,200.00</td><td class="price">5,000.00</td><td class="change-up"><span class="change-pill pill-up">+19.0%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="chart-box dark" style="margin-bottom:12px">
+          <div class="chart-label light">Domestic Hardwood Supply Index (Q1 2023 = 100)</div>
+          <div class="h-bar-chart" style="margin-top:8px">
+            <div class="hb-row"><div class="hb-lbl light" style="min-width:48px">Q1 '23</div><div class="hb-track dark-track"><div class="hb-fill green" style="width:100%"></div></div><div class="hb-val light">100</div></div>
+            <div class="hb-row"><div class="hb-lbl light" style="min-width:48px">Q3 '23</div><div class="hb-track dark-track"><div class="hb-fill" style="width:92%;background:#4a9"></div></div><div class="hb-val light">92</div></div>
+            <div class="hb-row"><div class="hb-lbl light" style="min-width:48px">Q1 '24</div><div class="hb-track dark-track"><div class="hb-fill" style="width:82%;background:var(--amber)"></div></div><div class="hb-val light">82</div></div>
+            <div class="hb-row"><div class="hb-lbl light" style="min-width:48px">Q3 '24</div><div class="hb-track dark-track"><div class="hb-fill" style="width:74%;background:var(--amber)"></div></div><div class="hb-val light">74</div></div>
+            <div class="hb-row"><div class="hb-lbl light" style="min-width:48px">Q4 '25</div><div class="hb-track dark-track"><div class="hb-fill red" style="width:64%"></div></div><div class="hb-val light">64</div></div>
+          </div>
+          <div style="font-family:'Barlow',sans-serif;font-size:8.5px;color:rgba(255,255,255,.35);margin-top:10px;line-height:1.5">Domestic hardwood supply has fallen 36% since Q1 2023 as Forestry Commission logging quotas tighten. Import volumes are up 48% to compensate — at much higher cost.</div>
+        </div>
+        <div style="background:rgba(232,132,10,.08);border:1px solid rgba(232,132,10,.25);padding:14px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:7px;color:var(--amber);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px">Timber Alert</div>
+          <div style="font-family:'Barlow',sans-serif;font-size:9.5px;color:var(--ink);line-height:1.6">European softwood imports from Sweden and Finland show a 27% YoY price increase driven by construction booms in Poland and Scandinavia. Shortages of treated structural timber in Accra were reported by 44% of contractors in our Q4 survey.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">30 — 31</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     REAL ESTATE MARKET OVERVIEW
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Real Estate Market Overview</div>
+    <div class="ph-pn">92</div>
+  </div>
+  <div class="header-accent"></div>
+  <div class="data-page">
+    <div class="data-hl">Ghana Real Estate Market Snapshot — Q4 2025</div>
+    <div class="data-sub">How construction cost trends are feeding through into property prices, rental yields, and developer margins across Ghana's key real estate segments. Source: GREDA; Knight Frank Ghana; Broll Property Group; LocalLink research.</div>
+    <div class="kpi-row" style="margin-bottom:14px">
+      <div class="kpi-cell"><div class="kpi-num up">+12.4%</div><div class="kpi-lbl">Residential sale price YoY increase, prime Accra (East Legon, Cantonments)</div></div>
+      <div class="kpi-cell"><div class="kpi-num amber">$1,800</div><div class="kpi-lbl">Average asking price per m², prime residential Accra (USD, Q4 2025)</div></div>
+      <div class="kpi-cell"><div class="kpi-num dn">6.8%</div><div class="kpi-lbl">Average residential rental yield, Accra (down from 8.2% in 2022)</div></div>
+      <div class="kpi-cell"><div class="kpi-num up">1.8M</div><div class="kpi-lbl">Estimated housing deficit, Ghana (National Housing Policy, 2025 update)</div></div>
+    </div>
+    <div class="price-table-wrap" style="margin-bottom:14px">
+      <table class="price-tbl">
+        <thead><tr><th>Location / Segment</th><th>Type</th><th>Build Cost/m² (GH₵)</th><th>Sale Price/m² (GH₵)</th><th>Developer Margin</th><th>Rental Yield</th></tr></thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">GREATER ACCRA — RESIDENTIAL</td></tr>
+          <tr><td class="cat">East Legon / Cantonments (prime)</td><td>Apartments 2–3BR</td><td>3,720</td><td class="price">28,800</td><td class="change-dn">674%</td><td class="change-flat">6.2%</td></tr>
+          <tr><td class="cat">Spintex / Adenta (mid-market)</td><td>Houses 3–4BR</td><td>3,600</td><td class="price">16,000</td><td class="change-dn">344%</td><td class="change-flat">7.1%</td></tr>
+          <tr><td class="cat">Tema Comm. 25 (developer)</td><td>Townhouses</td><td>3,400</td><td class="price">12,000</td><td class="change-dn">253%</td><td class="change-flat">7.8%</td></tr>
+          <tr><td class="cat">Kasoa / Ofankor (affordable)</td><td>Houses 3BR</td><td>3,200</td><td class="price">6,800</td><td class="change-dn">113%</td><td class="change-flat">8.4%</td></tr>
+          <tr class="section-row"><td colspan="6">COMMERCIAL &amp; MIXED USE — GREATER ACCRA</td></tr>
+          <tr><td class="cat">Airport City (A-grade office)</td><td>Office shell &amp; core</td><td>4,200</td><td class="price">—</td><td class="change-flat">Leasehold only</td><td class="change-dn">9.2%</td></tr>
+          <tr><td class="cat">CBD / Accra Mall (retail)</td><td>Retail shell</td><td>3,800</td><td class="price">—</td><td class="change-flat">Leasehold only</td><td class="change-dn">8.6%</td></tr>
+          <tr><td class="cat">Tema / Accra (industrial warehouse)</td><td>Single-storey portal</td><td>2,400</td><td class="price">—</td><td class="change-flat">Leasehold only</td><td class="change-dn">10.8%</td></tr>
+          <tr class="section-row"><td colspan="6">KUMASI — RESIDENTIAL</td></tr>
+          <tr><td class="cat">Airport Ridge / Nhyiaeso (prime)</td><td>Houses 3–4BR</td><td>4,158</td><td class="price">12,500</td><td class="change-dn">201%</td><td class="change-flat">7.8%</td></tr>
+          <tr><td class="cat">Ahodwo / Nhyiaeso (mid-market)</td><td>Houses 3BR</td><td>3,840</td><td class="price">8,400</td><td class="change-dn">119%</td><td class="change-flat">8.2%</td></tr>
+          <tr><td class="cat">Ahinsan / Asokwa (affordable)</td><td>Houses 2–3BR</td><td>3,600</td><td class="price">5,200</td><td class="change-dn">44%</td><td class="change-flat">9.1%</td></tr>
+          <tr class="section-row"><td colspan="6">TAKORADI — RESIDENTIAL &amp; COMMERCIAL</td></tr>
+          <tr><td class="cat">Takoradi GRA / Anaji (prime)</td><td>Houses 3–4BR</td><td>3,890</td><td class="price">10,200</td><td class="change-dn">162%</td><td class="change-flat">8.8%</td></tr>
+          <tr><td class="cat">Takoradi (commercial / oil sector)</td><td>Office, mid-spec</td><td>4,050</td><td class="price">—</td><td class="change-flat">Leasehold</td><td class="change-dn">11.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="pullquote" style="margin:0">
+        <div class="pq-text">"The construction cost explosion is compressing developer margins on affordable housing to the point where it is financially irrational to build it. Only prime and upper-mid product pencils out."</div>
+        <div class="pq-attr">— Chief Executive, leading Accra residential developer (off-record)</div>
+      </div>
+      <div style="background:rgba(192,52,26,.06);border-left:3px solid var(--red);padding:12px 14px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">The Affordable Housing Squeeze</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:9px;color:var(--mid);line-height:1.6">In 2020, a developer building a 3BR house in Kasoa at GH₵ 1,420/m² and selling at GH₵ 4,000/m² achieved a 181% margin. In 2025, at GH₵ 3,200/m² build cost and GH₵ 6,800/m² sale price, the margin is 113% — less than half. Meanwhile, land costs have tripled. The economics of affordable housing in Ghana are becoming impossible without government subsidy or land provision. GREDA estimates that private developers will deliver fewer than 12,000 affordable units in 2025 — against an annual demand of 170,000+ new units just to prevent the deficit from growing.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">92 — 93</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SECOND INTERVIEW — QUANTITY SURVEYOR
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="itv-header" style="background:var(--steel)">
+    <div class="itv-tag" style="color:var(--amber-lt)">Second Interview</div>
+    <div class="itv-name" style="font-size:34px">Mrs. Abena<br>Sarpong-Adu</div>
+    <div class="itv-role" style="color:rgba(255,255,255,.55)">President, Ghana Institution of Surveyors (GhIS) &amp; Director, Apex Quantity Surveyors Ltd</div>
+  </div>
+  <div class="itv-body">
+    <img class="itv-photo" src="https://picsum.photos/seed/qs-interview/185/240" alt="QS President">
+    <div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">On cost management, BoQ reform, and the QS profession in Ghana — Interviewed by Kwesi Antwi-Boasiako</div>
+      <div class="qa-block">
+        <div class="qa-q">Contractors are reporting average overruns of 10–22% in 2025. Is this a failure of quantity surveying or of the contract framework?</div>
+        <div class="qa-a">Both, but primarily the contract framework. A competent quantity surveyor will price a BoQ accurately at a point in time — but a BoQ is not a crystal ball. When cement moves 20% in nine months, any fixed-price BoQ becomes inaccurate within weeks of signing. The profession is not at fault for market movements we cannot predict. What we are responsible for is advising clients on the appropriate contract mechanism — and that means insisting on escalation clauses in contracts of more than six months' duration. Too many QS firms in Ghana accept fixed-price contracts uncritically because the client wants cost certainty. Cost certainty achieved through an impossible contract is not certainty — it is a deferred dispute.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">You have been pushing for reform of the standard government BoQ format. What specifically needs to change?</div>
+        <div class="qa-a">Several things. First, the government's standard BoQ format still does not separate materials from labour in most bill items — which makes it impossible to apply materials escalation formulae accurately. You need unit rates broken into their components if you want to adjust them properly. Second, provisional sums and contingency allowances in government BoQs are set at 2–3% of project cost as a matter of formula — regardless of project risk profile. In the current environment, a realistic contingency for a 12-month materials-intensive project is 12–15%. Third, there is no standard mechanism for getting a variation order processed in less than 60 days on a government project. By the time the variation is approved, the contractor has already absorbed the loss. Contractors price the anticipated loss into their next tender. The system breeds distrust and inflated bids.</div>
+      </div>
+      <div class="qa-block">
+        <div class="qa-q">What is your single most important message for developers and public sector clients in 2026?</div>
+        <div class="qa-a">Stop treating the quantity surveyor as a form-filler who produces the BoQ after all design decisions have been made. Bring your QS in at feasibility stage, not tender stage. We can tell you whether a project is affordable before you spend GH₵ 400,000 on full design. We can identify value engineering opportunities while the design is still fluid. And we can structure the contract correctly from the start — not scramble to fix it when the contractor is 30% over budget and threatening to walk off site. The profession has the tools. We need to be given the authority to use them.</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">95 — 96</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     METHODOLOGY & DATA SOURCES
+══════════════════════════════════════════ -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">CIPI Methodology &amp; Data Sources</div>
+    <div class="ph-pn">98</div>
+  </div>
+  <div class="header-accent"></div>
+  <div style="padding:20px 40px 0;position:relative;z-index:5">
+    <div class="amber-rule"></div>
+    <div class="story-hl" style="font-size:20px">How We Build the CIPI — Full Methodology Disclosure</div>
+    <div class="story-deck">Technical disclosure of data collection, weighting, index calculation, and quality assurance for the LocalLink Construction &amp; Infrastructure Pricing Index. Q4 2025.</div>
+  </div>
+  <div class="policy-layout" style="padding-top:16px">
+    <div class="pol-main">
+      <div class="col-body">
+        <div class="inline-head">Data Collection</div>
+        <p>The CIPI is compiled from three primary data streams. First, direct price surveys: our team of 12 field researchers visits registered construction materials suppliers in each of Ghana's nine administrative regions quarterly, collecting current retail prices for each of the 142 line items in the index basket. Suppliers are drawn from our standing panel of 180 firms, stratified by region and product category, representing a mix of major distributors, regional wholesalers, and independent retailers. A minimum of three price observations per line item per region are collected; outliers (more than 1.5 standard deviations from the regional mean) are investigated and either corrected or excluded.</p>
+        <p>The second data stream is government procurement records. The Public Procurement Authority (PPA) provides, with a 45-day lag, tender price data from completed award notices for public sector construction contracts above threshold. This data allows validation of field survey prices against actual procurement outcomes and identification of systematic divergences between retail and government procurement pricing.</p>
+        <p>The third stream is import data from the Ghana Customs and Excise Division. For materials with significant import content (steel, MEP components, tiles, sanitary ware), import unit values declared at Tema and Takoradi ports provide an independent check on retail price movements and allow early identification of imported-cost pressure before it fully transmits to retail prices.</p>
+        <div class="inline-head">Index Weighting</div>
+        <p>The CIPI is a Laspeyres price index with a fixed quantity basket updated every three years. The basket reflects the cost structure of our "Reference Project" — a standardised 500m² GFA, two-storey, reinforced concrete frame residential building designed in consultation with the Ghana Institution of Surveyors. Major category weights: Structural Materials 30.2%; MEP and Services 18.4%; Finishes and Cladding 16.8%; Skilled Labour 13.2%; Earthworks and Drainage 8.6%; Plant and Preliminaries 7.4%; Roofing and Waterproofing 5.4%.</p>
+        <div class="inline-head">Regional Index Calculation</div>
+        <p>The national CIPI is a GDP-weighted average of nine regional indices reflecting each region's approximate share of Ghana's total construction output. Regional weighting: Greater Accra 42%; Ashanti 22%; Western 9%; Central 6%; Eastern 6%; Brong-Ahafo 4%; Volta 4%; Northern 4%; Upper East/West 3%. Regional sub-indices are published in the quarterly CIPI Technical Supplement available to subscribers.</p>
+      </div>
+    </div>
+    <div class="pol-sb">
+      <div class="psw">
+        <div class="psw-head">Primary Data Sources</div>
+        <ul class="psw-list">
+          <li>Ghana Statistical Service <span>CPI &amp; PPI data</span></li>
+          <li>Bank of Ghana <span>Forex rates</span></li>
+          <li>Ghana Customs &amp; Excise <span>Import unit values</span></li>
+          <li>Public Procurement Auth. <span>Award notice prices</span></li>
+          <li>NDPC <span>Infrastructure cost database</span></li>
+          <li>GHA / DFR <span>Road construction costs</span></li>
+          <li>GES / MOH <span>School &amp; clinic project costs</span></li>
+          <li>GWCL <span>Water infrastructure costs</span></li>
+        </ul>
+      </div>
+      <div class="psw">
+        <div class="psw-head">Survey Panel Size</div>
+        <ul class="psw-list">
+          <li>Greater Accra <span>38 suppliers</span></li>
+          <li>Ashanti <span>28 suppliers</span></li>
+          <li>Western <span>18 suppliers</span></li>
+          <li>Central <span>16 suppliers</span></li>
+          <li>Eastern <span>16 suppliers</span></li>
+          <li>Northern <span>22 suppliers</span></li>
+          <li>Upper East <span>14 suppliers</span></li>
+          <li>Upper West <span>12 suppliers</span></li>
+          <li>Volta <span>16 suppliers</span></li>
+          <li><strong>TOTAL</strong> <span>180 active panel firms</span></li>
+        </ul>
+      </div>
+      <div class="psw">
+        <div class="psw-head">Publication Schedule</div>
+        <ul class="psw-list">
+          <li>Q1 data <span>Published April</span></li>
+          <li>Q2 data <span>Published July</span></li>
+          <li>Q3 data <span>Published October</span></li>
+          <li>Q4 / Annual <span>Published February following year</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">98 — 99</div>
+  </div>
+</div>
+
+<!-- Data Access & Licensing — full page so content is complete on spread 98–99 -->
+<div class="page">
+  <div class="bp-grid-fine"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Data Access &amp; Licensing</div>
+    <div class="ph-pn">99</div>
+  </div>
+  <div class="header-accent"></div>
+  <div style="padding:28px 40px 0;position:relative;z-index:5">
+    <div class="amber-rule"></div>
+    <div class="data-hl" style="margin-bottom:8px">Data Access &amp; Licensing</div>
+    <div class="data-sub" style="margin-bottom:28px">Full CIPI dataset, API access, custom reports, and academic licensing. Contact us for subscription and partnership options.</div>
+    <div class="chart-box" style="max-width:480px;margin-bottom:20px">
+      <div class="chart-label">Full CIPI dataset</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:10.5px;color:var(--ink);line-height:1.6">Available to subscribers. Quarterly and annual data; regional sub-indices; historical series from Q1 2023.</div>
+    </div>
+    <div class="chart-box" style="max-width:480px;margin-bottom:20px">
+      <div class="chart-label">API access</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:10.5px;color:var(--ink);line-height:1.6">Corporate subscribers. REST API for integration with your systems; rate limits and SLA by tier.</div>
+    </div>
+    <div class="chart-box" style="max-width:480px;margin-bottom:20px">
+      <div class="chart-label">Custom reports &amp; academic use</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:10.5px;color:var(--ink);line-height:1.6">Custom reports: research@locallink.com.gh · Academic use: free licence available for teaching and peer‑reviewed research.</div>
+    </div>
+    <div style="margin-top:24px;padding:14px 18px;background:rgba(232,132,10,.06);border-left:3px solid var(--amber)">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Enquiries</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:10px;color:var(--ink);line-height:1.5">subscribe.locallink.com.gh · +233 30 270 4400</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 02 · FEB 2026</div>
+    <div class="pf-txt">98 — 99</div>
+  </div>
+</div>
+
+<div class="p-sep">── back cover ──</div>
+
+<!-- ██████████████████████████████████████████
+     BACK COVER
+██████████████████████████████████████████ -->
+<div class="page" id="back-cover">
+  <div class="bc-blueprint"></div>
+  <div class="bc-accent"></div>
+  <div class="bc-top">
+    <div>
+      <div class="bc-brand"><span>LOCAL</span>LINK<br>Economist</div>
+      <div class="bc-tagline">Rigorous. Local. Essential.</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.22);letter-spacing:2px">Vol. 02 · Issue 02</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.22);letter-spacing:1px;margin-top:3px">February 2026</div>
+    </div>
+  </div>
+  <div class="bc-body">
+    <div class="bc-quote">
+      "EVERY GH₵ SPENT ON <span>BUILDING GHANA</span> PASSES THROUGH A SUPPLY CHAIN SHAPED BY DISTANCE, EXCHANGE RATES, AND POLICY."
+    </div>
+    <div class="bc-attrib">— LocalLink Economist, Vol. 02 · Construction &amp; Infrastructure Pricing Index</div>
+    <div class="bc-ad-box">
+      <div class="bc-ad-head">Advertise &amp; Get Featured</div>
+      <p class="bc-ad-text">Reach construction and infrastructure decision‑makers across Ghana. To advertise or be featured in <strong>LocalLink Economist</strong>, get in touch.</p>
+      <p class="bc-ad-cta">economist@locallink.com.gh</p>
+    </div>
+    <div class="bc-strip">
+      <img src="{{BACK_COVER_THUMB_1_FILE_URL}}" alt="Rainwater harvesting">
+      <img src="{{BACK_COVER_THUMB_2_FILE_URL}}" alt="Local materials, Ghana">
+      <img src="{{BACK_COVER_THUMB_3_FILE_URL}}" alt="Eco-friendly building materials">
+    </div>
+  </div>
+  <div class="bc-bottom">
+    <div class="bc-contact">
+      <h4>Contact &amp; Subscriptions</h4>
+      <p>LocalLink Media Group<br>14 Independence Avenue, Accra Central<br>P.O. Box AN 5561, Accra-North, Ghana<br><br><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b3d6d7dac7dcc1dad2dff3dfdcd0d2dfdfdaddd89dd0dcde9dd4db">[email&#160;protected]</a><br>subscribe.locallink.com.gh<br>+233 30 270 4400</p>
+    </div>
+    <div class="bc-next">
+      <div class="bc-next-lbl">Next Issue — March 2026</div>
+      <div class="bc-next-title">Digital Economy &amp; Fintech in Ghana</div>
+      <div style="margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.

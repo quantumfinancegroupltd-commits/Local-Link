@@ -215,7 +215,15 @@ corporateRouter.get('/jobs', asyncHandler(async (req, res) => {
     })
   }
 
-  return res.json(rows)
+  // Explicit mapping so map pins get location_lat/lng and image (pg may omit columns if migration not run)
+  const out = rows.map((row) => ({
+    ...row,
+    location_lat: row.location_lat != null ? Number(row.location_lat) : null,
+    location_lng: row.location_lng != null ? Number(row.location_lng) : null,
+    image_url: row.image_url ?? null,
+    company_logo_url: row.company_logo_url ?? null,
+  }))
+  return res.json(out)
 }))
 
 // Enterprise Mode: list workspaces user belongs to

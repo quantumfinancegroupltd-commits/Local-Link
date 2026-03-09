@@ -15,6 +15,9 @@ function buildFingerprint() {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), buildFingerprint()],
+  optimizeDeps: {
+    include: ['pdfjs-dist'],
+  },
   server: {
     // Use 5173 (Vite default). Port 5060 is blocked by Chromium as unsafe.
     port: 5173,

@@ -15,6 +15,7 @@ EXPOSE 4000
 
 # For single-instance self-hosting, running migrations on boot is acceptable.
 # For multi-replica deployments, run migrations as a separate one-off job.
-CMD ["sh","-c","node src/db/migrate.js && node src/server.js"]
+# Seed economist Volume 01 so /news always has an issue (idempotent upsert).
+CMD ["sh","-c","node src/db/migrate.js && node scripts/seed-economist-issue.js && node src/server.js"]
 
 

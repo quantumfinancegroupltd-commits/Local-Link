@@ -32,7 +32,7 @@ function loadGoogleMapsPlaces(apiKey) {
     const script = document.createElement('script')
     // "loading=async" is Google-recommended to avoid suboptimal loading warnings.
     // "v=weekly" keeps behavior current without pinning.
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&loading=async&v=weekly`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&loading=async&v=weekly&region=gh`
     script.async = true
     script.defer = true
     script.dataset.llGoogleMaps = '1'

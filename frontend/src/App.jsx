@@ -74,6 +74,8 @@ const Careers = lazy(() => import('./pages/public/Careers.jsx').then((m) => ({ d
 // /start now redirects to /onboarding (single source of truth)
 const News = lazy(() => import('./pages/news/News.jsx').then((m) => ({ default: m.News })))
 const NewsPost = lazy(() => import('./pages/news/NewsPost.jsx').then((m) => ({ default: m.NewsPost })))
+const EconomistArchive = lazy(() => import('./pages/economist/EconomistArchive.jsx').then((m) => ({ default: m.EconomistArchive })))
+const EconomistReader = lazy(() => import('./pages/economist/EconomistReader.jsx').then((m) => ({ default: m.EconomistReader })))
 const Feed = lazy(() => import('./pages/feed/Feed.jsx').then((m) => ({ default: m.Feed })))
 const People = lazy(() => import('./pages/people/People.jsx').then((m) => ({ default: m.People })))
 const Discover = lazy(() => import('./pages/discover/Discover.jsx').then((m) => ({ default: m.Discover })))
@@ -182,6 +184,8 @@ export default function App() {
             <Route path="/careers" element={<Careers />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsPost />} />
+            <Route path="/economist" element={<EconomistArchive />} />
+            <Route path="/economist/:slug" element={<EconomistReader />} />
             <Route path="/discover" element={<Discover />} />
             <Route
               path="/feed"

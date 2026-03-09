@@ -297,6 +297,7 @@ export function AdminDashboard() {
 
   const [audit, setAudit] = useState([])
   const [auditLoading, setAuditLoading] = useState(true)
+  const [dataAudit, setDataAudit] = useState(null)
 
   const [geo, setGeo] = useState(null)
   const [geoLoading, setGeoLoading] = useState(false)
@@ -375,6 +376,29 @@ export function AdminDashboard() {
   const [newsEditHeroAlt, setNewsEditHeroAlt] = useState('')
   const [newsEditHeroCredit, setNewsEditHeroCredit] = useState('')
   const [newsBusy, setNewsBusy] = useState(false)
+
+  const [economistIssues, setEconomistIssues] = useState([])
+  const [economistLoading, setEconomistLoading] = useState(false)
+  const [economistError, setEconomistError] = useState(null)
+  const [economistSelectedId, setEconomistSelectedId] = useState(null)
+  const [economistSelected, setEconomistSelected] = useState(null)
+  const [economistEditSlug, setEconomistEditSlug] = useState('')
+  const [economistEditVolume, setEconomistEditVolume] = useState(1)
+  const [economistEditIssueDate, setEconomistEditIssueDate] = useState('')
+  const [economistEditTheme, setEconomistEditTheme] = useState('')
+  const [economistEditTitle, setEconomistEditTitle] = useState('')
+  const [economistEditSummary, setEconomistEditSummary] = useState('')
+  const [economistEditPdfUrl, setEconomistEditPdfUrl] = useState('')
+  const [economistEditCoverUrl, setEconomistEditCoverUrl] = useState('')
+  const [economistEditPageCount, setEconomistEditPageCount] = useState('')
+  const [economistEditHeadline1, setEconomistEditHeadline1] = useState('')
+  const [economistEditHeadline2, setEconomistEditHeadline2] = useState('')
+  const [economistEditHeadline3, setEconomistEditHeadline3] = useState('')
+  const [economistEditPublished, setEconomistEditPublished] = useState(false)
+  const [economistPdfFile, setEconomistPdfFile] = useState(null)
+  const [economistCoverFile, setEconomistCoverFile] = useState(null)
+  const [economistBusy, setEconomistBusy] = useState(false)
+  const [economistFilter, setEconomistFilter] = useState('all') // 'all' | 'draft' | 'published'
 
   const [queues, setQueues] = useState(null)
   const [queuesLoading, setQueuesLoading] = useState(false)
@@ -483,15 +507,17 @@ export function AdminDashboard() {
       setOpsAlertsLoading(true)
       setOpsAlertsError(null)
       try {
-        const [o, s, a] = await Promise.all([
+        const [o, s, a, auditRes] = await Promise.all([
           http.get('/admin/ops/overview'),
           http.get('/admin/system/status'),
           http.get('/admin/ops/alerts', { params: { status: 'open', limit: 50 } }),
+          http.get('/admin/data-audit').catch(() => ({ data: null })),
         ])
         if (cancelled) return
         setOps(o.data ?? null)
         setSys(s.data ?? null)
         setOpsAlerts(Array.isArray(a.data?.items) ? a.data.items : [])
+        setDataAudit(auditRes?.data ?? null)
       } catch {
         // best-effort
       } finally {
@@ -529,6 +555,7 @@ export function AdminDashboard() {
       { label: 'Reliability', value: 'reliability' },
       { label: 'Controls', value: 'controls' },
       { label: 'News', value: 'news' },
+      { label: 'LocalLink Economist', value: 'economist' },
       { label: `Disputes${ops?.disputes_active ? ` (${ops.disputes_active})` : ''}`, value: 'disputes' },
       { label: `Verification${ops?.verification_requests_pending ? ` (${ops.verification_requests_pending})` : ''}`, value: 'verification' },
       { label: `Dispatch${ops?.deliveries_unassigned_paid ? ` (${ops.deliveries_unassigned_paid})` : ''}`, value: 'dispatch' },
@@ -604,6 +631,83 @@ export function AdminDashboard() {
       cancelled = true
     }
   }, [tab])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadEconomist() {
+      if (tab !== 'economist') return
+      setEconomistLoading(true)
+      setEconomistError(null)
+      try {
+        const r = await http.get('/admin/economist')
+        if (!cancelled) setEconomistIssues(Array.isArray(r.data) ? r.data : [])
+      } catch (e) {
+        if (!cancelled) setEconomistError(e?.response?.data?.message ?? e?.message ?? 'Failed to load issues')
+      } finally {
+        if (!cancelled) setEconomistLoading(false)
+      }
+    }
+    loadEconomist()
+    return () => { cancelled = true }
+  }, [tab])
+
+  useEffect(() => {
+    let cancelled = false
+    if (tab !== 'economist') return
+    async function loadEconomistDetail() {
+      if (!economistSelectedId) {
+        setEconomistSelected(null)
+        setEconomistEditSlug('')
+        setEconomistEditVolume(1)
+        setEconomistEditIssueDate('')
+        setEconomistEditTheme('')
+        setEconomistEditTitle('')
+        setEconomistEditSummary('')
+        setEconomistEditPdfUrl('')
+        setEconomistEditCoverUrl('')
+        setEconomistEditPageCount('')
+        setEconomistEditHeadline1('')
+        setEconomistEditHeadline2('')
+        setEconomistEditHeadline3('')
+        setEconomistEditPublished(false)
+        setEconomistPdfFile(null)
+        setEconomistCoverFile(null)
+        return
+      }
+      setEconomistBusy(true)
+      try {
+        const r = await http.get(`/admin/economist/${encodeURIComponent(economistSelectedId)}`)
+        const p = r.data
+        if (!cancelled) {
+          setEconomistSelected(p)
+          setEconomistEditSlug(p?.slug ?? '')
+          setEconomistEditVolume(p?.volume_number ?? 1)
+          setEconomistEditIssueDate(p?.issue_date ? p.issue_date.slice(0, 10) : '')
+          setEconomistEditTheme(p?.theme ?? '')
+          setEconomistEditTitle(p?.title ?? '')
+          setEconomistEditSummary(p?.summary ?? '')
+          setEconomistEditPdfUrl(p?.pdf_url ?? '')
+          setEconomistEditCoverUrl(p?.cover_image_url ?? '')
+          setEconomistEditPageCount(p?.page_count != null ? String(p.page_count) : '')
+          setEconomistEditHeadline1(p?.featured_headline_1 ?? '')
+          setEconomistEditHeadline2(p?.featured_headline_2 ?? '')
+          setEconomistEditHeadline3(p?.featured_headline_3 ?? '')
+          setEconomistEditPublished(!!p?.is_published)
+          setEconomistPdfFile(null)
+          setEconomistCoverFile(null)
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setEconomistSelected(null)
+          toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to load issue')
+        }
+      } finally {
+        if (!cancelled) setEconomistBusy(false)
+      }
+    }
+    loadEconomistDetail()
+    return () => { cancelled = true }
+  }, [tab, economistSelectedId])
 
   useEffect(() => {
     let cancelled = false
@@ -764,6 +868,102 @@ export function AdminDashboard() {
       toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete')
     } finally {
       setNewsBusy(false)
+    }
+  }
+
+  async function refreshEconomistList() {
+    const r = await http.get('/admin/economist')
+    setEconomistIssues(Array.isArray(r.data) ? r.data : [])
+  }
+
+  function startNewEconomistIssue() {
+    setEconomistSelectedId(null)
+    setEconomistSelected(null)
+    setEconomistEditSlug('')
+    setEconomistEditVolume(1)
+    setEconomistEditIssueDate(new Date().toISOString().slice(0, 10))
+    setEconomistEditTheme('')
+    setEconomistEditTitle('')
+    setEconomistEditSummary('')
+    setEconomistEditPdfUrl('')
+    setEconomistEditCoverUrl('')
+    setEconomistEditPageCount('')
+    setEconomistEditHeadline1('')
+    setEconomistEditHeadline2('')
+    setEconomistEditHeadline3('')
+    setEconomistEditPublished(false)
+    setEconomistPdfFile(null)
+    setEconomistCoverFile(null)
+  }
+
+  async function saveEconomistIssue() {
+    if (!economistSelectedId && (!economistPdfFile || !economistCoverFile)) {
+      toast.error('For a new issue, please select both a PDF file and a cover image.')
+      return
+    }
+    setEconomistBusy(true)
+    try {
+      let pdfUrl = economistEditPdfUrl || null
+      let coverImageUrl = economistEditCoverUrl || null
+      if (economistPdfFile && economistCoverFile) {
+        const form = new FormData()
+        form.append('pdf', economistPdfFile)
+        form.append('cover_image', economistCoverFile)
+        const up = await http.post('/uploads/economist', form, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        pdfUrl = up.data?.pdf_url ?? pdfUrl
+        coverImageUrl = up.data?.cover_image_url ?? coverImageUrl
+        if (up.data?.page_count != null) setEconomistEditPageCount(String(up.data.page_count))
+      }
+      const slug = (economistEditSlug || `volume-${String(economistEditVolume).padStart(2, '0')}-${economistEditIssueDate?.slice(0, 7) || 'unknown'}`).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+      const payload = {
+        slug,
+        volume_number: Number(economistEditVolume) || 1,
+        issue_date: economistEditIssueDate || new Date().toISOString().slice(0, 10),
+        theme: economistEditTheme || null,
+        title: economistEditTitle || 'Untitled',
+        summary: economistEditSummary || null,
+        pdf_url: pdfUrl,
+        cover_image_url: coverImageUrl,
+        page_count: economistEditPageCount === '' ? null : parseInt(economistEditPageCount, 10),
+        featured_headline_1: economistEditHeadline1 || null,
+        featured_headline_2: economistEditHeadline2 || null,
+        featured_headline_3: economistEditHeadline3 || null,
+        is_published: economistEditPublished,
+      }
+      if (economistSelectedId) {
+        const r = await http.put(`/admin/economist/${encodeURIComponent(economistSelectedId)}`, payload)
+        setEconomistSelected(r.data)
+        toast.success('Saved.')
+      } else {
+        const r = await http.post('/admin/economist', payload)
+        setEconomistSelectedId(r.data?.id ?? null)
+        setEconomistSelected(r.data)
+        toast.success('Issue created.')
+      }
+      await refreshEconomistList()
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to save')
+    } finally {
+      setEconomistBusy(false)
+    }
+  }
+
+  async function deleteEconomistIssue() {
+    if (!economistSelectedId) return
+    if (!window.confirm('Delete this Economist issue? This cannot be undone.')) return
+    setEconomistBusy(true)
+    try {
+      await http.delete(`/admin/economist/${encodeURIComponent(economistSelectedId)}`)
+      toast.success('Deleted.')
+      setEconomistSelectedId(null)
+      setEconomistSelected(null)
+      await refreshEconomistList()
+    } catch (e) {
+      toast.error(e?.response?.data?.message ?? e?.message ?? 'Failed to delete')
+    } finally {
+      setEconomistBusy(false)
     }
   }
 
@@ -1600,6 +1800,58 @@ export function AdminDashboard() {
                   )}
                 </div>
               </div>
+              {sys?.data_summary && !sys.data_summary.error ? (
+                <div className="rounded-2xl border bg-slate-50 p-4">
+                  <div className="text-xs text-slate-600">Database row counts</div>
+                  <p className="mt-1 text-xs text-slate-500">Connected DB — if these are 0, this environment has no seeded data.</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                      <span className="text-slate-600">Users</span>
+                      <span className="font-semibold text-slate-900">{sys.data_summary.users ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                      <span className="text-slate-600">Jobs</span>
+                      <span className="font-semibold text-slate-900">{sys.data_summary.jobs ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                      <span className="text-slate-600">Orders</span>
+                      <span className="font-semibold text-slate-900">{sys.data_summary.orders ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-lg bg-white px-3 py-2">
+                      <span className="text-slate-600">Products</span>
+                      <span className="font-semibold text-slate-900">{sys.data_summary.products ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              {dataAudit?.tables ? (
+                <div className="rounded-2xl border bg-slate-50 p-4 md:col-span-2">
+                  <div className="text-xs font-medium text-slate-600">Data audit — restore check</div>
+                  <p className="mt-1 text-xs text-slate-500">Row counts and date range per table. Empty or old “Latest” may mean this DB was reset or switched.</p>
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b text-left text-slate-600">
+                          <th className="pb-2 pr-4 font-medium">Table</th>
+                          <th className="pb-2 pr-4 font-medium text-right">Rows</th>
+                          <th className="pb-2 pr-4 font-medium">Earliest</th>
+                          <th className="pb-2 font-medium">Latest</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-slate-700">
+                        {Object.entries(dataAudit.tables).map(([name, t]) => (
+                          <tr key={name} className="border-b border-slate-100 last:border-0">
+                            <td className="py-1.5 pr-4 font-medium">{name}</td>
+                            <td className="py-1.5 pr-4 text-right">{t.error ? t.error : t.rows}</td>
+                            <td className="py-1.5 pr-4">{t.earliest ? t.earliest.slice(0, 19).replace('T', ' ') : '—'}</td>
+                            <td className="py-1.5">{t.latest ? t.latest.slice(0, 19).replace('T', ' ') : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
               <div className="rounded-2xl border bg-slate-50 p-4">
                 <div className="text-xs text-slate-600">Ops queue</div>
                 {opsLoading ? (
@@ -3672,6 +3924,177 @@ export function AdminDashboard() {
                 </div>
               </div>
             )}
+          </Card>
+        </div>
+      ) : null}
+
+      {tab === 'economist' ? (
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold">LocalLink Economist</div>
+                <div className="mt-1 text-xs text-slate-600">Monthly digital magazine issues for the /news slider and reader.</div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" disabled={economistBusy} onClick={startNewEconomistIssue}>
+                  Upload New Issue
+                </Button>
+                <Button variant="secondary" disabled={economistLoading} onClick={() => refreshEconomistList()}>
+                  Refresh
+                </Button>
+              </div>
+            </div>
+            {economistIssues.length > 0 ? (
+              <div className="mt-2 flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-slate-800/50">
+                {['all', 'published', 'draft'].map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setEconomistFilter(f)}
+                    className={`rounded-md px-2.5 py-1.5 text-xs font-medium capitalize ${
+                      economistFilter === f ? 'bg-white text-slate-900 shadow dark:bg-white/10 dark:text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {economistLoading ? (
+              <div className="mt-3 text-sm text-slate-600">Loading…</div>
+            ) : economistError ? (
+              <div className="mt-3 text-sm text-red-700">{economistError}</div>
+            ) : economistIssues.length === 0 ? (
+              <div className="mt-3 text-sm text-slate-600">No issues yet. Upload PDF + cover to create one.</div>
+            ) : (() => {
+              const filtered = economistFilter === 'all' ? economistIssues : economistFilter === 'published' ? economistIssues.filter((i) => i.is_published) : economistIssues.filter((i) => !i.is_published)
+              return filtered.length === 0 ? (
+                <div className="mt-3 text-sm text-slate-600">No {economistFilter} issues.</div>
+              ) : (
+              <div className="mt-3 divide-y">
+                {filtered.map((issue) => (
+                  <button
+                    key={issue.id}
+                    type="button"
+                    onClick={() => setEconomistSelectedId(issue.id)}
+                    className={[
+                      'w-full text-left py-3',
+                      economistSelectedId === issue.id ? 'bg-slate-50' : 'bg-transparent hover:bg-slate-50',
+                    ].join(' ')}
+                  >
+                    <div className="px-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-semibold text-slate-900">Vol {issue.volume_number} — {issue.issue_date?.slice(0, 7)}</div>
+                        <span
+                          className={[
+                            'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold',
+                            issue.is_published ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700',
+                          ].join(' ')}
+                        >
+                          {issue.is_published ? 'Published' : 'Draft'}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-slate-500 line-clamp-2">{issue.title}</div>
+                      <div className="mt-1 text-xs text-slate-400">/{issue.slug}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            );
+            })()}
+          </Card>
+          <Card className="lg:col-span-2">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold">{economistSelectedId ? 'Edit issue' : 'New issue'}</div>
+                  <div className="mt-1 text-xs text-slate-600">
+                    {economistSelectedId ? `Public URL: /economist/${economistEditSlug || economistSelected?.slug || ''}` : 'Upload PDF and cover, then fill metadata.'}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {economistSelectedId ? (
+                    <Button variant="secondary" disabled={economistBusy} onClick={deleteEconomistIssue} className="border-red-200 text-red-700 hover:bg-red-50">
+                      Delete
+                    </Button>
+                  ) : null}
+                  <Button disabled={economistBusy} onClick={saveEconomistIssue}>
+                    {economistBusy ? 'Saving…' : economistSelectedId ? 'Save' : 'Create issue'}
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <Label>PDF & cover</Label>
+                  <div className="mt-1 flex flex-wrap gap-4">
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="text-slate-600">PDF file</span>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="rounded border border-slate-200 p-2 text-sm"
+                        onChange={(e) => setEconomistPdfFile(e.target.files?.[0] ?? null)}
+                      />
+                      {economistEditPdfUrl && !economistPdfFile ? <span className="text-slate-500">Current file set</span> : economistPdfFile ? <span className="text-emerald-600">{economistPdfFile.name}</span> : null}
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="text-slate-600">Cover image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="rounded border border-slate-200 p-2 text-sm"
+                        onChange={(e) => setEconomistCoverFile(e.target.files?.[0] ?? null)}
+                      />
+                      {economistEditCoverUrl && !economistCoverFile ? <span className="text-slate-500">Current image set</span> : economistCoverFile ? <span className="text-emerald-600">{economistCoverFile.name}</span> : null}
+                    </label>
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">For new issues both are required. To replace, choose new files and save.</div>
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Slug (URL)</Label>
+                  <Input value={economistEditSlug} onChange={(e) => setEconomistEditSlug(e.target.value)} disabled={economistBusy} placeholder="e.g. volume-01-january-2026" />
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Volume number</Label>
+                  <Input type="number" min={1} value={economistEditVolume} onChange={(e) => setEconomistEditVolume(Number(e.target.value) || 1)} disabled={economistBusy} />
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Issue date</Label>
+                  <Input type="date" value={economistEditIssueDate} onChange={(e) => setEconomistEditIssueDate(e.target.value)} disabled={economistBusy} />
+                </div>
+                <div className="md:col-span-1">
+                  <Label>Page count</Label>
+                  <Input type="number" min={0} value={economistEditPageCount} onChange={(e) => setEconomistEditPageCount(e.target.value)} disabled={economistBusy} placeholder="optional" />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Theme</Label>
+                  <Input value={economistEditTheme} onChange={(e) => setEconomistEditTheme(e.target.value)} disabled={economistBusy} placeholder="e.g. The State of Skilled Labour in Ghana" />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Title</Label>
+                  <Input value={economistEditTitle} onChange={(e) => setEconomistEditTitle(e.target.value)} disabled={economistBusy} placeholder="Issue title" />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Summary</Label>
+                  <Input value={economistEditSummary} onChange={(e) => setEconomistEditSummary(e.target.value)} disabled={economistBusy} placeholder="Short description for slider" />
+                </div>
+                <div className="md:col-span-2">
+                  <Label>Featured headlines (optional, for slider)</Label>
+                  <div className="mt-1 flex flex-col gap-2">
+                    <Input value={economistEditHeadline1} onChange={(e) => setEconomistEditHeadline1(e.target.value)} disabled={economistBusy} placeholder="Headline 1" />
+                    <Input value={economistEditHeadline2} onChange={(e) => setEconomistEditHeadline2(e.target.value)} disabled={economistBusy} placeholder="Headline 2" />
+                    <Input value={economistEditHeadline3} onChange={(e) => setEconomistEditHeadline3(e.target.value)} disabled={economistBusy} placeholder="Headline 3" />
+                  </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={economistEditPublished} onChange={(e) => setEconomistEditPublished(e.target.checked)} disabled={economistBusy} />
+                    <span className="text-sm font-medium">Published (show on /news slider and public reader)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </Card>
         </div>
       ) : null}

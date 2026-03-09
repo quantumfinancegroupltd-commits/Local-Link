@@ -67,22 +67,22 @@ const BADGE_CLASS = {
   product: 'bg-blue-500/20 text-blue-400 dark:bg-blue-500/25 dark:text-blue-300',
   africa: 'bg-amber-500/20 text-amber-600 dark:bg-amber-500/25 dark:text-amber-400',
   articles: 'bg-emerald-500/20 text-emerald-600 dark:bg-emerald-500/25 dark:text-emerald-400',
-  guides: 'bg-purple-500/20 text-purple-400 dark:bg-purple-500/25 dark:text-purple-300',
+  guides: 'bg-teal-500/20 text-teal-600 dark:bg-teal-500/25 dark:text-teal-400',
   workers: 'bg-teal-500/20 text-teal-500 dark:bg-teal-500/25 dark:text-teal-400',
   employers: 'bg-orange-500/20 text-orange-500 dark:bg-orange-500/25 dark:text-orange-400',
   safety: 'bg-yellow-500/20 text-yellow-600 dark:bg-yellow-500/25 dark:text-yellow-400',
-  legal: 'bg-indigo-500/20 text-indigo-400 dark:bg-indigo-500/25 dark:text-indigo-300',
+  legal: 'bg-slate-500/20 text-slate-600 dark:bg-slate-500/25 dark:text-slate-400',
 }
 
 const IMG_GRADIENT = {
   product: 'bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-900 dark:to-black',
   africa: 'bg-gradient-to-br from-amber-900/40 to-amber-950/50 dark:from-amber-950/50 dark:to-black',
   articles: 'bg-gradient-to-br from-emerald-900/40 to-emerald-950/50 dark:from-emerald-950/50 dark:to-black',
-  guides: 'bg-gradient-to-br from-purple-900/40 to-purple-950/50 dark:from-purple-950/50 dark:to-black',
+  guides: 'bg-gradient-to-br from-teal-900/40 to-teal-950/50 dark:from-teal-950/50 dark:to-black',
   workers: 'bg-gradient-to-br from-teal-900/40 to-teal-950/50 dark:from-teal-950/50 dark:to-black',
   employers: 'bg-gradient-to-br from-orange-900/40 to-orange-950/50 dark:from-orange-950/50 dark:to-black',
   safety: 'bg-gradient-to-br from-yellow-900/30 to-amber-950/50 dark:from-yellow-950/30 dark:to-black',
-  legal: 'bg-gradient-to-br from-indigo-900/40 to-indigo-950/50 dark:from-indigo-950/50 dark:to-black',
+  legal: 'bg-gradient-to-br from-slate-800/50 to-slate-900/60 dark:from-slate-900 dark:to-black',
 }
 
 const PLACEHOLDER_EMOJI = {
@@ -200,6 +200,8 @@ export function News() {
   const [section, setSection] = useState('all')
   const [showCount, setShowCount] = useState(INITIAL_BATCH)
   const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [economistIssues, setEconomistIssues] = useState([])
+  const [economistLoading, setEconomistLoading] = useState(false)
 
   const sectionsWithCounts = useMemo(() => {
     const counts = new Map()
@@ -247,6 +249,23 @@ export function News() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadEconomist() {
+      setEconomistLoading(true)
+      try {
+        const r = await http.get('/economist')
+        if (!cancelled) setEconomistIssues(Array.isArray(r.data) ? r.data : [])
+      } catch {
+        if (!cancelled) setEconomistIssues([])
+      } finally {
+        if (!cancelled) setEconomistLoading(false)
+      }
+    }
+    loadEconomist()
+    return () => { cancelled = true }
   }, [])
 
   const handleLoadMore = () => {
@@ -329,6 +348,87 @@ export function News() {
 
           {showStatsAndNewsletter && (
             <>
+              {/* LocalLink Economist */}
+              <section className="max-w-5xl mx-auto py-12 md:py-16 border-t border-slate-200 dark:border-white/10">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="font-serif text-3xl font-bold tracking-tight text-[#111111] dark:text-white md:text-4xl">
+                      LocalLink Economist
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                      A monthly digital magazine analysing Ghana&apos;s local labour, trade, produce and SME economy.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    {economistIssues.length > 0 ? (
+                      <Link
+                        to={`/economist/${economistIssues[0].slug}`}
+                        className="inline-flex items-center justify-center rounded-lg bg-[#b9141a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#9a1116]"
+                      >
+                        Read Latest Issue
+                      </Link>
+                    ) : null}
+                    <Link
+                      to="/economist"
+                      className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-white/20 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
+                    >
+                      Browse Archive
+                    </Link>
+                  </div>
+                </div>
+                <div className="mt-6 border-b border-slate-200 dark:border-white/10" aria-hidden />
+                {economistLoading ? (
+                  <div className="mt-8 py-12 text-center text-sm text-slate-500 dark:text-slate-400">Loading issues…</div>
+                ) : economistIssues.length > 0 ? (
+                  <div className="mt-8 flex gap-6 overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin]">
+                    {economistIssues.map((issue) => (
+                      <Link
+                        key={issue.id}
+                        to={`/economist/${issue.slug}`}
+                        className="group flex w-[280px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-[#b9141a]/30 hover:shadow-md dark:border-white/10 dark:bg-white/5 dark:hover:border-[#b9141a]/40"
+                      >
+                        <div className="relative aspect-[4/5] w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
+                          {issue.cover_image_url ? (
+                            <img
+                              src={issue.cover_image_url.startsWith('/') ? issue.cover_image_url : issue.cover_image_url}
+                              alt=""
+                              className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-slate-400 dark:text-slate-500 text-4xl font-serif">Vol {issue.volume_number}</div>
+                          )}
+                          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-2 left-2 right-2 text-xs font-semibold uppercase tracking-wider text-white">
+                            Volume {String(issue.volume_number).padStart(2, '0')} — {issue.issue_date ? new Date(issue.issue_date).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : ''}
+                          </div>
+                        </div>
+                        <div className="flex flex-1 flex-col p-4">
+                          <h3 className="font-serif text-lg font-bold text-slate-900 dark:text-white line-clamp-2">
+                            {issue.title}
+                          </h3>
+                          {issue.summary ? (
+                            <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 line-clamp-2">{issue.summary}</p>
+                          ) : (
+                            <ul className="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-slate-400">
+                              {[issue.featured_headline_1, issue.featured_headline_2, issue.featured_headline_3].filter(Boolean).slice(0, 2).map((h, i) => (
+                                <li key={i} className="line-clamp-1">• {h}</li>
+                              ))}
+                            </ul>
+                          )}
+                          <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#b9141a]">
+                            Read Issue →
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-8 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                    No issues yet. Check back soon for the first LocalLink Economist.
+                  </div>
+                )}
+              </section>
+
               <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 dark:border-white/10 dark:bg-white/10 md:grid-cols-4">
                 {STATS.map((stat) => (
                   <div

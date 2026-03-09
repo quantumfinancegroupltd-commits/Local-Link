@@ -45,7 +45,7 @@ export function ServiceCard({ service }) {
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-violet-400 via-indigo-300 to-sky-400" />
+          <div className="h-full w-full bg-gradient-to-br from-slate-700 via-emerald-600 to-slate-800" />
         )}
         <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-800 backdrop-blur">

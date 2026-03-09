@@ -233,14 +233,15 @@ export function AppLayout() {
 
   const location = useLocation()
   const isFeedPage = location.pathname === '/feed'
+  const isEconomistReader = /^\/economist\/[^/]+$/.test(location.pathname || '')
 
   return (
-    <div className={isFeedPage ? 'flex h-screen flex-col overflow-y-hidden' : 'flex min-h-screen flex-col'}>
+    <div className={`w-full max-w-full min-w-0 flex flex-col overflow-x-hidden ${isFeedPage ? 'h-screen overflow-y-hidden' : 'min-h-screen'}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[9999] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg">
         Skip to main content
       </a>
       {/* Header can scroll horizontally when nav is long so user block (name + logout) stays visible */}
-      <header className="w-full shrink-0 overflow-x-auto border-b bg-white dark:border-white/10 dark:bg-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="banner">
+      <header className="w-full min-w-0 shrink-0 overflow-x-auto overflow-y-hidden border-b bg-white dark:border-white/10 dark:bg-black [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="banner">
         <div className="flex items-center py-3 pl-3 pr-2 sm:py-4 sm:pl-4 sm:pr-3" style={{ minWidth: 'max-content' }}>
           {/* Left: logo + nav */}
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -746,13 +747,17 @@ export function AppLayout() {
           </main>
         </div>
       ) : (
-        <main id="main-content" className="mx-auto max-w-6xl flex-1 overflow-x-hidden px-4 py-8" role="main">
+        <main
+          id="main-content"
+          className={`mx-auto w-full min-w-0 flex-1 overflow-x-hidden ${isEconomistReader ? 'max-w-[1920px] px-2 py-4' : 'max-w-6xl px-4 py-8'}`}
+          role="main"
+        >
           <Outlet />
         </main>
       )}
 
-      <footer className="shrink-0 border-t bg-white dark:border-white/10 dark:bg-black" role="contentinfo">
-        <div className="mx-auto max-w-6xl px-4 py-10">
+      <footer className="w-full min-w-0 shrink-0 overflow-x-hidden border-t bg-white dark:border-white/10 dark:bg-black" role="contentinfo">
+        <div className="mx-auto w-full min-w-0 max-w-6xl px-4 py-10">
           <div className="grid gap-8 md:grid-cols-5">
             <div>
               <div className="text-sm font-semibold text-slate-900 dark:text-white">LocalLink</div>

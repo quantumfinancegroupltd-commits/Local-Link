@@ -88,7 +88,7 @@ function typeColor(type) {
     case 'review':
       return 'bg-amber-100 text-amber-800'
     case 'escrow':
-      return 'bg-violet-100 text-violet-800'
+      return 'bg-emerald-100 text-emerald-800'
     case 'dispute':
       return 'bg-red-100 text-red-800'
     case 'job_post':

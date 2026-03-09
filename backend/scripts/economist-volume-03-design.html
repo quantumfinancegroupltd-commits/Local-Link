@@ -85,16 +85,18 @@ body{
   position:absolute;inset:0;width:100%;height:100%;
   object-fit:cover;object-position:center 30%;
   opacity:1;
+  /* Remove pink/warm cast from photo */
+  filter: saturate(0.75) contrast(1.02);
 }
-/* Dark transparent overlay over cover image */
+/* Dark overlay only — pure black, no pink. Stronger so warm tones don’t show. */
 .cv-wash{
   position:absolute;inset:0;z-index:2;
   background:linear-gradient(
     160deg,
-    rgba(0,0,0,.55) 0%,
-    rgba(0,0,0,.32) 40%,
-    rgba(0,0,0,.28) 70%,
-    rgba(0,0,0,.7) 100%
+    rgba(0,0,0,.68) 0%,
+    rgba(0,0,0,.48) 35%,
+    rgba(0,0,0,.42) 65%,
+    rgba(0,0,0,.78) 100%
   );
   pointer-events:none;
 }

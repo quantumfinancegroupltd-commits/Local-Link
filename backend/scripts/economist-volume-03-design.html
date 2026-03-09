@@ -77,10 +77,27 @@ body{
 /* ═══════════════════════════════════════
    FRONT COVER
 ═══════════════════════════════════════ */
-#cover{background:var(--forest);min-height:1123px}
-/* No background image, no overlay, no decorative assets — solid forest green only */
+#cover{background:var(--white);min-height:1123px}
+/* No background image, overlay, or decorative assets */
 #cover .grain,#cover .dot-bg{display:none}
 #cover .cv-photo,#cover .cv-wash,#cover .cv-circle{display:none !important}
+/* Cover text on white: use dark/terra so readable */
+#cover .cvw-local{color:var(--terra)}
+#cover .cvw-link{color:var(--ink)}
+#cover .cvw-tag{color:var(--mid)}
+#cover .cv-vol-lbl{color:var(--terra)}
+#cover .cv-date-lbl{color:var(--mid)}
+#cover .cv-hl-main{color:var(--ink)}
+#cover .cv-hl-main em{color:var(--terra)}
+#cover .cv-hl-sub{color:var(--ink-mid)}
+#cover .cv-slbl{color:var(--mid)}
+#cover .cvt-lbl{color:var(--terra)}
+#cover .cvt-title{color:var(--ink-mid)}
+#cover .cv-teasers{border-top-color:var(--lt-border)}
+#cover .cv-price-bar{color:var(--mid)}
+#cover .cv-mastbar{border-bottom-color:rgba(196,84,26,.25)}
+#cover .cv-stat-strip{border-top-color:rgba(196,84,26,.2)}
+#cover .cv-stat{border-right-color:rgba(196,84,26,.15)}
 
 .cv-photo{
   position:absolute;inset:0;width:100%;height:100%;

@@ -55,7 +55,8 @@ async function main() {
     const page = await browser.newPage()
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 })
     await page.setContent(html, { waitUntil: 'load', timeout: 120000 })
-    await page.emulateMediaType('print')
+    // Use 'screen' to avoid print color shift (e.g. gradient → pink in some PDF viewers)
+    await page.emulateMediaType('screen')
 
     await Promise.race([
       page.evaluate(() => document.fonts.ready),

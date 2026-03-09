@@ -80,8 +80,6 @@ body{
 #cover{background:var(--forest);min-height:1123px}
 #cover .grain,#cover .dot-bg{display:none}
 #cover .cv-circle{display:none !important}
-/* Hide terracotta bars that can read as pink in PDF viewer */
-#cover .cv-bar,#cover .cv-top-rule{display:none !important}
 
 .cv-photo{
   position:absolute;inset:0;width:100%;height:100%;
@@ -90,16 +88,10 @@ body{
   /* Heavy desaturation so no pink in PDF viewer */
   filter: saturate(0.5) contrast(1.03);
 }
-/* Dark overlay only — pure black, no pink. Stronger so warm tones don’t show. */
+/* Dark overlay: solid black (no gradient — gradients can render pink in PDF viewers). Stronger so warm tones don’t show. */
 .cv-wash{
   position:absolute;inset:0;z-index:2;
-  background:linear-gradient(
-    160deg,
-    rgba(0,0,0,.78) 0%,
-    rgba(0,0,0,.58) 35%,
-    rgba(0,0,0,.52) 65%,
-    rgba(0,0,0,.85) 100%
-  );
+  background:rgba(0,0,0,.62);
   pointer-events:none;
 }
 /* Terracotta left bar — bolder than Vol 02, angled */

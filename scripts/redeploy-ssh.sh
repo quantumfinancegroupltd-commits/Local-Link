@@ -18,9 +18,16 @@ fi
 
 chmod 400 "$KEY" 2>/dev/null || true
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ -f "$ROOT_DIR/backend/.env" ]]; then
+  echo "Copying backend/.env to server (includes OPENAI_API_KEY for assistant voice)..."
+  scp -i "$KEY" -o StrictHostKeyChecking=accept-new "$ROOT_DIR/backend/.env" "$USER@$HOST:~/$REPO_DIR/.env"
+fi
+
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
-# 1) Pull latest 2) Rebuild web image with no cache 3) Recreate web + gateway so new bundle is served 4) Migrate
-CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && echo \"Deploying commit: \$(git rev-parse --short HEAD)\" && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate && echo \"Web image: \$(docker compose -f docker-compose.selfhost.yml images -q web)\""
+# 1) Pull latest 2) Rebuild web image with no cache 3) Recreate web + gateway + api so new bundle and env are used 4) Migrate
+CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && echo \"Deploying commit: \$(git rev-parse --short HEAD)\" && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway api && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate && echo \"Web image: \$(docker compose -f docker-compose.selfhost.yml images -q web)\""
 if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; then
   echo ""
   echo "Failed. The repo may not be at ~/$REPO_DIR on the server."

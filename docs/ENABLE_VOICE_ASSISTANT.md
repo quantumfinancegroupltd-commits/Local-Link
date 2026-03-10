@@ -6,7 +6,11 @@ The assistant can transcribe your speech (Whisper) and read replies aloud (TTS).
 
 The backend returns **503** and "Voice is not configured" when `OPENAI_API_KEY` is not set in the API process environment. The frontend then shows a message asking the admin to add the key.
 
-## How to enable voice (server admin)
+## Automatic: key from your machine to the server
+
+If **`backend/.env`** on your Mac (or CI) already contains `OPENAI_API_KEY=sk-...`, then **`./deploy.sh`** will copy that file to the server as the repo’s `.env` and recreate the API container so it picks up the key. No need to edit anything on the server. Just ensure `backend/.env` has the key and run deploy as usual.
+
+## How to enable voice (server admin, manual)
 
 1. **Get an OpenAI API key**  
    Create one at [platform.openai.com](https://platform.openai.com/api-keys). Billing must be enabled; Whisper and TTS usage is charged per request.

@@ -26,36 +26,37 @@ const OUT_COVER_PNG_PATH = path.resolve(__dirname, '../../frontend/public/econom
 
 const PRINT_CSS = `
 html, body { margin: 0; padding: 0; overflow: visible; box-sizing: border-box; }
+/* Apply page-lock in ALL media: we use emulateMediaType('screen') for PDF gen, so @media print would not run */
+.page {
+  height: 1123px !important;
+  min-height: 0 !important;
+  max-height: 1123px !important;
+  overflow: hidden !important;
+  contain: layout paint;
+  isolation: isolate;
+}
+.page .data-page,
+.page .profile-grid,
+.page .pol-layout,
+.page .mast-layout,
+.page .ed-grid,
+.page .portrait-page,
+.page .photo-mosaic,
+.page .region-grid,
+.page .itv-body,
+.page .op-body,
+.page .bc-body,
+.page .two-col,
+.page .three-col,
+.page [style*="flex:1"] {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
 @media print {
   @page { size: 794px 1123px; margin: 0; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .page, .p-sep { page-break-after: always; }
   #back-cover { page-break-after: auto; }
-  /* Lock each .page to exactly one PDF page so content does not flow into the next */
-  .page {
-    height: 1123px !important;
-    min-height: 0 !important;
-    max-height: 1123px !important;
-    overflow: hidden !important;
-  }
-  /* Let flex content areas shrink and clip instead of growing the page */
-  .page .data-page,
-  .page .profile-grid,
-  .page .pol-layout,
-  .page .mast-layout,
-  .page .ed-grid,
-  .page .portrait-page,
-  .page .photo-mosaic,
-  .page .region-grid,
-  .page .itv-body,
-  .page .op-body,
-  .page .bc-body,
-  .page .two-col,
-  .page .three-col,
-  .page [style*="flex:1"] {
-    min-height: 0 !important;
-    overflow: hidden !important;
-  }
 }
 `
 

@@ -26,8 +26,21 @@ export async function transcribeAudio(blob) {
   return (data?.text || '').trim()
 }
 
+let currentSpeechAudio = null
+let currentSpeechUrl = null
+
 export async function speakText(text) {
   if (!text || !text.trim()) return
+  // Stop any already playing speech so we don't get double audio
+  if (currentSpeechAudio) {
+    try {
+      currentSpeechAudio.pause()
+      currentSpeechAudio.currentTime = 0
+    } catch {}
+    if (currentSpeechUrl) try { URL.revokeObjectURL(currentSpeechUrl) } catch {}
+    currentSpeechAudio = null
+    currentSpeechUrl = null
+  }
   const token = localStorage.getItem('locallink_token')
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers.Authorization = `Bearer ${token}`
@@ -46,13 +59,26 @@ export async function speakText(text) {
   }
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)
+  currentSpeechUrl = url
   const audio = new Audio(url)
+  currentSpeechAudio = audio
   await new Promise((resolve, reject) => {
     audio.onended = () => {
+      if (currentSpeechAudio === audio) {
+        currentSpeechAudio = null
+        currentSpeechUrl = null
+      }
       URL.revokeObjectURL(url)
       resolve()
     }
-    audio.onerror = reject
+    audio.onerror = (e) => {
+      if (currentSpeechAudio === audio) {
+        currentSpeechAudio = null
+        currentSpeechUrl = null
+      }
+      URL.revokeObjectURL(url)
+      reject(e)
+    }
     audio.play().catch(reject)
   })
 }

@@ -459,6 +459,7 @@ export function AssistantChat({ onClose, onStartVideoCall, embedded = false }) {
 
   async function playMessage(index, content) {
     if (!content?.trim()) return
+    if (playingIndex !== null) return
     setPlayingIndex(index)
     setVoiceReplyPendingPlay(false)
     try {

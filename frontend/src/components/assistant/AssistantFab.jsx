@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { AssistantChat } from './AssistantChat.jsx'
+import { AssistantVideoCall } from './AssistantVideoCall.jsx'
 
 const ASSISTANT_OPEN_EVENT = 'open-assistant'
 const ASSISTANT_SEEN_KEY = 'locallink_assistant_seen'
 
 export function AssistantFab() {
   const [open, setOpen] = useState(false)
+  const [videoCallOpen, setVideoCallOpen] = useState(false)
   const [showBadge, setShowBadge] = useState(() => {
     try {
       return !sessionStorage.getItem(ASSISTANT_SEEN_KEY)
@@ -82,6 +84,10 @@ export function AssistantFab() {
         </div>
       </div>
 
+      {videoCallOpen && (
+        <AssistantVideoCall onEndCall={() => setVideoCallOpen(false)} />
+      )}
+
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-end p-4 sm:p-6">
           <button
@@ -91,7 +97,13 @@ export function AssistantFab() {
             aria-label="Close assistant panel"
           />
           <div className="relative z-10 flex h-[min(85vh,560px)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-black/95 dark:shadow-none">
-            <AssistantChat onClose={() => setOpen(false)} />
+            <AssistantChat
+              onClose={() => setOpen(false)}
+              onStartVideoCall={() => {
+                setOpen(false)
+                setVideoCallOpen(true)
+              }}
+            />
           </div>
         </div>
       )}

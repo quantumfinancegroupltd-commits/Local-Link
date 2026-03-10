@@ -6,6 +6,7 @@ import { http, getApiOrigin } from '../../api/http.js'
 import { usePageMeta } from '../../components/ui/seo.js'
 import 'react-pdf/dist/Page/TextLayer.css'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
+import './EconomistReader.css'
 
 // Polyfill URL.parse for mobile browsers (pdfjs uses it; not in standard Web API)
 if (typeof URL !== 'undefined' && typeof URL.parse !== 'function') {
@@ -327,7 +328,7 @@ export function EconomistReader() {
         }
       >
         <div className={`flex flex-row flex-nowrap items-start justify-center gap-4 ${pageTransition ? 'opacity-70' : 'opacity-100'} transition-opacity duration-200`}>
-          <div key={leftPage} className="shadow-md">
+          <div key={leftPage} className="economist-page-wrap relative overflow-hidden rounded shadow-md">
             <Page
               pageNumber={leftPage}
               width={zoomedPageWidth}
@@ -336,7 +337,7 @@ export function EconomistReader() {
             />
           </div>
           {rightPage != null && rightPage <= (numPages ?? 0) && (
-            <div key={rightPage} className="shadow-md">
+            <div key={rightPage} className="economist-page-wrap relative overflow-hidden rounded shadow-md">
               <Page
                 pageNumber={rightPage}
                 width={zoomedPageWidth}

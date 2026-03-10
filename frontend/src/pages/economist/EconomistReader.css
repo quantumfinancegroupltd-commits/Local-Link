@@ -1,0 +1,12 @@
+/* Contain react-pdf text/annotation layers so they don't overlap adjacent pages.
+   Known issue: text layer can be mispositioned on multi-page docs (scale/position),
+   causing page numbers and text to appear to mix. */
+.economist-page-wrap .react-pdf__Page {
+  overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+.economist-page-wrap .react-pdf__Page__textContent {
+  overflow: hidden;
+  pointer-events: auto;
+}

@@ -35,7 +35,25 @@ If **`backend/.env`** on your Mac (or CI) already contains `OPENAI_API_KEY=sk-..
 4. **Verify**  
    Use the assistant in the app: hold the mic button, speak, and release. If the key is valid and the service is up, you should get transcription and a spoken reply.
 
-## Same key for chat and voice
+## ## If the API is unhealthy after deploy
+
+If the API container fails its healthcheck (e.g. after the server `.env` was overwritten), fix the server env and restart:
+
+1. **SSH to the server** and go to the repo, e.g. `cd ~/LocalLink`.
+2. **Check API logs:**  
+   `docker compose -f docker-compose.selfhost.yml logs api`  
+   Look for `JWT_SECRET must be set` or DB connection errors.
+3. **Fix `.env`** in that directory:
+   - Ensure **`DATABASE_URL=postgresql://locallink:locallink@db:5432/locallink`** (so the API in Docker can reach the `db` service). If you use an external DB, set `DATABASE_URL` to that.
+   - Ensure **`JWT_SECRET`** is set to a strong value (e.g. `openssl rand -hex 32`).
+   - Keep **`OPENAI_API_KEY`** if you want assistant voice.
+4. **Restart the API:**  
+   `docker compose -f docker-compose.selfhost.yml up -d --force-recreate api gateway`  
+   Then confirm: `docker compose -f docker-compose.selfhost.yml ps` (api should be healthy).
+
+---
+
+Same key for chat and voice
 
 The same `OPENAI_API_KEY` is used for:
 

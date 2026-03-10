@@ -20,9 +20,17 @@ chmod 400 "$KEY" 2>/dev/null || true
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# Merge only OPENAI_API_KEY from local backend/.env into server .env (do not overwrite server's JWT_SECRET, DATABASE_URL, etc.)
 if [[ -f "$ROOT_DIR/backend/.env" ]]; then
-  echo "Copying backend/.env to server (includes OPENAI_API_KEY for assistant voice)..."
-  scp -i "$KEY" -o StrictHostKeyChecking=accept-new "$ROOT_DIR/backend/.env" "$USER@$HOST:~/$REPO_DIR/.env"
+  OPENAI_LINE="$(grep '^OPENAI_API_KEY=' "$ROOT_DIR/backend/.env" 2>/dev/null || true)"
+  if [[ -n "$OPENAI_LINE" ]]; then
+    echo "Syncing OPENAI_API_KEY to server for assistant voice..."
+    TMPF="$(mktemp)"
+    echo "$OPENAI_LINE" > "$TMPF"
+    scp -i "$KEY" -o StrictHostKeyChecking=accept-new "$TMPF" "$USER@$HOST:~/$REPO_DIR/.env.openai_key"
+    rm -f "$TMPF"
+    ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd ~/$REPO_DIR && (grep -v '^OPENAI_API_KEY=' .env 2>/dev/null || true; cat .env.openai_key) > .env.merged && mv .env.merged .env && rm -f .env.openai_key"
+  fi
 fi
 
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"

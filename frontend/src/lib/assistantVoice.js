@@ -16,7 +16,11 @@ export async function transcribeAudio(blob) {
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    throw new Error(data?.message || 'Transcription failed')
+    const msg = data?.message || ''
+    if (res.status === 503 && (msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('voice'))) {
+      throw new Error("Voice isn't available on this server. Ask your admin to add OPENAI_API_KEY to the API environment.")
+    }
+    throw new Error(msg || 'Transcription failed')
   }
   const data = await res.json()
   return (data?.text || '').trim()
@@ -32,7 +36,14 @@ export async function speakText(text) {
     headers,
     body: JSON.stringify({ text: text.slice(0, 4096) }),
   })
-  if (!res.ok) throw new Error('Speech failed')
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    const msg = data?.message || ''
+    if (res.status === 503 && (msg.toLowerCase().includes('not configured') || msg.toLowerCase().includes('voice'))) {
+      throw new Error("Voice isn't available on this server. Ask your admin to add OPENAI_API_KEY to the API environment.")
+    }
+    throw new Error(msg || 'Speech failed')
+  }
   const blob = await res.blob()
   const url = URL.createObjectURL(blob)
   const audio = new Audio(url)

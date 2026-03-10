@@ -6,6 +6,11 @@
  * Run from repo root: node backend/scripts/generate-economist-volume-03-pdf-from-html.js
  *
  * Vol 03 design uses picsum.photos URLs for images; add assets to economist-assets/ to override later if desired.
+ *
+ * Layout: Print CSS forces each .page to height 1123px so one HTML page = one PDF page. Content areas
+ * use min-height:0 and overflow:hidden so excess content is clipped rather than flowing into the next
+ * page. If a page clips important content, split that content into an additional <div class="page"> in
+ * the design HTML.
  */
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -26,6 +31,31 @@ html, body { margin: 0; padding: 0; overflow: visible; box-sizing: border-box; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .page, .p-sep { page-break-after: always; }
   #back-cover { page-break-after: auto; }
+  /* Lock each .page to exactly one PDF page so content does not flow into the next */
+  .page {
+    height: 1123px !important;
+    min-height: 0 !important;
+    max-height: 1123px !important;
+    overflow: hidden !important;
+  }
+  /* Let flex content areas shrink and clip instead of growing the page */
+  .page .data-page,
+  .page .profile-grid,
+  .page .pol-layout,
+  .page .mast-layout,
+  .page .ed-grid,
+  .page .portrait-page,
+  .page .photo-mosaic,
+  .page .region-grid,
+  .page .itv-body,
+  .page .op-body,
+  .page .bc-body,
+  .page .two-col,
+  .page .three-col,
+  .page [style*="flex:1"] {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
 }
 `
 

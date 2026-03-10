@@ -56,7 +56,7 @@ const ISSUES = [
     summary: 'Breaking barriers, building Ghana — how women are entering, surviving, and transforming the skilled trades workforce. Enrolment, employment, wages, and outcomes; eight women in eight trades; TVET reform and policy priorities.',
     pdf_url: '/economist-volume-03.pdf',
     cover_image_url: '/economist-volume-03-cover.png',
-    page_count: 35,
+    page_count: 41,
     featured_headline_1: 'The Gender Pay Gap Across 18 Trades',
     featured_headline_2: 'Eight Women, Eight Trades — From Accra to Tamale',
     featured_headline_3: 'What TVET Reform Must Do to Close the Gender Gap',

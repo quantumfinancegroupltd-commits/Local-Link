@@ -307,22 +307,22 @@ body{
 /* ═══════════════════════════════════════
    STORY / ARTICLE LAYOUTS
 ═══════════════════════════════════════ */
-.story-head{padding:22px 40px 0;position:relative;z-index:5}
+.story-head{padding:18px 40px 0;position:relative;z-index:5}
 .story-tag{
   display:inline-block;background:var(--terra);color:var(--white);
   font-family:'Space Mono',monospace;font-size:7px;letter-spacing:3px;
-  padding:3px 9px;text-transform:uppercase;margin-bottom:11px;
+  padding:3px 9px;text-transform:uppercase;margin-bottom:8px;
 }
 .story-tag.green{background:var(--forest)}
 .story-tag.outline{background:transparent;border:1px solid var(--terra);color:var(--terra)}
-.story-hl{font-family:'Fraunces',serif;font-weight:900;font-size:30px;line-height:1.05;color:var(--ink);margin-bottom:7px;letter-spacing:-.5px}
-.story-deck{font-family:'DM Sans',sans-serif;font-size:11px;font-style:italic;color:var(--mid);line-height:1.6;margin-bottom:10px;font-weight:300}
-.story-byline{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.story-hl{font-family:'Fraunces',serif;font-weight:900;font-size:30px;line-height:1.05;color:var(--ink);margin-bottom:5px;letter-spacing:-.5px}
+.story-deck{font-family:'DM Sans',sans-serif;font-size:11px;font-style:italic;color:var(--mid);line-height:1.55;margin-bottom:8px;font-weight:300}
+.story-byline{font-family:'Space Mono',monospace;font-size:7px;color:var(--terra);letter-spacing:2px;text-transform:uppercase;padding-bottom:10px;border-bottom:2px solid var(--ink)}
 
 /* 2-col & 3-col article grid */
-.two-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr;gap:30px;padding-top:18px;position:relative;z-index:5}
-.three-col{padding:0 40px 26px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding-top:18px;position:relative;z-index:5}
-.col-body p{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.76;margin-bottom:11px;color:#2a1c10}
+.two-col{padding:0 40px 20px;display:grid;grid-template-columns:1fr 1fr;gap:26px;padding-top:14px;position:relative;z-index:5}
+.three-col{padding:0 40px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;padding-top:14px;position:relative;z-index:5}
+.col-body p{font-family:'DM Sans',sans-serif;font-size:10.5px;line-height:1.72;margin-bottom:9px;color:#2a1c10}
 .col-body p:first-child::first-letter{
   font-family:'Fraunces',serif;font-weight:900;font-size:52px;float:left;
   line-height:.82;margin-right:8px;margin-top:4px;color:var(--terra);
@@ -345,9 +345,9 @@ body{
 /* ═══════════════════════════════════════
    DATA / INDEX COMPONENTS
 ═══════════════════════════════════════ */
-.data-page{padding:22px 40px;flex:1;position:relative;z-index:5}
-.data-hl{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:4px;letter-spacing:-.5px}
-.data-sub{font-family:'DM Sans',sans-serif;font-size:10px;color:var(--mid);font-style:italic;margin-bottom:18px}
+.data-page{padding:18px 40px;flex:1;position:relative;z-index:5}
+.data-hl{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--ink);margin-bottom:3px;letter-spacing:-.5px}
+.data-sub{font-family:'DM Sans',sans-serif;font-size:10px;color:var(--mid);font-style:italic;margin-bottom:14px}
 
 /* KPI row — warm card style */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--lt-border);margin-bottom:20px;background:var(--cream-lt)}
@@ -358,7 +358,7 @@ body{
 .kpi-lbl{font-family:'DM Sans',sans-serif;font-size:8.5px;color:var(--mid);line-height:1.4;margin-top:5px}
 
 /* Chart containers */
-.chart-box{background:var(--cream-lt);border:1px solid var(--lt-border);padding:18px;margin-bottom:16px}
+.chart-box{background:var(--cream-lt);border:1px solid var(--lt-border);padding:14px;margin-bottom:12px}
 .chart-box.dark{background:var(--forest);border-color:var(--forest-lt)}
 .chart-box.warm{background:var(--parchment);border-color:var(--lt-border)}
 .chart-lbl{font-family:'Space Mono',monospace;font-size:7px;color:var(--mid);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
@@ -987,29 +987,44 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
       <div class="inline-head">What the Regional Data Shows</div>
       <p>The regional breakdown of female technical enrolment reveals a geographic dimension to the gender gap in TVET. Greater Accra leads all regions in absolute female enrolment but performs poorly on female share of technical (non-service) programmes — reflecting a large overall system with persistent gender sorting. The Northern Region, despite lower absolute numbers, has seen the fastest growth in female enrolment in technical trades, driven partly by community apprenticeship models that are more accommodating of women's domestic obligations.</p>
       <p>The Upper East Region stands out for a different reason: a higher-than-national-average completion rate for women who do enrol — 74%, compared to the national female completion rate of 69%. Researchers attribute this partly to the strong community accountability structures in traditional apprenticeship contexts and to the relatively lower cost-of-living pressures compared to urban centres.</p>
-
-      <div class="chart-box warm" style="margin-top:6px">
-        <div class="chart-lbl">Female TVET Completion Rate vs Enrolment Share — By Region (2025)</div>
-        <div class="hbar" style="margin-top:6px">
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Greater Accra</div><div class="hb-track"><div class="hb-fill" style="width:66%"></div></div><div class="hb-val">66% completion · 21% share</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Ashanti</div><div class="hb-track"><div class="hb-fill" style="width:68%"></div></div><div class="hb-val">68% · 19%</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Western</div><div class="hb-track"><div class="hb-fill forest" style="width:72%"></div></div><div class="hb-val">72% · 18%</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Central</div><div class="hb-track"><div class="hb-fill forest" style="width:70%"></div></div><div class="hb-val">70% · 17%</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Northern</div><div class="hb-track"><div class="hb-fill ochre" style="width:67%"></div></div><div class="hb-val">67% · 14%</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Upper East</div><div class="hb-track"><div class="hb-fill" style="width:74%;background:var(--forest-lt)"></div></div><div class="hb-val">74% · 13%</div></div>
-          <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Volta</div><div class="hb-track"><div class="hb-fill" style="width:65%"></div></div><div class="hb-val">65% · 16%</div></div>
-        </div>
-      </div>
-
-      <div class="pullquote" style="margin-top:12px">
-        <div class="pq-text">"We lose them not because they can't do the work. We lose them because they can't eat while they're learning it."</div>
-        <div class="pq-attr">— Director, Community TVET Centre, Wa, Upper West Region</div>
-      </div>
     </div>
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">14 — 15</div>
+    <div class="pf-txt">14</div>
+  </div>
+</div>
+
+<!-- PAGE 15 — TVET ENROLMENT (regional chart + quote) -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">TVET Enrolment Analysis — continued</div>
+    <div class="ph-pn">15</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="data-page">
+    <div class="chart-box warm" style="margin-top:0">
+      <div class="chart-lbl">Female TVET Completion Rate vs Enrolment Share — By Region (2025)</div>
+      <div class="hbar" style="margin-top:6px">
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Greater Accra</div><div class="hb-track"><div class="hb-fill" style="width:66%"></div></div><div class="hb-val">66% completion · 21% share</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Ashanti</div><div class="hb-track"><div class="hb-fill" style="width:68%"></div></div><div class="hb-val">68% · 19%</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Western</div><div class="hb-track"><div class="hb-fill forest" style="width:72%"></div></div><div class="hb-val">72% · 18%</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Central</div><div class="hb-track"><div class="hb-fill forest" style="width:70%"></div></div><div class="hb-val">70% · 17%</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Northern</div><div class="hb-track"><div class="hb-fill ochre" style="width:67%"></div></div><div class="hb-val">67% · 14%</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Upper East</div><div class="hb-track"><div class="hb-fill" style="width:74%;background:var(--forest-lt)"></div></div><div class="hb-val">74% · 13%</div></div>
+        <div class="hb-row"><div class="hb-lbl" style="min-width:90px">Volta</div><div class="hb-track"><div class="hb-fill" style="width:65%"></div></div><div class="hb-val">65% · 16%</div></div>
+      </div>
+    </div>
+    <div class="pullquote" style="margin-top:14px">
+      <div class="pq-text">"We lose them not because they can't do the work. We lose them because they can't eat while they're learning it."</div>
+      <div class="pq-attr">— Director, Community TVET Centre, Wa, Upper West Region</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">15</div>
   </div>
 </div>
 
@@ -1477,29 +1492,44 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
       <div class="inline-head">Light Manufacturing: Aluminium &amp; Metal Fabrication</div>
       <p>Ghana's light manufacturing sector — aluminium window and door fabrication, metal furniture, roofing sheet production, PVC fitting — has historically employed women primarily in finishing and quality control roles. The physically demanding cutting, bending, and welding operations have been male by default rather than by design. TVET programme data for 2025 shows 18% female enrolment in aluminium fabrication — the fastest-growing female share of any workshop trade, up from 6% in 2020.</p>
       <p>The growth is partly explained by the economics. Aluminium fabrication is one of the better-paid workshop trades in Ghana, with licensed fabricators earning GH₵ 98–130 per day. As more women have entered the polytechnic programmes that produce fabricators, the economic case has been made directly to the families and communities who influence young women's training choices. Earnings speak where arguments about gender equality do not always reach.</p>
-
-      <div class="chart-box warm">
-        <div class="chart-lbl">Female Share of Enrolment — Automotive &amp; Manufacturing Trades (2020 vs 2025)</div>
-        <div class="hbar" style="margin-top:6px">
-          <div class="hb-row"><div class="hb-lbl sm">Aluminium Fabrication</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:6%;background:rgba(196,84,26,.22)"></div><div style="width:12%;background:var(--terra)"></div></div></div><div class="hb-val">6% → 18%</div></div>
-          <div class="hb-row"><div class="hb-lbl sm">Auto Diagnostics</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:3%;background:rgba(196,84,26,.22)"></div><div style="width:9%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 11%</div></div>
-          <div class="hb-row"><div class="hb-lbl sm">Auto Mechanics (general)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:3%;background:var(--terra-dk)"></div></div></div><div class="hb-val">1.5% → 3.2%</div></div>
-          <div class="hb-row"><div class="hb-lbl sm">Refrigeration &amp; AC</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:5%;background:rgba(31,74,46,.22)"></div><div style="width:7%;background:var(--forest-lt)"></div></div></div><div class="hb-val">4% → 7%</div></div>
-          <div class="hb-row"><div class="hb-lbl sm">Welding (MIG/TIG)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:7%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 9%</div></div>
-          <div class="hb-row"><div class="hb-lbl sm">Solar PV Installation</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:4%;background:rgba(212,160,32,.3)"></div><div style="width:19%;background:var(--ochre)"></div></div></div><div class="hb-val">3% → 22%</div></div>
-        </div>
-        <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);margin-top:7px">Lighter bar = 2020. Darker = 2025. TVET Service data; solar from COTVET / KATH programme records.</div>
-      </div>
-
-      <div style="background:rgba(212,160,32,.07);border-left:3px solid var(--ochre);padding:12px 14px;margin-top:8px">
-        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--ochre);margin-bottom:5px">Solar PV: The New Frontier</div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Solar photovoltaic installation is the fastest-growing trade for women in Ghana. With 22% female TVET enrolment — up from 3% in 2020 — it outperforms every other technical trade. The reason, as Afia Boakye explains on page 22, is that solar is new enough to have no established male culture. The trade formed after the modern gender equality discourse, and its training programmes were designed with diversity as a stated goal. It is a model for how trade training systems can be built differently from the start.</div>
-      </div>
     </div>
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">44 — 45</div>
+    <div class="pf-txt">44</div>
+  </div>
+</div>
+
+<!-- PAGE 45 — AUTOMOTIVE & MANUFACTURING (chart + Solar callout) -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Automotive &amp; Manufacturing — continued</div>
+    <div class="ph-pn">45</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="data-page">
+    <div class="chart-box warm">
+      <div class="chart-lbl">Female Share of Enrolment — Automotive &amp; Manufacturing Trades (2020 vs 2025)</div>
+      <div class="hbar" style="margin-top:6px">
+        <div class="hb-row"><div class="hb-lbl sm">Aluminium Fabrication</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:6%;background:rgba(196,84,26,.22)"></div><div style="width:12%;background:var(--terra)"></div></div></div><div class="hb-val">6% → 18%</div></div>
+        <div class="hb-row"><div class="hb-lbl sm">Auto Diagnostics</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:3%;background:rgba(196,84,26,.22)"></div><div style="width:9%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 11%</div></div>
+        <div class="hb-row"><div class="hb-lbl sm">Auto Mechanics (general)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:3%;background:var(--terra-dk)"></div></div></div><div class="hb-val">1.5% → 3.2%</div></div>
+        <div class="hb-row"><div class="hb-lbl sm">Refrigeration &amp; AC</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:5%;background:rgba(31,74,46,.22)"></div><div style="width:7%;background:var(--forest-lt)"></div></div></div><div class="hb-val">4% → 7%</div></div>
+        <div class="hb-row"><div class="hb-lbl sm">Welding (MIG/TIG)</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:2%;background:rgba(196,84,26,.22)"></div><div style="width:7%;background:var(--terra)"></div></div></div><div class="hb-val">2% → 9%</div></div>
+        <div class="hb-row"><div class="hb-lbl sm">Solar PV Installation</div><div class="hb-track"><div style="display:flex;height:100%"><div style="width:4%;background:rgba(212,160,32,.3)"></div><div style="width:19%;background:var(--ochre)"></div></div></div><div class="hb-val">3% → 22%</div></div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:6.5px;color:var(--mid);margin-top:7px">Lighter bar = 2020. Darker = 2025. TVET Service data; solar from COTVET / KATH programme records.</div>
+    </div>
+    <div style="background:rgba(212,160,32,.07);border-left:3px solid var(--ochre);padding:12px 14px;margin-top:10px">
+      <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--ochre);margin-bottom:5px">Solar PV: The New Frontier</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Solar photovoltaic installation is the fastest-growing trade for women in Ghana. With 22% female TVET enrolment — up from 3% in 2020 — it outperforms every other technical trade. The reason, as Afia Boakye explains on page 22, is that solar is new enough to have no established male culture. The trade formed after the modern gender equality discourse, and its training programmes were designed with diversity as a stated goal. It is a model for how trade training systems can be built differently from the start.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">45</div>
   </div>
 </div>
 
@@ -1542,6 +1572,23 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
         <div><div class="rc-kpi-n">GH₵ 117</div><div class="rc-kpi-l">Cement price premium (vs GH₵ 90 Accra)</div></div>
       </div>
     </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">48</div>
+  </div>
+</div>
+
+<!-- PAGE 49 — REGIONAL SPOTLIGHT (Kumasi + Takoradi) -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Regional Spotlight — continued</div>
+    <div class="ph-pn">49</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="region-grid" style="padding:14px 40px 0;margin-top:0">
     <div class="region-card">
       <div class="rc-name">Kumasi / Ashanti Region</div>
       <div class="rc-sub">+12% materials premium · 19% female TVET share</div>
@@ -1567,7 +1614,7 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">48 — 49</div>
+    <div class="pf-txt">49</div>
   </div>
 </div>
 
@@ -1606,15 +1653,31 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
         <div class="qa-q">The dropout rate for women in TVET is 31%, compared to 17% for men. What is driving that, and what can the system do about it?</div>
         <div class="qa-a">We know exactly what is driving it. The research is unambiguous. Women drop out because they cannot afford to stay enrolled — stipends are inadequate, accommodation costs are high, and many women have dependants. They drop out because there are no childcare provisions. And they drop out because the training environment in some programmes is not safe or welcoming for them. These are all fixable problems. The first requires money — we need to double the female stipend in technical programmes, full stop. The second requires infrastructure investment — every public TVET centre should have crèche provision. The third requires a culture change that starts with trainer selection and training. None of this is rocket science. It's a question of whether it's a priority.</div>
       </div>
-      <div class="qa-block">
-        <div class="qa-q">The gender pay gap in skilled trades averages 23% even for equivalent qualifications. Is TVET reform enough, or does pay equity require different interventions?</div>
-        <div class="qa-a">TVET reform addresses the supply side — getting more qualified women into the market. The pay gap is a demand-side problem. It reflects employer and client preferences — the willingness to pay a woman less for the same work. Two things can change that. First, more women in the trades — when women are a larger share of the qualified workforce, the market can't systematically underpay them without losing access to them. Second, public sector procurement can set the standard. Government contracts should require equal pay as a condition of award. If the government is your biggest construction client and it requires equal pay, the market shifts. We don't have that yet, but it's a policy lever that costs nothing to implement.</div>
-      </div>
     </div>
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">56 — 57</div>
+    <div class="pf-txt">56</div>
+  </div>
+</div>
+
+<!-- PAGE 57 — INTERVIEW (COTVET) continued -->
+<div class="page">
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Policy Interview — continued</div>
+    <div class="ph-pn">57</div>
+  </div>
+  <div class="h-rule"></div>
+  <div style="padding:22px 40px;position:relative;z-index:5">
+    <div class="qa-block">
+      <div class="qa-q">The gender pay gap in skilled trades averages 23% even for equivalent qualifications. Is TVET reform enough, or does pay equity require different interventions?</div>
+      <div class="qa-a">TVET reform addresses the supply side — getting more qualified women into the market. The pay gap is a demand-side problem. It reflects employer and client preferences — the willingness to pay a woman less for the same work. Two things can change that. First, more women in the trades — when women are a larger share of the qualified workforce, the market can't systematically underpay them without losing access to them. Second, public sector procurement can set the standard. Government contracts should require equal pay as a condition of award. If the government is your biggest construction client and it requires equal pay, the market shifts. We don't have that yet, but it's a policy lever that costs nothing to implement.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">57</div>
   </div>
 </div>
 
@@ -2007,37 +2070,52 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
       <div class="inline-head">What Finance Products Actually Exist</div>
       <p>The formal financial products available to women in Ghana's skilled trades are limited but not zero. The MASLOC (Microfinance and Small Loans Centre) programme has a women's enterprise strand that can provide working capital for registered businesses. Several rural and community banks in the Ashanti and Brong-Ahafo regions have begun offering trade-specific business loans following advocacy from COTVET. The GIZ-supported Skills Development Fund has piloted women's cooperative lending at below-market rates.</p>
       <p>None of these reach the majority of women in the trades. Awareness is low, application requirements are complex, and the underlying premise of most products — that women in manual trades are micro-entrepreneurs rather than small business operators — means the loan sizes are often inadequate for what women actually need to grow.</p>
-
-      <div class="tbl-wrap" style="margin-top:12px">
-        <table class="dtbl">
-          <thead>
-            <tr>
-              <th>Source of Startup Capital</th>
-              <th>% of Women (survey)</th>
-              <th>Avg. Amount (GH₵)</th>
-              <th>Note</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td class="cat">Susu / savings group</td><td>38%</td><td>2,400</td><td class="mid">No interest, short-term</td></tr>
-            <tr><td class="cat">Family loan</td><td>29%</td><td>3,100</td><td class="mid">Informal, variable</td></tr>
-            <tr><td class="cat">Personal savings</td><td>22%</td><td>1,800</td><td class="mid">Accumulated from wage work</td></tr>
-            <tr><td class="cat">Formal bank / MFI</td><td>14%</td><td>6,200</td><td class="mid">Low uptake; high refusal rate</td></tr>
-            <tr><td class="cat">MASLOC / government</td><td>6%</td><td>3,800</td><td class="mid">Application process cited as barrier</td></tr>
-            <tr><td class="cat">NGO / development grant</td><td>4%</td><td>4,500</td><td class="mid">Geographically uneven</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div style="background:rgba(31,74,46,.06);border-left:3px solid var(--forest);padding:12px 14px;margin-top:10px">
-        <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--forest);margin-bottom:5px">What Would Change This</div>
-        <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Three interventions would materially shift capital access for women in trades: (1) A government-backed trade contractor loan product with NVQ qualification as primary eligibility criterion — removing the collateral barrier; (2) Mandatory financial literacy and business development modules in all Level 3+ TVET programmes; (3) Recognition of cooperative membership as a credit-worthiness factor by MASLOC and participating commercial banks. None of these requires new institutional infrastructure — only policy will.</div>
-      </div>
     </div>
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">82 — 83</div>
+    <div class="pf-txt">82</div>
+  </div>
+</div>
+
+<!-- PAGE 83 — FINANCING (table + callout) -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">Finance &amp; Business — continued</div>
+    <div class="ph-pn">83</div>
+  </div>
+  <div class="h-rule"></div>
+  <div class="data-page">
+    <div class="tbl-wrap" style="margin-top:0">
+      <table class="dtbl">
+        <thead>
+          <tr>
+            <th>Source of Startup Capital</th>
+            <th>% of Women (survey)</th>
+            <th>Avg. Amount (GH₵)</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="cat">Susu / savings group</td><td>38%</td><td>2,400</td><td class="mid">No interest, short-term</td></tr>
+          <tr><td class="cat">Family loan</td><td>29%</td><td>3,100</td><td class="mid">Informal, variable</td></tr>
+          <tr><td class="cat">Personal savings</td><td>22%</td><td>1,800</td><td class="mid">Accumulated from wage work</td></tr>
+          <tr><td class="cat">Formal bank / MFI</td><td>14%</td><td>6,200</td><td class="mid">Low uptake; high refusal rate</td></tr>
+          <tr><td class="cat">MASLOC / government</td><td>6%</td><td>3,800</td><td class="mid">Application process cited as barrier</td></tr>
+          <tr><td class="cat">NGO / development grant</td><td>4%</td><td>4,500</td><td class="mid">Geographically uneven</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="background:rgba(31,74,46,.06);border-left:3px solid var(--forest);padding:12px 14px;margin-top:12px">
+      <div style="font-family:'Fraunces',serif;font-size:12px;font-weight:700;color:var(--forest);margin-bottom:5px">What Would Change This</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:9.5px;color:var(--mid);line-height:1.6">Three interventions would materially shift capital access for women in trades: (1) A government-backed trade contractor loan product with NVQ qualification as primary eligibility criterion — removing the collateral barrier; (2) Mandatory financial literacy and business development modules in all Level 3+ TVET programmes; (3) Recognition of cooperative membership as a credit-worthiness factor by MASLOC and participating commercial banks. None of these requires new institutional infrastructure — only policy will.</div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">83</div>
   </div>
 </div>
 
@@ -2094,8 +2172,24 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
         </tbody>
       </table>
     </div>
+  </div>
+  <div class="page-footer">
+    <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
+    <div class="pf-txt">86</div>
+  </div>
+</div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+<!-- PAGE 87 — INTERNATIONAL BENCHMARKS (chart + callouts) -->
+<div class="page">
+  <div class="dot-bg"></div>
+  <div class="page-header">
+    <div class="ph-brand"><span>LOCAL</span>LINK Economist</div>
+    <div class="ph-section">International Benchmarks — continued</div>
+    <div class="ph-pn">87</div>
+  </div>
+  <div class="h-rule-green"></div>
+  <div class="data-page">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div class="chart-box">
         <div class="chart-lbl">Female Share of Technical (Non-Service) TVET — Ranked (2024–25)</div>
         <div class="hbar" style="margin-top:6px">
@@ -2125,7 +2219,7 @@ table.dtbl .sec-row td{background:rgba(31,74,46,.08);color:var(--forest);font-fa
   </div>
   <div class="page-footer">
     <div class="pf-txt">LOCALLINK ECONOMIST &nbsp;·&nbsp; VOL. 03 · MAR 2026</div>
-    <div class="pf-txt">86 — 87</div>
+    <div class="pf-txt">87</div>
   </div>
 </div>
 

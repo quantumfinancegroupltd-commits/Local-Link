@@ -282,6 +282,14 @@ export function AIAssistant() {
           <p className="mx-auto mt-4 max-w-xl text-center text-slate-600 dark:text-slate-400">
             YAO is just getting started. In the future, YAO will evolve into a fully interactive Meta Human AI assistant.
           </p>
+          <div className="mx-auto mt-10 max-w-md">
+            <img
+              src="/yao-metahuman.png"
+              alt="YAO Meta Human — a realistic digital AI persona for LocalLink"
+              className="w-full rounded-2xl border border-slate-200 shadow-lg dark:border-white/10"
+              loading="lazy"
+            />
+          </div>
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {FUTURE_FEATURES.map((f) => (
               <div

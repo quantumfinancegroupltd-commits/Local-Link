@@ -153,7 +153,15 @@ export function AppLayout() {
   const QUICK_SUGGESTIONS = ['Plumber', 'Electrician', 'Tomatoes', 'Driver', 'Carpenter', 'Hairdresser']
   const showSearchDropdown = searchFocused && !searchQuery.trim() && (recentSearches.length > 0 || true)
 
-  const commonLinks = useMemo(() => [{ to: '/feed', label: 'Feed' }, { to: '/people', label: 'People' }, { to: '/news', label: 'News' }], [])
+  const commonLinks = useMemo(
+    () => [
+      { to: '/feed', label: 'Feed' },
+      { to: '/people', label: 'People' },
+      { to: '/news', label: 'News' },
+      { to: '/ai-assistant', label: 'AI Assistant' },
+    ],
+    [],
+  )
   const navLinks = useMemo(() => {
     if (!isAuthed) return []
     if (user?.role === 'buyer') {
@@ -272,6 +280,7 @@ export function AppLayout() {
                   </NavItem>
                 ))}
                 <NavItem to="/news">News</NavItem>
+                <NavItem to="/ai-assistant">AI Assistant</NavItem>
                 <NavItem to="/login">Login</NavItem>
               </>
             ) : (
@@ -608,6 +617,11 @@ export function AppLayout() {
                         News
                       </Button>
                     </Link>
+                    <Link to="/ai-assistant" onClick={() => setMobileOpen(false)} className="block">
+                      <Button className="w-full" variant="secondary">
+                        AI Assistant
+                      </Button>
+                    </Link>
                   </div>
                   <Link to="/login" onClick={() => setMobileOpen(false)} className="block">
                     <Button className="w-full" variant="secondary">
@@ -776,6 +790,9 @@ export function AppLayout() {
                 </Link>
                 <Link className="block hover:underline" to="/careers">
                   Careers
+                </Link>
+                <Link className="block hover:underline" to="/ai-assistant">
+                  AI Assistant
                 </Link>
               </div>
             </div>

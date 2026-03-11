@@ -71,6 +71,7 @@ const NotFound = lazy(() => import('./pages/NotFound.jsx').then((m) => ({ defaul
 const About = lazy(() => import('./pages/public/About.jsx').then((m) => ({ default: m.About })))
 const Contact = lazy(() => import('./pages/public/Contact.jsx').then((m) => ({ default: m.Contact })))
 const Careers = lazy(() => import('./pages/public/Careers.jsx').then((m) => ({ default: m.Careers })))
+const AIAssistant = lazy(() => import('./pages/ai-assistant/AIAssistant.jsx').then((m) => ({ default: m.AIAssistant })))
 // /start now redirects to /onboarding (single source of truth)
 const News = lazy(() => import('./pages/news/News.jsx').then((m) => ({ default: m.News })))
 const NewsPost = lazy(() => import('./pages/news/NewsPost.jsx').then((m) => ({ default: m.NewsPost })))
@@ -182,6 +183,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/ai-assistant" element={<AIAssistant />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsPost />} />
             <Route path="/economist" element={<EconomistArchive />} />

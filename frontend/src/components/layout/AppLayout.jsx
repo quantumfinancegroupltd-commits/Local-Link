@@ -20,7 +20,7 @@ function NavItem({ to, children, isActive: isActiveFn }) {
         const active = isActiveFn ? isActiveFn({ isActive, location }) : isActive
         return [
           'rounded-lg px-2 py-1.5 text-sm font-medium sm:px-3 sm:py-2',
-          active ? 'bg-slate-900 text-white dark:bg-brand-emerald dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10',
+          active ? 'bg-slate-900 text-white dark:bg-white/10 dark:text-white' : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10',
         ].join(' ')
       }}
       isActive={typeof isActiveFn === 'function' ? isActiveFn : undefined}

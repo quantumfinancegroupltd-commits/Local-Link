@@ -58,6 +58,7 @@ const EXAMPLE_QUESTIONS = [
   'Show me electricians near Tema',
   'What are the top construction companies in Kumasi?',
   "What is happening in Ghana's labour market?",
+  'Hwehwɛ obi a ɔyɛ adwuma wɔ Accra',
 ]
 
 const FEATURES = [
@@ -85,7 +86,7 @@ const FUTURE_FEATURES = [
 
 export function AIAssistant() {
   const capabilitiesRef = useRef(null)
-  usePageMeta({ title: 'YAO — AI Assistant • LocalLink', description: "LocalLink's intelligent AI assistant for Ghana. Discover businesses, construction pricing, economic insights, and skilled workers." })
+  usePageMeta({ title: 'YAO — AI Assistant • LocalLink', description: "LocalLink's intelligent AI assistant for Ghana. Speak or type in English or Twi. Discover businesses, construction pricing, economic insights, and skilled workers." })
 
   function scrollToCapabilities() {
     capabilitiesRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -108,6 +109,9 @@ export function AIAssistant() {
           </p>
           <p className="mx-auto mt-4 max-w-2xl text-slate-600 dark:text-slate-400">
             Whether you&apos;re looking for skilled workers, business insights, construction pricing, or economic data — YAO connects you instantly.
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-base font-medium text-emerald-700 dark:text-emerald-300">
+            Speak or type in English or Twi — YAO responds in your language.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <button
@@ -136,6 +140,9 @@ export function AIAssistant() {
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-center text-slate-600 dark:text-slate-400">
             Unlike generic chatbots, YAO understands the LocalLink ecosystem — connecting people with real businesses, services, and economic insights.
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            Use Twi or English — type or speak; YAO replies in the language you use.
           </p>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (

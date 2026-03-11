@@ -115,9 +115,13 @@ export function AIAssistant() {
             Speak or type in English or Twi — YAO responds in your language.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Button type="button" onClick={openAssistant} className="px-6 py-3.5 text-base shadow-md ring-2 ring-white/20">
+            <button
+              type="button"
+              onClick={openAssistant}
+              className="inline-flex items-center justify-center rounded-xl bg-brand-emerald px-6 py-3.5 text-base font-semibold text-white shadow-md transition hover:bg-brand-emerald-dark focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 dark:focus:ring-orange-400/50 dark:focus:ring-offset-slate-950"
+            >
               Try YAO
-            </Button>
+            </button>
             <Button type="button" variant="secondary" onClick={scrollToCapabilities} className="px-6 py-3.5 text-base">
               Explore Capabilities
             </Button>
@@ -188,7 +192,7 @@ export function AIAssistant() {
           <div className="mt-12 flex flex-col items-center gap-4 text-center">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-8 py-4 dark:border-white/10 dark:bg-white/5 dark:backdrop-blur-sm">Users</div>
             <div className="text-slate-400">↓</div>
-            <div className="rounded-xl border-2 border-brand-emerald bg-brand-gradient px-8 py-4 font-semibold text-white shadow-sm dark:backdrop-blur-sm">
+            <div className="rounded-xl border-2 border-brand-emerald bg-brand-emerald px-8 py-4 font-semibold text-white shadow-sm dark:backdrop-blur-sm">
               YAO AI Assistant
             </div>
             <div className="text-slate-400">↓</div>
@@ -235,7 +239,7 @@ export function AIAssistant() {
                 <span className="text-xs font-semibold text-slate-400">User</span>
                 <p className="mt-1">What is the average cement price in Ghana?</p>
               </div>
-              <div className="mr-4 ml-12 rounded-2xl bg-brand-gradient px-4 py-3 text-sm text-white shadow">
+              <div className="mr-4 ml-12 rounded-2xl bg-brand-emerald px-4 py-3 text-sm text-white shadow">
                 <span className="text-xs font-semibold text-white/90">YAO</span>
                 <p className="mt-1">
                   The average cement price is currently between GH₵90 – GH₵105 depending on region and supplier.
@@ -246,7 +250,7 @@ export function AIAssistant() {
                 <span className="text-xs font-semibold text-slate-400">User</span>
                 <p className="mt-1">Yes</p>
               </div>
-              <div className="mr-4 ml-12 rounded-2xl bg-brand-gradient px-4 py-3 text-sm text-white shadow">
+              <div className="mr-4 ml-12 rounded-2xl bg-brand-emerald px-4 py-3 text-sm text-white shadow">
                 <span className="text-xs font-semibold text-white/90">YAO</span>
                 <p className="mt-1">Here are suppliers near Accra.</p>
               </div>
@@ -314,9 +318,13 @@ export function AIAssistant() {
           <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
             LocalLink is building the infrastructure for how people discover businesses, services, and economic knowledge across Ghana. YAO is the first step.
           </p>
-          <Button type="button" onClick={openAssistant} className="mt-8 px-8 py-4 text-lg shadow-md ring-2 ring-white/20">
+          <button
+            type="button"
+            onClick={openAssistant}
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-brand-emerald px-8 py-4 text-lg font-semibold text-white shadow-md transition hover:bg-brand-emerald-dark focus:outline-none focus:ring-2 focus:ring-orange-200 focus:ring-offset-2 dark:focus:ring-orange-400/50 dark:focus:ring-offset-slate-950"
+          >
             Try YAO
-          </Button>
+          </button>
           <p className="mt-8 text-xs text-slate-500 dark:text-slate-500">
             YAO is currently in development and will continue expanding with new capabilities across the LocalLink ecosystem.
           </p>

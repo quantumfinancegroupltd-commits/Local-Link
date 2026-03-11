@@ -33,8 +33,21 @@ if [[ -f "$ROOT_DIR/backend/.env" ]]; then
   fi
 fi
 
+# Merge VITE_GOOGLE_MAPS_API_KEY from local frontend/.env into server root .env (so web build gets it; root .env survives git clean)
+if [[ -f "$ROOT_DIR/frontend/.env" ]]; then
+  MAPS_LINE="$(grep '^VITE_GOOGLE_MAPS_API_KEY=' "$ROOT_DIR/frontend/.env" 2>/dev/null || true)"
+  if [[ -n "$MAPS_LINE" ]]; then
+    echo "Syncing VITE_GOOGLE_MAPS_API_KEY to server for map/Places..."
+    TMPF="$(mktemp)"
+    echo "$MAPS_LINE" > "$TMPF"
+    scp -i "$KEY" -o StrictHostKeyChecking=accept-new "$TMPF" "$USER@$HOST:~/$REPO_DIR/.env.maps_key"
+    rm -f "$TMPF"
+    ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "cd ~/$REPO_DIR && (grep -v '^VITE_GOOGLE_MAPS_API_KEY=' .env 2>/dev/null || true; cat .env.maps_key) > .env.merged && mv .env.merged .env && rm -f .env.maps_key"
+  fi
+fi
+
 echo "Redeploying on $HOST ($USER@$HOST), directory on server: $REPO_DIR"
-# 1) Pull latest 2) Rebuild web image with no cache 3) Recreate web + gateway + api so new bundle and env are used 4) Migrate
+# 1) Pull latest 2) Rebuild web image with no cache (docker-compose reads .env for VITE_GOOGLE_MAPS_API_KEY) 3) Recreate 4) Migrate
 CMD="cd $REPO_DIR && git fetch origin && git checkout main && git reset --hard origin/main && git clean -fd && echo \"Deploying commit: \$(git rev-parse --short HEAD)\" && docker compose -f docker-compose.selfhost.yml build --no-cache web && docker compose -f docker-compose.selfhost.yml up -d --force-recreate web gateway api && docker compose -f docker-compose.selfhost.yml run --rm api npm run migrate && echo \"Web image: \$(docker compose -f docker-compose.selfhost.yml images -q web)\""
 if ! ssh -i "$KEY" -o StrictHostKeyChecking=accept-new "$USER@$HOST" "$CMD"; then
   echo ""

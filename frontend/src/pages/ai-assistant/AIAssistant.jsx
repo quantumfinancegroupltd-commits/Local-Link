@@ -306,6 +306,17 @@ export function AIAssistant() {
               </div>
             ))}
           </div>
+          <div className="mx-auto mt-12 max-w-3xl">
+            <video
+              src="/yao-future-demo.mov"
+              controls
+              playsInline
+              className="w-full rounded-2xl border border-slate-200 shadow-lg dark:border-white/10"
+              poster="/yao-metahuman.png"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       </section>
 

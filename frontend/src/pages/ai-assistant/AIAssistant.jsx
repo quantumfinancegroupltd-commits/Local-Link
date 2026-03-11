@@ -2,52 +2,53 @@ import { Link } from 'react-router-dom'
 import { useRef } from 'react'
 import { usePageMeta } from '../../components/ui/seo.js'
 import { openAssistant } from '../../components/assistant/AssistantFab.jsx'
+import { Button } from '../../components/ui/FormControls.jsx'
 
 // Professional SVG icons (24x24, currentColor)
 const IconSearch = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.2-5.2M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" />
   </svg>
 )
 const IconChart = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 13h2v6H3v-6zm4 2h2v4H7v-4zm4-6h2v10h-2V9zm4 2h2v8h-2v-8z" />
   </svg>
 )
 const IconBuilding = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" />
   </svg>
 )
 const IconMapPin = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657 13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
   </svg>
 )
 const IconBriefcase = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0 1 12 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2m4 6h.01M5 20h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" />
   </svg>
 )
 const IconUser = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z" />
   </svg>
 )
 const IconMic = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 0 1-14 0v2a7 7 0 1 1 14 0v-2zm-7 4v3m0 0v3m0-3h3m-3 0H9" />
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z" />
   </svg>
 )
 const IconLightbulb = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
   </svg>
 )
 const IconGlobe = () => (
-  <svg className="h-6 w-6 shrink-0 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+  <svg className="h-6 w-6 shrink-0 text-brand-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden>
     <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2 2 2 0 0 1 2 2v2.945M8 3.935V5.5A2.5 2.5 0 0 0 10.5 8h.5a2 2 0 0 1 2 2 2 2 0 1 0 4 0 2 2 0 0 1 2-2h1.064M15 20.488V18a2 2 0 0 1 2-2h3.064M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
   </svg>
 )
@@ -96,12 +97,12 @@ export function AIAssistant() {
     <div className="min-h-screen bg-white dark:bg-black">
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-slate-200 dark:border-white/10 bg-gradient-to-b from-slate-50 to-white dark:from-black dark:to-black">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.08),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.12),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.08),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(34,197,94,0.12),transparent)]" />
         <div className="relative mx-auto max-w-4xl px-4 py-20 sm:py-28 text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-5xl md:text-6xl">
             Meet YAO
           </h1>
-          <p className="mt-4 text-xl font-semibold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-4 text-xl font-semibold text-brand-emerald">
             The AI Assistant for Ghana&apos;s Real Economy
           </p>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
@@ -110,24 +111,16 @@ export function AIAssistant() {
           <p className="mx-auto mt-4 max-w-2xl text-slate-600 dark:text-slate-400">
             Whether you&apos;re looking for skilled workers, business insights, construction pricing, or economic data — YAO connects you instantly.
           </p>
-          <p className="mx-auto mt-3 max-w-2xl text-base font-medium text-emerald-700 dark:text-emerald-300">
+          <p className="mx-auto mt-3 max-w-2xl text-base font-medium text-brand-emerald">
             Speak or type in English or Twi — YAO responds in your language.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <button
-              type="button"
-              onClick={openAssistant}
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-6 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
-            >
+            <Button type="button" onClick={openAssistant} className="px-6 py-3.5 text-base shadow-md ring-2 ring-white/20">
               Try YAO
-            </button>
-            <button
-              type="button"
-              onClick={scrollToCapabilities}
-              className="inline-flex items-center justify-center rounded-xl border-2 border-slate-300 bg-white px-6 py-3.5 text-base font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50 dark:border-white/20 dark:bg-white/10 dark:text-slate-200 dark:hover:bg-white/15"
-            >
+            </Button>
+            <Button type="button" variant="secondary" onClick={scrollToCapabilities} className="px-6 py-3.5 text-base">
               Explore Capabilities
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -141,7 +134,7 @@ export function AIAssistant() {
           <p className="mx-auto mt-4 max-w-2xl text-center text-slate-600 dark:text-slate-400">
             Unlike generic chatbots, YAO understands the LocalLink ecosystem — connecting people with real businesses, services, and economic insights.
           </p>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm font-medium text-brand-emerald">
             Use Twi or English — type or speak; YAO replies in the language you use.
           </p>
           <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,7 +167,7 @@ export function AIAssistant() {
                 key={q}
                 type="button"
                 onClick={openAssistant}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 dark:border-white/20 dark:bg-white/10 dark:text-slate-200 dark:hover:border-emerald-500/50 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300 dark:backdrop-blur-sm"
+                className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:border-brand-emerald/50 hover:bg-brand-emerald/10 hover:text-slate-900 dark:border-white/20 dark:bg-white/10 dark:text-slate-200 dark:hover:border-brand-emerald/50 dark:hover:bg-brand-emerald/20 dark:hover:text-white dark:backdrop-blur-sm"
               >
                 {q}
               </button>
@@ -195,7 +188,7 @@ export function AIAssistant() {
           <div className="mt-12 flex flex-col items-center gap-4 text-center">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-8 py-4 dark:border-white/10 dark:bg-white/5 dark:backdrop-blur-sm">Users</div>
             <div className="text-slate-400">↓</div>
-            <div className="rounded-xl border-2 border-emerald-500 bg-emerald-50 px-8 py-4 font-semibold text-emerald-800 dark:border-emerald-400 dark:bg-emerald-500/20 dark:text-emerald-200 dark:backdrop-blur-sm">
+            <div className="rounded-xl border-2 border-brand-emerald bg-brand-gradient px-8 py-4 font-semibold text-white shadow-sm dark:backdrop-blur-sm">
               YAO AI Assistant
             </div>
             <div className="text-slate-400">↓</div>
@@ -242,8 +235,8 @@ export function AIAssistant() {
                 <span className="text-xs font-semibold text-slate-400">User</span>
                 <p className="mt-1">What is the average cement price in Ghana?</p>
               </div>
-              <div className="mr-4 ml-12 rounded-2xl bg-emerald-600 px-4 py-3 text-sm text-white shadow">
-                <span className="text-xs font-semibold text-emerald-200">YAO</span>
+              <div className="mr-4 ml-12 rounded-2xl bg-brand-gradient px-4 py-3 text-sm text-white shadow">
+                <span className="text-xs font-semibold text-white/90">YAO</span>
                 <p className="mt-1">
                   The average cement price is currently between GH₵90 – GH₵105 depending on region and supplier.
                   Would you like me to find suppliers near you?
@@ -253,8 +246,8 @@ export function AIAssistant() {
                 <span className="text-xs font-semibold text-slate-400">User</span>
                 <p className="mt-1">Yes</p>
               </div>
-              <div className="mr-4 ml-12 rounded-2xl bg-emerald-600 px-4 py-3 text-sm text-white shadow">
-                <span className="text-xs font-semibold text-emerald-200">YAO</span>
+              <div className="mr-4 ml-12 rounded-2xl bg-brand-gradient px-4 py-3 text-sm text-white shadow">
+                <span className="text-xs font-semibold text-white/90">YAO</span>
                 <p className="mt-1">Here are suppliers near Accra.</p>
               </div>
             </div>
@@ -273,7 +266,7 @@ export function AIAssistant() {
           </p>
           <Link
             to="/economist"
-            className="mt-6 inline-block text-base font-semibold text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300"
+            className="mt-6 inline-block text-base font-semibold text-brand-emerald hover:opacity-90 dark:text-brand-emerald"
           >
             Explore LocalLink Economist →
           </Link>
@@ -321,13 +314,9 @@ export function AIAssistant() {
           <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
             LocalLink is building the infrastructure for how people discover businesses, services, and economic knowledge across Ghana. YAO is the first step.
           </p>
-          <button
-            type="button"
-            onClick={openAssistant}
-            className="mt-8 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
-          >
+          <Button type="button" onClick={openAssistant} className="mt-8 px-8 py-4 text-lg shadow-md ring-2 ring-white/20">
             Try YAO
-          </button>
+          </Button>
           <p className="mt-8 text-xs text-slate-500 dark:text-slate-500">
             YAO is currently in development and will continue expanding with new capabilities across the LocalLink ecosystem.
           </p>
